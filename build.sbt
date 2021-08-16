@@ -19,7 +19,35 @@ name := "feral"
 ThisBuild / baseVersion := "0.1"
 
 ThisBuild / organization := "org.typelevel"
+ThisBuild / organizationName := "Typelevel"
 ThisBuild / publishGithubUser := "armanbilge"
 ThisBuild / publishFullName := "Arman Bilge"
 
-ThisBuild / crossScalaVersions := Seq("2.13.6")
+ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
+
+val catsEffectVersion = "3.2.3"
+val circeVersion = "0.14.1"
+
+lazy val root =
+  project.in(file(".")).aggregate(lambda.js, lambda.jvm).enablePlugins(NoPublishPlugin)
+
+lazy val lambda = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda"))
+  .settings(
+    name := "feral-lambda",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "io.circe" %%% "circe-core" % circeVersion
+    )
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-scalajs" % circeVersion
+    )
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
+      "io.circe" %%% "circe-jawn" % circeVersion,
+    )
+  )

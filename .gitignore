@@ -1,9 +1,22 @@
 target/
 
+.sbtopts
+
 # vim
 *.sw?
+
+# intellij
+.idea/
 
 # Ignore [ce]tags files
 tags
 
-/.bsp/
+# Metals
+.metals/
+.bsp/
+.bloop/
+metals.sbt
+.vscode
+
+# npm
+node_modules/
