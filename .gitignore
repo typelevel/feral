@@ -1,0 +1,9 @@
+target/
+
+# vim
+*.sw?
+
+# Ignore [ce]tags files
+tags
+
+/.bsp/
