@@ -19,12 +19,12 @@ package feral.lambda
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import cats.syntax.all._
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
-import io.circe.jawn._
+import io.circe
 
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.charset.StandardCharsets
 
 private[lambda] abstract class IOLambdaPlatform[Setup, Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Setup, Event, Result] =>
@@ -37,11 +37,18 @@ private[lambda] abstract class IOLambdaPlatform[Setup, Event, Result]
       .eval {
         for {
           setup <- setupMemo
-          event <- IO(input.readAllBytes()).map(decodeByteArray[Event]).rethrow
+          event <- fs2
+            .io
+            .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
+            .through(circe.fs2.byteStreamParser)
+            .through(circe.fs2.decoder[IO, Event])
+            .head
+            .compile
+            .lastOrError
           context <- IO(Context.fromJava(context))
           _ <- OptionT(apply(event, context, setup)).foldF(IO.unit) { result =>
             // TODO can circe write directly to output?
-            IO(output.write(encoder(result).noSpaces.getBytes()))
+            IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
           }
         } yield ()
       }

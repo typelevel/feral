@@ -27,6 +27,7 @@ ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
 
 val catsEffectVersion = "3.2.3"
 val circeVersion = "0.14.1"
+val fs2Version = "3.1.0"
 
 lazy val root =
   project.in(file(".")).aggregate(lambda.js, lambda.jvm).enablePlugins(NoPublishPlugin)
@@ -48,6 +49,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
-      "io.circe" %%% "circe-jawn" % circeVersion,
+      "co.fs2" %%% "fs2-io" % fs2Version,
+      "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
