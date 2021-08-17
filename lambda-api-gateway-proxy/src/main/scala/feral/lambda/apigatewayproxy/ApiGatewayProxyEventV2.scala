@@ -16,6 +16,10 @@
 
 package feral.lambda.apigatewayproxy
 
+import io.circe.Decoder
+import io.circe.generic.auto._
+import io.circe.generic.semiauto._
+
 // TODO Just the bare minimum for proof-of-concept
 final case class ApiGatewayProxyEventV2(
     rawPath: String,
@@ -25,6 +29,10 @@ final case class ApiGatewayProxyEventV2(
     body: Option[String],
     isBase64Encoded: Boolean
 )
+
+object ApiGatewayProxyEventV2 {
+  implicit def decoder: Decoder[ApiGatewayProxyEventV2] = deriveDecoder
+}
 
 final case class RequestContext(http: Http)
 

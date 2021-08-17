@@ -20,7 +20,6 @@ package apigatewayproxy
 import cats.effect.IO
 import cats.effect.Resource
 import fs2.Stream
-import io.circe.generic.auto._
 import org.http4s.Charset
 import org.http4s.ContextRequest
 import org.http4s.ContextRoutes
@@ -35,7 +34,7 @@ abstract class ApiGatewayProxyLambda
     extends IOLambda[
       ContextRoutes[Context, IO],
       ApiGatewayProxyEventV2,
-      ApiGatewayProxyResultV2] {
+      ApiGatewayProxyStructuredResultV2] {
 
   def routes: Resource[IO, ContextRoutes[Context, IO]]
 
@@ -44,7 +43,7 @@ abstract class ApiGatewayProxyLambda
   override final def apply(
       event: ApiGatewayProxyEventV2,
       context: Context,
-      routes: ContextRoutes[Context, IO]): IO[Some[ApiGatewayProxyResultV2]] =
+      routes: ContextRoutes[Context, IO]): IO[Some[ApiGatewayProxyStructuredResultV2]] =
     for {
       method <- IO.fromEither(Method.fromString(event.requestContext.http.method))
       uri <- IO.fromEither(Uri.fromString(event.rawPath))

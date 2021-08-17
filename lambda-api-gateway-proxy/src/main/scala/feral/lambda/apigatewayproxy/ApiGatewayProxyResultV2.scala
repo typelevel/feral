@@ -16,6 +16,9 @@
 
 package feral.lambda.apigatewayproxy
 
+import io.circe.Encoder
+import io.circe.generic.semiauto._
+
 sealed abstract class ApiGatewayProxyResultV2
 
 final case class ApiGatewayProxyStructuredResultV2(
@@ -24,3 +27,7 @@ final case class ApiGatewayProxyStructuredResultV2(
     body: String,
     isBase64Encoded: Boolean
 ) extends ApiGatewayProxyResultV2
+
+object ApiGatewayProxyStructuredResultV2 {
+  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = deriveEncoder
+}
