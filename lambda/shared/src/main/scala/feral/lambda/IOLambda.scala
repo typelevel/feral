@@ -26,13 +26,14 @@ import io.circe.Encoder
 
 abstract class IOLambda[Setup, Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
-    private[lambda] val encoder: Encoder[Result],
-    private[lambda] val runtime: IORuntime
+    private[lambda] val encoder: Encoder[Result]
 ) extends IOLambdaPlatform[Setup, Event, Result] {
+
+  protected def runtime: IORuntime = IORuntime.global
 
   def setup: Resource[IO, Setup]
 
-  private[lambda] final lazy val setupMemo: IO[Setup] = {
+  private[lambda] final val setupMemo: IO[Setup] = {
     val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
     setup
       .attempt
@@ -41,7 +42,7 @@ abstract class IOLambda[Setup, Event, Result](
         case (setup, _) =>
           deferred.complete(setup)
       }
-      .unsafeRunAndForget()
+      .unsafeRunAndForget()(runtime)
     deferred.get.rethrow
   }
 

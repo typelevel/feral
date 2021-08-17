@@ -32,5 +32,5 @@ private[lambda] trait IOLambdaPlatform[Setup, Event, Result] {
       setup <- setupMemo
       event <- IO.fromEither(decodeJs[Event](event))
       result <- apply(event, Context.fromJS(context), setup)
-    } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()
+    } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
 }

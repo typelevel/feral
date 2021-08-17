@@ -55,6 +55,6 @@ private[lambda] abstract class IOLambdaPlatform[Setup, Event, Result]
       .onFinalize(IO(input.close()))
       .onFinalize(IO(output.close()))
       .use_
-      .unsafeRunSync()
+      .unsafeRunSync()(runtime)
 
 }

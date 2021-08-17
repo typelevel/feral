@@ -19,7 +19,6 @@ package apigatewayproxy
 
 import cats.effect.IO
 import cats.effect.Resource
-import cats.effect.unsafe.IORuntime
 import fs2.Stream
 import io.circe.generic.auto._
 import org.http4s.Charset
@@ -32,7 +31,7 @@ import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
 
-abstract class ApiGatewayProxyLambda(implicit runtime: IORuntime)
+abstract class ApiGatewayProxyLambda
     extends IOLambda[
       ContextRoutes[Context, IO],
       ApiGatewayProxyEventV2,
