@@ -23,8 +23,8 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
 
-private[lambda] trait IOLambdaPlatform[Setup, Event, Result] {
-  this: IOLambda[Setup, Event, Result] =>
+private[lambda] trait IOLambdaPlatform[Event, Result] {
+  this: IOLambda[Event, Result] =>
 
   // @JSExportTopLevel("handler") // TODO
   final def handler(event: js.Any, context: facade.Context): js.Promise[js.Any | Unit] =

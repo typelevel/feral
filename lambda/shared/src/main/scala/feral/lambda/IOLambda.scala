@@ -24,14 +24,15 @@ import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.Encoder
 
-abstract class IOLambda[Setup, Event, Result](
+abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
     private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Setup, Event, Result] {
+) extends IOLambdaPlatform[Event, Result] {
 
   protected def runtime: IORuntime = IORuntime.global
 
-  def setup: Resource[IO, Setup]
+  protected type Setup
+  protected val setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
 
   private[lambda] final val setupMemo: IO[Setup] = {
     val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
@@ -47,5 +48,4 @@ abstract class IOLambda[Setup, Event, Result](
   }
 
   def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
-
 }

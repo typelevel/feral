@@ -32,13 +32,13 @@ import org.http4s.Uri
 
 abstract class ApiGatewayProxyLambda
     extends IOLambda[
-      ContextRoutes[Context, IO],
       ApiGatewayProxyEventV2,
       ApiGatewayProxyStructuredResultV2] {
 
   def routes: Resource[IO, ContextRoutes[Context, IO]]
 
-  override final def setup: Resource[IO, ContextRoutes[Context, IO]] = routes
+  protected type Setup = ContextRoutes[Context, IO]
+  protected override final val setup: Resource[IO, ContextRoutes[Context, IO]] = routes
 
   override final def apply(
       event: ApiGatewayProxyEventV2,
