@@ -26,8 +26,8 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
-private[lambda] abstract class IOLambdaPlatform[Setup, Event, Result]
-    extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Setup, Event, Result] =>
+private[lambda] abstract class IOLambdaPlatform[Event, Result]
+    extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
 
   final def handleRequest(
       input: InputStream,
