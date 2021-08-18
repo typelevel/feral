@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package feral.lambda.apigatewayproxy
+package feral.lambda.events
 
 import io.circe.Decoder
 import io.circe.generic.auto._

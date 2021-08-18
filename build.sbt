@@ -33,7 +33,13 @@ val http4sVersion = "1.0.0-M24"
 lazy val root =
   project
     .in(file("."))
-    .aggregate(lambda.js, lambda.jvm, lambdaApiGatewayProxy.js, lambdaApiGatewayProxy.jvm)
+    .aggregate(
+      lambda.js,
+      lambda.jvm,
+      lambdaEvents.js,
+      lambdaEvents.jvm,
+      lambdaApiGatewayProxyHttp4s.js,
+      lambdaApiGatewayProxyHttp4s.jvm)
     .enablePlugins(NoPublishPlugin)
 
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
@@ -58,14 +64,23 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val lambdaApiGatewayProxy = crossProject(JSPlatform, JVMPlatform)
+lazy val lambdaEvents = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .in(file("lambda-api-gateway-proxy"))
+  .in(file("lambda-events"))
   .settings(
-    name := "feral-lambda-api-gateway-proxy",
+    name := "feral-lambda-events",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-core" % http4sVersion,
       "io.circe" %%% "circe-generic" % circeVersion
     )
   )
-  .dependsOn(lambda)
+
+lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("lambda-api-gateway-proxy-http4s"))
+  .settings(
+    name := "feral-lambda-api-gateway-proxy",
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-core" % http4sVersion
+    )
+  )
+  .dependsOn(lambda, lambdaEvents)

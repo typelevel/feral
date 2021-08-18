@@ -15,10 +15,11 @@
  */
 
 package feral.lambda
-package apigatewayproxy
 
 import cats.effect.IO
 import cats.effect.Resource
+import feral.lambda.events.ApiGatewayProxyEventV2
+import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
 import org.http4s.Charset
 import org.http4s.ContextRequest
@@ -30,10 +31,8 @@ import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
 
-abstract class ApiGatewayProxyLambda
-    extends IOLambda[
-      ApiGatewayProxyEventV2,
-      ApiGatewayProxyStructuredResultV2] {
+abstract class ApiGatewayProxyHttp4sLambda
+    extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
 
   def routes: Resource[IO, ContextRoutes[Context, IO]]
 
