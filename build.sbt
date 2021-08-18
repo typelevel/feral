@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Arman Bilge
+ * Copyright 2021 Typelevel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lambda-api-gateway-proxy-http4s"))
   .settings(
-    name := "feral-lambda-api-gateway-proxy",
+    name := "feral-lambda-api-gateway-proxy-http4s",
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-core" % http4sVersion
     )
