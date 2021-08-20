@@ -18,22 +18,24 @@ package feral
 package cloudflare.worker
 
 import cats.effect.IO
+import cats.effect.SyncIO
 import cats.effect.kernel.Resource
 import cats.effect.std.Supervisor
-import org.http4s.ContextRequest
-import org.http4s.ContextRoutes
-import io.circe.Json
 import io.circe.Decoder
+import io.circe.Json
 import io.circe.generic.semiauto._
 import io.circe.scalajs._
+import org.http4s.HttpRoutes
+import org.http4s.Request
+import org.typelevel.vault.Key
+import org.http4s.HttpVersion
 
 trait FetchEventListener extends IOSetup {
 
-  def routes: Resource[IO, ContextRoutes[FetchEventContext[IO], IO]]
+  def routes: Resource[IO, HttpRoutes[IO]]
 
-  final type Setup = ContextRoutes[FetchEventContext[IO], IO]
-  protected override final val setup: Resource[IO, ContextRoutes[FetchEventContext[IO], IO]] =
-    routes
+  final type Setup = HttpRoutes[IO]
+  protected override final val setup = routes
 
   private def apply(event: facade.FetchEvent): Unit =
     event.waitUntil(
@@ -43,7 +45,10 @@ trait FetchEventListener extends IOSetup {
             routes <- setupMemo
             request <- fromRequest[IO](event.request)
             properties <- IO.fromEither(decodeJs[IncomingRequestCfProperties](event.request.cf))
-            _ <- routes(ContextRequest(FetchEventContext(supervisor, properties), request))
+            httpVersion <- IO.fromEither(HttpVersion.fromString(properties.httpProtocol))
+            _ <- routes(request
+              .withHttpVersion(httpVersion)
+              .withAttribute(FetchEventContext.key, FetchEventContext(supervisor, properties)))
               .map(toResponse[IO])
               .foldF(IO.unit)(r => IO(event.respondWith(r)))
           } yield ()
@@ -55,14 +60,21 @@ trait FetchEventListener extends IOSetup {
 
 }
 
-final case class FetchEventContext[F[_]](
-    supervisor: Supervisor[F],
+final case class FetchEventContext(
+    supervisor: Supervisor[IO],
     properties: IncomingRequestCfProperties)
+
+object FetchEventContext {
+  private[worker] val key = Key.newKey[SyncIO, FetchEventContext].unsafeRunSync()
+  def apply(request: Request[IO]): IO[FetchEventContext] =
+    IO.fromEither(request.attributes.lookup(key).toRight(new NoSuchElementException))
+}
 
 final case class IncomingRequestCfProperties(
     asn: String,
     colo: String,
     country: Option[String],
+    httpProtocol: String,
     requestPriority: Option[String],
     tlsCipher: String,
     tlsClientAuth: Option[Json],

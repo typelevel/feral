@@ -30,6 +30,7 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import org.http4s.Method
 import org.http4s.Uri
+import org.http4s.Status
 
 package object worker {
 
@@ -43,15 +44,21 @@ package object worker {
   private[worker] def fromRequest[F[_]](req: facade.Request)(implicit F: Async[F]): F[Request[F]] = for {
     method <- F.fromEither(Method.fromString(req.method))
     uri <- F.fromEither(Uri.fromString(req.url))
-  } yield Request(method, uri)
+    headers = fromHeaders(req.headers)
+    body = fromReadableStream(req.body)
+  } yield Request(method, uri, headers = headers, body = body)
 
   private[worker] def toRequest[F[_]](req: Request[F]): facade.Request = ???
 
-  private[worker] def fromResponse[F[_]](req: facade.Response): F[Response[F]] = ???
+  private[worker] def fromResponse[F[_]](res: facade.Response)(implicit F: Async[F]): F[Response[F]] = for {
+    status <- F.fromEither(Status.fromIntAndReason(res.status, res.statusText))
+    headers = fromHeaders(res.headers)
+    body = fromReadableStream(res.body)
+  } yield Response(status, headers = headers, body = body)
 
   private[worker] def toResponse[F[_]](req: Response[F]): facade.Response = ???
 
-  private[worker] def toDomHeaders(headers: Headers): facade.Headers =
+  private[worker] def toHeaders(headers: Headers): facade.Headers =
     new facade.Headers(
       headers
         .headers
@@ -63,7 +70,7 @@ package object worker {
         .toMap
         .toJSDictionary)
 
-  private[worker] def fromDomHeaders(headers: facade.Headers): Headers =
+  private[worker] def fromHeaders(headers: facade.Headers): Headers =
     Headers(
       headers.toIterable.map { header => header(0) -> header(1) }.toList
     )
