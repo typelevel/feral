@@ -40,9 +40,7 @@ lazy val root =
       lambdaEvents.jvm,
       lambdaApiGatewayProxyHttp4s.js,
       lambdaApiGatewayProxyHttp4s.jvm,
-      cloudflareWorker,
-      cloudflareWorkerFetch,
-      cloudflareWorkerScheduled
+      cloudflareWorker
     )
     .enablePlugins(NoPublishPlugin)
 
@@ -107,25 +105,9 @@ lazy val cloudflareWorker = project
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "co.fs2" %%% "fs2-core" % fs2Version,
-      "io.circe" %%% "circe-scalajs" % circeVersion
+      "io.circe" %%% "circe-generic" % circeVersion,
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "org.http4s" %%% "http4s-client" % http4sVersion
     )
-  )
+  ).dependsOn(core.js)
   
-lazy val cloudflareWorkerFetch = project
-  .in(file("cloudflare-worker-fetch"))
-  .enablePlugins(ScalaJSPlugin)
-  .settings(
-    name := "feral-cloudflare-worker-fetch",
-    libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-core" % http4sVersion
-    )
-  )
-  .dependsOn(core.js, cloudflareWorker)
-
-lazy val cloudflareWorkerScheduled = project
-  .in(file("cloudflare-worker-scheduled"))
-  .enablePlugins(ScalaJSPlugin)
-  .settings(
-    name := "feral-cloudflare-worker-scheduled"
-  )
-  .dependsOn(core.js, cloudflareWorker)

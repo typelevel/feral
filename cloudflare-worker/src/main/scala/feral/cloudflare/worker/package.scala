@@ -16,12 +16,20 @@
 
 package feral.cloudflare
 
+import cats.effect.kernel.Async
+import cats.effect.kernel.Resource
+import cats.syntax.all._
+import fs2.Stream
+import org.http4s.Header
+import org.http4s.Headers
+import org.http4s.Request
+import org.http4s.Response
+
 import scala.annotation.nowarn
 import scala.scalajs.js
-import cats.effect.kernel.Async
-import fs2.Stream
-import cats.syntax.all._
-import cats.effect.kernel.Resource
+import scala.scalajs.js.JSConverters._
+import org.http4s.Method
+import org.http4s.Uri
 
 package object worker {
 
@@ -31,6 +39,34 @@ package object worker {
   private[worker] def addEventListener[E <: facade.Event](
       `type`: String,
       listener: js.Function1[E, Unit]): Unit = js.native
+
+  private[worker] def fromRequest[F[_]](req: facade.Request)(implicit F: Async[F]): F[Request[F]] = for {
+    method <- F.fromEither(Method.fromString(req.method))
+    uri <- F.fromEither(Uri.fromString(req.url))
+  } yield Request(method, uri)
+
+  private[worker] def toRequest[F[_]](req: Request[F]): facade.Request = ???
+
+  private[worker] def fromResponse[F[_]](req: facade.Response): F[Response[F]] = ???
+
+  private[worker] def toResponse[F[_]](req: Response[F]): facade.Response = ???
+
+  private[worker] def toDomHeaders(headers: Headers): facade.Headers =
+    new facade.Headers(
+      headers
+        .headers
+        .view
+        .map {
+          case Header.Raw(name, value) =>
+            name.toString -> value
+        }
+        .toMap
+        .toJSDictionary)
+
+  private[worker] def fromDomHeaders(headers: facade.Headers): Headers =
+    Headers(
+      headers.toIterable.map { header => header(0) -> header(1) }.toList
+    )
 
   private[worker] def fromReadableStream[F[_]](
       rs: facade.ReadableStream[js.typedarray.Uint8Array])(
@@ -45,6 +81,8 @@ package object worker {
         }
       }
     }
+
+  private[worker] def toReadableStream[F[_]](s: Stream[F, Byte]): facade.ReadableStream[js.typedarray.Uint8Array] = ???
 
   private[worker] def closeReadableStream[F[_], A](
       rs: facade.ReadableStream[A],

@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package feral
-package cloudflare.worker
+package feral.cloudflare.worker.facade
 
-import cats.effect.IO
+import scala.scalajs.js
+import scala.scalajs.js.|
 
-trait ScheduledEventListener extends IOSetup {
-
-  def apply(event: ScheduledEvent, setup: Setup): IO[Unit]
-
-  def main(args: Array[String]): Unit =
-    addEventListener[facade.ScheduledEvent](
-      "scheduled",
-      event =>
-        event.waitUntil(
-          setupMemo.flatMap(apply(ScheduledEvent(event), _)).unsafeToPromise()(runtime)))
-
+@js.native
+private[worker] sealed trait FetchEvent extends Event {
+  def request: Request = js.native
+  def respondWith(response: Response | js.Promise[Response]): Unit
 }
