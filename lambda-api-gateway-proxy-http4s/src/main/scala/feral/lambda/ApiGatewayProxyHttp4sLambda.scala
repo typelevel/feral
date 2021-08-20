@@ -31,12 +31,14 @@ import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
 import org.typelevel.vault.Key
+import org.typelevel.vault.Vault
 
 abstract class ApiGatewayProxyHttp4sLambda
     extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
 
   val ContextKey = Key.newKey[SyncIO, Context].unsafeRunSync()
-  
+  val EventKey = Key.newKey[SyncIO, ApiGatewayProxyEventV2].unsafeRunSync()
+
   def routes: Resource[IO, HttpRoutes[IO]]
 
   protected type Setup = HttpRoutes[IO]
@@ -55,8 +57,12 @@ abstract class ApiGatewayProxyHttp4sLambda
           Stream.fromOption[IO](event.body).through(fs2.text.base64.decode)
         else
           Stream.fromOption[IO](event.body).through(fs2.text.utf8.encode)
-      request = Request(method, uri, headers = headers, body = requestBody)
-        .withAttribute(ContextKey, context)
+      request = Request(
+        method,
+        uri,
+        headers = headers,
+        body = requestBody,
+        attributes = Vault.empty.insert(ContextKey, context).insert(EventKey, event))
       response <- routes(request).getOrElse(Response.notFound[IO])
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- (if (isBase64Encoded)
