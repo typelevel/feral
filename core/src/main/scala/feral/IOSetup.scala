@@ -15,17 +15,31 @@
  */
 
 package feral
-package lambda
 
+import cats.effect.unsafe.IORuntime
+import cats.effect.kernel.Resource
 import cats.effect.IO
-import io.circe.Decoder
-import io.circe.Encoder
+import cats.effect.kernel.Deferred
+import cats.syntax.all._
 
-abstract class IOLambda[Event, Result](
-    implicit private[lambda] val decoder: Decoder[Event],
-    private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
+trait IOSetup {
+  
+  protected def runtime: IORuntime = IORuntime.global
 
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+  protected type Setup
+  protected val setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
+
+  private[feral] final val setupMemo: IO[Setup] = {
+    val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
+    setup
+      .attempt
+      .allocated
+      .flatTap {
+        case (setup, _) =>
+          deferred.complete(setup)
+      }
+      .unsafeRunAndForget()(runtime)
+    deferred.get.rethrow
+  }
+
 }

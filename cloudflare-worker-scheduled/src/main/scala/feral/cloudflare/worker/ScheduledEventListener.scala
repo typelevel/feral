@@ -15,17 +15,19 @@
  */
 
 package feral
-package lambda
+package cloudflare.worker
 
 import cats.effect.IO
-import io.circe.Decoder
-import io.circe.Encoder
 
-abstract class IOLambda[Event, Result](
-    implicit private[lambda] val decoder: Decoder[Event],
-    private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
+trait ScheduledEventListener extends IOSetup {
 
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+  def apply(event: ScheduledEvent, setup: Setup): IO[Unit]
+
+  def main(args: Array[String]): Unit =
+    addEventListener[facade.ScheduledEvent](
+      "scheduled",
+      event =>
+        event.waitUntil(
+          setupMemo.flatMap(apply(ScheduledEvent(event), _)).unsafeToPromise()(runtime)))
+
 }
