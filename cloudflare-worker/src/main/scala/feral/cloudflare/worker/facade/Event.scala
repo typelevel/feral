@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package feral
-package lambda
+package feral.cloudflare.worker.facade
 
-import cats.effect.IO
-import io.circe.Decoder
-import io.circe.Encoder
+import scala.annotation.nowarn
+import scala.scalajs.js
 
-abstract class IOLambda[Event, Result](
-    implicit private[lambda] val decoder: Decoder[Event],
-    private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
-
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+@js.native
+private[worker] trait Event extends js.Object {
+  @nowarn def waitUntil(promise: js.Promise[Unit]): Unit = js.native
 }

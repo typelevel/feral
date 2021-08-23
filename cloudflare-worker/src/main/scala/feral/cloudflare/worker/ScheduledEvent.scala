@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package feral
-package lambda
+package feral.cloudflare.worker
 
-import cats.effect.IO
-import io.circe.Decoder
-import io.circe.Encoder
+import scala.scalajs.js
 
-abstract class IOLambda[Event, Result](
-    implicit private[lambda] val decoder: Decoder[Event],
-    private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
+final case class ScheduledEvent(cron: String, scheduledTime: js.Date)
 
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+object ScheduledEvent {
+  private[worker] def apply(event: facade.ScheduledEvent): ScheduledEvent =
+    ScheduledEvent(event.cron, new js.Date(event.scheduledTime))
 }
