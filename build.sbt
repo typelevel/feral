@@ -34,6 +34,8 @@ lazy val root =
   project
     .in(file("."))
     .aggregate(
+      core.js,
+      core.jvm,
       lambda.js,
       lambda.jvm,
       lambdaEvents.js,
