@@ -14,38 +14,18 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral
+package lambda
 
-import cats.effect.Deferred
 import cats.effect.IO
-import cats.effect.Resource
-import cats.effect.unsafe.IORuntime
-import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.Encoder
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
     private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result] {
-
-  protected def runtime: IORuntime = IORuntime.global
-
-  protected type Setup
-  protected val setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
-
-  private[lambda] final val setupMemo: IO[Setup] = {
-    val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
-    setup
-      .attempt
-      .allocated
-      .flatTap {
-        case (setup, _) =>
-          deferred.complete(setup)
-      }
-      .unsafeRunAndForget()(runtime)
-    deferred.get.rethrow
-  }
+) extends IOLambdaPlatform[Event, Result]
+    with IOSetup {
 
   def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
 }
