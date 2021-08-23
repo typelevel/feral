@@ -34,20 +34,32 @@ lazy val root =
   project
     .in(file("."))
     .aggregate(
+      core.js,
+      core.jvm,
       lambda.js,
       lambda.jvm,
       lambdaEvents.js,
       lambdaEvents.jvm,
       lambdaApiGatewayProxyHttp4s.js,
-      lambdaApiGatewayProxyHttp4s.jvm)
+      lambdaApiGatewayProxyHttp4s.jvm
+    )
     .enablePlugins(NoPublishPlugin)
+
+lazy val core = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("core"))
+  .settings(
+    name := "feral-core",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion
+    )
+  )
 
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .in(file("lambda"))
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "io.circe" %%% "circe-core" % circeVersion
     )
   )
@@ -63,6 +75,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
+  .dependsOn(core)
 
 lazy val lambdaEvents = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
