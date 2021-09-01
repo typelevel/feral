@@ -36,6 +36,8 @@ lazy val root =
     .aggregate(
       core.js,
       core.jvm,
+      cloudformationCustomResource.js,
+      cloudformationCustomResource.jvm,
       lambda.js,
       lambda.jvm,
       lambdaEvents.js,
@@ -97,3 +99,20 @@ lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .dependsOn(lambda, lambdaEvents)
+
+lazy val cloudformationCustomResource = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("cloudformation-custom-resource"))
+  .settings(
+    name := "feral-cloudformation-custom-resource",
+    scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => Seq("-Ywarn-macros:after")
+      case _ => Nil
+    }),
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-generic" % circeVersion,
+      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.http4s" %%% "http4s-circe" % http4sVersion,
+    )
+  )
+  .dependsOn(lambda)
