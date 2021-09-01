@@ -23,7 +23,7 @@ ThisBuild / organizationName := "Typelevel"
 ThisBuild / publishGithubUser := "armanbilge"
 ThisBuild / publishFullName := "Arman Bilge"
 
-ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("3.0.2", "2.12.14", "2.13.6")
 
 val catsEffectVersion = "3.2.3"
 val circeVersion = "0.14.1"
