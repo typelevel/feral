@@ -1,38 +1,43 @@
 package feral
 
-import cats.implicits._
-import shapeless.tag.@@
+import cats.syntax.all._
 import io.circe._
 import io.circe.syntax._
 import io.circe.generic.semiauto._
+import monix.newtypes._
+import org.http4s.Uri
+import org.http4s.circe.CirceInstances
 
 package object cloudformation {
-  type PhysicalResourceId = String @@ PhysicalResourceIdTag
-  type StackId = String @@ StackIdTag
-  type RequestId = String @@ RequestIdTag
-  type LogicalResourceId = String @@ LogicalResourceIdTag
-  type ResourceType = String @@ ResourceTypeTag
-
-  val tagPhysicalResourceId: String => PhysicalResourceId = shapeless.tag[PhysicalResourceIdTag][String]
-  private[cloudformation] val tagStackId: String => StackId = shapeless.tag[StackIdTag][String]
-  private[cloudformation] val tagRequestId: String => RequestId = shapeless.tag[RequestIdTag][String]
-  private[cloudformation] val tagLogicalResourceId: String => LogicalResourceId = shapeless.tag[LogicalResourceIdTag][String]
-  private[cloudformation] val tagResourceType: String => ResourceType = shapeless.tag[ResourceTypeTag][String]
-
-  private[cloudformation] implicit def encodeTaggedString[A]: Encoder[String @@ A] = Encoder[String].narrow
-  private[cloudformation] implicit def decodeTaggedString[A]: Decoder[String @@ A] = Decoder[String].map(shapeless.tag[A][String])
+  type PhysicalResourceId = PhysicalResourceId.Type
+  type StackId = StackId.Type
+  type RequestId = RequestId.Type
+  type LogicalResourceId = LogicalResourceId.Type
+  type ResourceType = ResourceType.Type
 }
 
 package cloudformation {
 
-  import org.http4s.Uri
-  import org.http4s.circe._
-
-  trait PhysicalResourceIdTag
-  trait StackIdTag
-  trait RequestIdTag
-  trait LogicalResourceIdTag
-  trait ResourceTypeTag
+  object PhysicalResourceId extends NewtypeWrapped[String] {
+    implicit val PhysicalResourceIdDecoder: Decoder[PhysicalResourceId] = derive[Decoder]
+    implicit val PhysicalResourceIdEncoder: Encoder[PhysicalResourceId] = derive[Encoder]
+  }
+  object StackId extends NewtypeWrapped[String] {
+    implicit val StackIdDecoder: Decoder[StackId] = derive[Decoder]
+    implicit val StackIdEncoder: Encoder[StackId] = derive[Encoder]
+  }
+  object RequestId extends NewtypeWrapped[String] {
+    implicit val RequestIdDecoder: Decoder[RequestId] = derive[Decoder]
+    implicit val RequestIdEncoder: Encoder[RequestId] = derive[Encoder]
+  }
+  object LogicalResourceId extends NewtypeWrapped[String] {
+    implicit val LogicalResourceIdDecoder: Decoder[LogicalResourceId] = derive[Decoder]
+    implicit val LogicalResourceIdEncoder: Encoder[LogicalResourceId] = derive[Encoder]
+  }
+  object ResourceType extends NewtypeWrapped[String] {
+    implicit val ResourceTypeDecoder: Decoder[ResourceType] = derive[Decoder]
+    implicit val ResourceTypeEncoder: Encoder[ResourceType] = derive[Encoder]
+  }
 
   sealed trait CloudFormationRequestType
   object CloudFormationRequestType {
@@ -66,9 +71,10 @@ package cloudformation {
       case Failed => "FAILED".asJson
     }
 
-    implicit val decoder: Decoder[RequestResponseStatus] = Decoder[String].map {
-      case "SUCCESS" => Success
-      case "FAILED" => Failed
+    implicit val decoder: Decoder[RequestResponseStatus] = Decoder[String].emap {
+      case "SUCCESS" => Success.asRight
+      case "FAILED" => Failed.asRight
+      case other => s"Invalid response status: $other".asLeft
     }
   }
 
@@ -82,9 +88,9 @@ package cloudformation {
                                                     ResourceProperties: A,
                                                     OldResourceProperties: Option[JsonObject])
 
-  object CloudFormationCustomResourceRequest {
-    implicit def CloudFormationCustomResourceRequestDecoder[A : Decoder]: Decoder[CloudFormationCustomResourceRequest[A]] = deriveDecoder[CloudFormationCustomResourceRequest[A]]
-    implicit def CloudFormationCustomResourceRequestEncoder[A : Encoder]: Encoder[CloudFormationCustomResourceRequest[A]] = deriveEncoder[CloudFormationCustomResourceRequest[A]]
+  object CloudFormationCustomResourceRequest extends CirceInstances {
+    implicit def CloudFormationCustomResourceRequestDecoder[A: Decoder]: Decoder[CloudFormationCustomResourceRequest[A]] = deriveDecoder[CloudFormationCustomResourceRequest[A]]
+    implicit def CloudFormationCustomResourceRequestEncoder[A: Encoder]: Encoder[CloudFormationCustomResourceRequest[A]] = deriveEncoder[CloudFormationCustomResourceRequest[A]]
   }
 
   case class CloudFormationCustomResourceResponse(Status: RequestResponseStatus,
@@ -104,7 +110,7 @@ package cloudformation {
                                 data: Option[A])
 
   object HandlerResponse {
-    implicit def HandlerResponseCodec[A : Codec]: Codec[HandlerResponse[A]] = deriveCodec[HandlerResponse[A]]
+    implicit def HandlerResponseCodec[A: Encoder : Decoder]: Codec[HandlerResponse[A]] = deriveCodec[HandlerResponse[A]]
   }
 
   object MissingResourceProperties extends RuntimeException
