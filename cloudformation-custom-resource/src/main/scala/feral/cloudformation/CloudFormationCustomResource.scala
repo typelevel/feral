@@ -22,23 +22,25 @@ trait CloudFormationCustomResource[F[_], Input, Output] {
   def deleteResource(event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
 }
 
-abstract class CloudFormationCustomResourceHandler[CfnSetup, Input : Decoder, Output: Encoder]
+abstract class CloudFormationCustomResourceHandler[Input : Decoder, Output: Encoder]
   extends IOLambda[CloudFormationCustomResourceRequest[Input], Unit] {
-  override protected type Setup = (Client[IO], CfnSetup)
+  type Setup = (Client[IO], CloudFormationCustomResource[IO, Input, Output])
 
-  def cfnSetup: Resource[IO, CfnSetup]
-  def handler(setup: CfnSetup): CloudFormationCustomResource[IO, Input, Output]
+  override final def setup: Resource[IO, Setup] =
+    client.mproduct(handler)
 
-  override protected def setup: Resource[IO, Setup] =
-    (EmberClientBuilder.default[IO].build, cfnSetup).parTupled
+  protected def client: Resource[IO, Client[IO]] =
+    EmberClientBuilder.default[IO].build
+
+  def handler(client: Client[IO]): Resource[IO, CloudFormationCustomResource[IO, Input, Output]]
 
   override def apply(event: CloudFormationCustomResourceRequest[Input],
                      context: Context,
                      setup: Setup): IO[Option[Unit]] =
     (event.RequestType match {
-      case CreateRequest => handler(setup._2).createResource(event)
-      case UpdateRequest => handler(setup._2).updateResource(event)
-      case DeleteRequest => handler(setup._2).deleteResource(event)
+      case CreateRequest => setup._2.createResource(event)
+      case UpdateRequest => setup._2.updateResource(event)
+      case DeleteRequest => setup._2.deleteResource(event)
       case OtherRequestType(other) => illegalRequestType(other)
     })
       .attempt
