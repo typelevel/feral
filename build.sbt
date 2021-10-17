@@ -27,7 +27,7 @@ ThisBuild / crossScalaVersions := Seq("3.0.2", "2.12.15", "2.13.6")
 
 val catsEffectVersion = "3.2.9"
 val circeVersion = "0.14.1"
-val fs2Version = "3.1.5"
+val fs2Version = "3.1.6"
 val http4sVersion = "0.23.6"
 
 lazy val root =
