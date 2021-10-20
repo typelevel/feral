@@ -21,11 +21,13 @@ import cats.effect.IO
 import io.circe.Decoder
 import io.circe.Encoder
 
-abstract class IOLambda[Event, Result](
+abstract class Lambda[F[_], Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
     private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
+) extends LambdaPlatform[F, Event, Result]
+    with Feral[F] {
 
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+  def apply(event: Event, context: Context[F], setup: Setup): F[Option[Result]]
 }
+
+trait IOLambda[Event, Result] extends Lambda[IO, Event, Result] with FeralIO

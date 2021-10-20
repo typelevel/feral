@@ -16,14 +16,15 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.effect.kernel.Sync
 import com.amazonaws.services.lambda.runtime
 
 import scala.concurrent.duration._
 
 private[lambda] trait ContextCompanionPlatform {
 
-  private[lambda] def fromJava(context: runtime.Context): Context =
+  private[lambda] def fromJava[F[_]](context: runtime.Context)(
+      implicit F: Sync[F]): Context[F] =
     Context(
       context.getFunctionName(),
       context.getFunctionVersion(),
@@ -53,7 +54,7 @@ private[lambda] trait ContextCompanionPlatform {
           )
         )
       },
-      IO(context.getRemainingTimeInMillis().millis)
+      F.delay(context.getRemainingTimeInMillis().millis)
     )
 
 }

@@ -17,8 +17,8 @@
 package feral.lambda
 
 import cats.data.OptionT
-import cats.effect.IO
 import cats.effect.kernel.Resource
+import cats.syntax.all._
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
 import io.circe
 
@@ -26,35 +26,35 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
-private[lambda] abstract class IOLambdaPlatform[Event, Result]
-    extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
+private[lambda] abstract class LambdaPlatform[F[_], Event, Result]
+    extends lambdaRuntime.RequestStreamHandler { this: Lambda[F, Event, Result] =>
 
   final def handleRequest(
       input: InputStream,
       output: OutputStream,
-      context: lambdaRuntime.Context): Unit =
+      context: lambdaRuntime.Context): Unit = dispatcher.unsafeRunSync {
     Resource
       .eval {
         for {
           setup <- setupMemo
           event <- fs2
             .io
-            .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
+            .readInputStream(input.pure, 8192, closeAfterUse = false)
             .through(circe.fs2.byteStreamParser)
-            .through(circe.fs2.decoder[IO, Event])
+            .through(circe.fs2.decoder[F, Event])
             .head
             .compile
             .lastOrError
-          context <- IO(Context.fromJava(context))
-          _ <- OptionT(apply(event, context, setup)).foldF(IO.unit) { result =>
+          context <- F.delay(Context.fromJava(context))
+          _ <- OptionT(apply(event, context, setup)).foldF(F.unit) { result =>
             // TODO can circe write directly to output?
-            IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
+            F.delay(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
           }
         } yield ()
       }
-      .onFinalize(IO(input.close()))
-      .onFinalize(IO(output.close()))
+      .onFinalize(F.delay(input.close()))
+      .onFinalize(F.delay(output.close()))
       .use_
-      .unsafeRunSync()(runtime)
+  }
 
 }

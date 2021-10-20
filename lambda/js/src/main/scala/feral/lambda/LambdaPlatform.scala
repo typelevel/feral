@@ -16,21 +16,23 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.syntax.all._
 import io.circe.scalajs._
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
 
-private[lambda] trait IOLambdaPlatform[Event, Result] {
-  this: IOLambda[Event, Result] =>
+private[lambda] trait LambdaPlatform[F[_], Event, Result] {
+  this: Lambda[F, Event, Result] =>
 
   // @JSExportTopLevel("handler") // TODO
   final def handler(event: js.Any, context: facade.Context): js.Promise[js.Any | Unit] =
-    (for {
-      setup <- setupMemo
-      event <- IO.fromEither(decodeJs[Event](event))
-      result <- apply(event, Context.fromJS(context), setup)
-    } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
+    dispatcher.unsafeToPromise {
+      for {
+        setup <- setupMemo
+        event <- decodeJs[Event](event).liftTo
+        result <- apply(event, Context.fromJS(context), setup)
+      } yield result.map(_.asJsAny).orUndefined
+    }
 }

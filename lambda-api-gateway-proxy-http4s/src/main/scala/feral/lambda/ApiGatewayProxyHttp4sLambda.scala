@@ -16,9 +16,9 @@
 
 package feral.lambda
 
-import cats.effect.IO
 import cats.effect.Resource
 import cats.effect.SyncIO
+import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
@@ -33,37 +33,37 @@ import org.http4s.Uri
 import org.typelevel.vault.Key
 import org.typelevel.vault.Vault
 
-abstract class ApiGatewayProxyHttp4sLambda
-    extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
+abstract class ApiGatewayProxyHttp4sLambda[F[_]]
+    extends Lambda[F, ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
 
-  val ContextKey = Key.newKey[SyncIO, Context].unsafeRunSync()
+  val ContextKey = Key.newKey[SyncIO, Context[F]].unsafeRunSync()
   val EventKey = Key.newKey[SyncIO, ApiGatewayProxyEventV2].unsafeRunSync()
 
-  def routes: Resource[IO, HttpRoutes[IO]]
+  def routes: Resource[F, HttpRoutes[F]]
 
-  protected type Setup = HttpRoutes[IO]
-  protected override final val setup: Resource[IO, HttpRoutes[IO]] = routes
+  protected type Setup = HttpRoutes[F]
+  protected override final val setup: Resource[F, HttpRoutes[F]] = routes
 
   override final def apply(
       event: ApiGatewayProxyEventV2,
-      context: Context,
-      routes: HttpRoutes[IO]): IO[Some[ApiGatewayProxyStructuredResultV2]] =
+      context: Context[F],
+      routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
-      method <- IO.fromEither(Method.fromString(event.requestContext.http.method))
-      uri <- IO.fromEither(Uri.fromString(event.rawPath))
+      method <- Method.fromString(event.requestContext.http.method).liftTo
+      uri <- Uri.fromString(event.rawPath).liftTo
       headers = Headers(event.headers.toList)
       requestBody =
         if (event.isBase64Encoded)
-          Stream.fromOption[IO](event.body).through(fs2.text.base64.decode)
+          Stream.fromOption[F](event.body).through(fs2.text.base64.decode)
         else
-          Stream.fromOption[IO](event.body).through(fs2.text.utf8.encode)
+          Stream.fromOption[F](event.body).through(fs2.text.utf8.encode)
       request = Request(
         method,
         uri,
         headers = headers,
         body = requestBody,
         attributes = Vault.empty.insert(ContextKey, context).insert(EventKey, event))
-      response <- routes(request).getOrElse(Response.notFound[IO])
+      response <- routes(request).getOrElse(Response.notFound[F])
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- (if (isBase64Encoded)
                          response.body.through(fs2.text.base64.encode)
