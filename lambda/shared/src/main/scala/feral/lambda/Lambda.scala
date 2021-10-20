@@ -30,4 +30,4 @@ abstract class Lambda[F[_], Event, Result](
   def apply(event: Event, context: Context[F], setup: Setup): F[Option[Result]]
 }
 
-trait IOLambda[Event, Result] extends Lambda[IO, Event, Result] with FeralIO
+trait IOLambda[Event, Result] extends Lambda[IO, Event, Result] with IOFeral

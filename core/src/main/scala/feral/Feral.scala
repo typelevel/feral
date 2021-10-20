@@ -47,7 +47,7 @@ trait Feral[F[_]] {
 
 }
 
-trait FeralIO extends Feral[IO] {
+trait IOFeral extends Feral[IO] {
 
   protected def runtime: IORuntime = IORuntime.global
 
