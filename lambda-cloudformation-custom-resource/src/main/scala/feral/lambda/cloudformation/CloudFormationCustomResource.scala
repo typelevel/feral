@@ -33,9 +33,9 @@ import org.http4s.ember.client.EmberClientBuilder
 import java.io.{PrintWriter, StringWriter}
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
-  def createResource(event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
-  def updateResource(event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
-  def deleteResource(event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
+  def createResource(event: CloudFormationCustomResourceRequest[Input], context: Context): F[HandlerResponse[Output]]
+  def updateResource(event: CloudFormationCustomResourceRequest[Input], context: Context): F[HandlerResponse[Output]]
+  def deleteResource(event: CloudFormationCustomResourceRequest[Input], context: Context): F[HandlerResponse[Output]]
 }
 
 abstract class CloudFormationCustomResourceHandler[Input : Decoder, Output: Encoder]
@@ -54,9 +54,9 @@ abstract class CloudFormationCustomResourceHandler[Input : Decoder, Output: Enco
                      context: Context,
                      setup: Setup): IO[Option[Unit]] =
     (event.RequestType match {
-      case CreateRequest => setup._2.createResource(event)
-      case UpdateRequest => setup._2.updateResource(event)
-      case DeleteRequest => setup._2.deleteResource(event)
+      case CreateRequest => setup._2.createResource(event, context)
+      case UpdateRequest => setup._2.updateResource(event, context)
+      case DeleteRequest => setup._2.deleteResource(event, context)
       case OtherRequestType(other) => illegalRequestType(other)
     })
       .attempt
