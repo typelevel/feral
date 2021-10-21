@@ -25,6 +25,11 @@ ThisBuild / publishFullName := "Arman Bilge"
 
 ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.6")
 
+replaceCommandAlias(
+  "ci",
+  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
+)
+
 val catsEffectVersion = "3.2.9"
 val circeVersion = "0.14.1"
 val fs2Version = "3.1.6"
