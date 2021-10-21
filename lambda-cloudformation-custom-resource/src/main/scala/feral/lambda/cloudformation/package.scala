@@ -94,39 +94,49 @@ package cloudformation {
     }
   }
 
-  case class CloudFormationCustomResourceRequest[A](RequestType: CloudFormationRequestType,
-                                                    ResponseURL: Uri,
-                                                    StackId: StackId,
-                                                    RequestId: RequestId,
-                                                    ResourceType: ResourceType,
-                                                    LogicalResourceId: LogicalResourceId,
-                                                    PhysicalResourceId: Option[PhysicalResourceId],
-                                                    ResourceProperties: A,
-                                                    OldResourceProperties: Option[JsonObject])
+  case class CloudFormationCustomResourceRequest[A](
+      RequestType: CloudFormationRequestType,
+      ResponseURL: Uri,
+      StackId: StackId,
+      RequestId: RequestId,
+      ResourceType: ResourceType,
+      LogicalResourceId: LogicalResourceId,
+      PhysicalResourceId: Option[PhysicalResourceId],
+      ResourceProperties: A,
+      OldResourceProperties: Option[JsonObject])
 
   object CloudFormationCustomResourceRequest extends CirceInstances {
-    implicit def CloudFormationCustomResourceRequestDecoder[A: Decoder]: Decoder[CloudFormationCustomResourceRequest[A]] = deriveDecoder[CloudFormationCustomResourceRequest[A]]
-    implicit def CloudFormationCustomResourceRequestEncoder[A: Encoder]: Encoder[CloudFormationCustomResourceRequest[A]] = deriveEncoder[CloudFormationCustomResourceRequest[A]]
+    implicit def CloudFormationCustomResourceRequestDecoder[A: Decoder]
+        : Decoder[CloudFormationCustomResourceRequest[A]] =
+      deriveDecoder[CloudFormationCustomResourceRequest[A]]
+    implicit def CloudFormationCustomResourceRequestEncoder[A: Encoder]
+        : Encoder[CloudFormationCustomResourceRequest[A]] =
+      deriveEncoder[CloudFormationCustomResourceRequest[A]]
   }
 
-  case class CloudFormationCustomResourceResponse(Status: RequestResponseStatus,
-                                                  Reason: Option[String],
-                                                  PhysicalResourceId: Option[PhysicalResourceId],
-                                                  StackId: StackId,
-                                                  RequestId: RequestId,
-                                                  LogicalResourceId: LogicalResourceId,
-                                                  Data: Json)
+  case class CloudFormationCustomResourceResponse(
+      Status: RequestResponseStatus,
+      Reason: Option[String],
+      PhysicalResourceId: Option[PhysicalResourceId],
+      StackId: StackId,
+      RequestId: RequestId,
+      LogicalResourceId: LogicalResourceId,
+      Data: Json)
 
   object CloudFormationCustomResourceResponse {
-    implicit val CloudFormationCustomResourceResponseDecoder: Decoder[CloudFormationCustomResourceResponse] = deriveDecoder[CloudFormationCustomResourceResponse]
-    implicit val CloudFormationCustomResourceResponseEncoder: Encoder[CloudFormationCustomResourceResponse] = deriveEncoder[CloudFormationCustomResourceResponse]
+    implicit val CloudFormationCustomResourceResponseDecoder
+        : Decoder[CloudFormationCustomResourceResponse] =
+      deriveDecoder[CloudFormationCustomResourceResponse]
+    implicit val CloudFormationCustomResourceResponseEncoder
+        : Encoder[CloudFormationCustomResourceResponse] =
+      deriveEncoder[CloudFormationCustomResourceResponse]
   }
 
-  case class HandlerResponse[A](physicalId: PhysicalResourceId,
-                                data: Option[A])
+  case class HandlerResponse[A](physicalId: PhysicalResourceId, data: Option[A])
 
   object HandlerResponse {
-    implicit def HandlerResponseCodec[A: Encoder : Decoder]: Codec[HandlerResponse[A]] = deriveCodec[HandlerResponse[A]]
+    implicit def HandlerResponseCodec[A: Encoder: Decoder]: Codec[HandlerResponse[A]] =
+      deriveCodec[HandlerResponse[A]]
   }
 
   object MissingResourceProperties extends RuntimeException
