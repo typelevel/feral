@@ -20,10 +20,14 @@ ThisBuild / baseVersion := "0.1"
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / organizationName := "Typelevel"
-ThisBuild / publishGithubUser := "armanbilge"
-ThisBuild / publishFullName := "Arman Bilge"
 
 ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.6")
+
+ThisBuild / developers := List(
+  Developer("armanbilge", "Arman Bilge", "@armanbilge", url("https://github.com/armanbilge")),
+  Developer("bpholt", "Brian Holt", "@bpholt", url("https://github.com/bpholt")),
+  Developer("djspiewak", "Daniel Spiewak", "@djspiewak", url("https://github.com/djspiewak"))
+)
 
 replaceCommandAlias(
   "ci",
