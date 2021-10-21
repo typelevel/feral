@@ -113,7 +113,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "io.monix" %%% "newtypes-core" % "0.0.1",
       "io.circe" %%% "circe-generic" % circeVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
-      "org.http4s" %%% "http4s-circe" % http4sVersion,
+      "org.http4s" %%% "http4s-circe" % http4sVersion
     )
   )
   .dependsOn(lambda)
