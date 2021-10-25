@@ -36,7 +36,7 @@ replaceCommandAlias(
 
 val catsEffectVersion = "3.2.9"
 val circeVersion = "0.14.1"
-val fs2Version = "3.1.6"
+val fs2Version = "3.2.1"
 val http4sVersion = "0.23.6"
 
 lazy val root =
