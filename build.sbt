@@ -21,7 +21,7 @@ ThisBuild / baseVersion := "0.1"
 ThisBuild / organization := "org.typelevel"
 ThisBuild / organizationName := "Typelevel"
 
-ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.7")
 
 ThisBuild / developers := List(
   Developer("armanbilge", "Arman Bilge", "@armanbilge", url("https://github.com/armanbilge")),
