@@ -21,6 +21,7 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
 import io.circe
+import natchez.Trace.ioTrace
 
 import java.io.InputStream
 import java.io.OutputStream
@@ -34,23 +35,25 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
       output: OutputStream,
       context: lambdaRuntime.Context): Unit =
     Resource
-      .eval {
-        for {
-          setup <- setupMemo
-          event <- fs2
-            .io
-            .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
-            .through(circe.fs2.byteStreamParser)
-            .through(circe.fs2.decoder[IO, Event])
-            .head
-            .compile
-            .lastOrError
-          context <- IO(Context.fromJava(context))
-          _ <- OptionT(apply(event, context, setup)).foldF(IO.unit) { result =>
-            // TODO can circe write directly to output?
-            IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
-          }
-        } yield ()
+      .eval(IO(Context.fromJava(context)))
+      .flatMap { (context: Context) =>
+        traceRootSpan(context.functionName).evalMap(ioTrace).evalMap { implicit trace =>
+          for {
+            setup <- setupMemo
+            event <- fs2
+              .io
+              .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
+              .through(circe.fs2.byteStreamParser)
+              .through(circe.fs2.decoder[IO, Event])
+              .head
+              .compile
+              .lastOrError
+            _ <- OptionT(apply(event, context, setup)).foldF(IO.unit) { result =>
+              // TODO can circe write directly to output?
+              IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
+            }
+          } yield ()
+        }
       }
       .onFinalize(IO(input.close()))
       .onFinalize(IO(output.close()))

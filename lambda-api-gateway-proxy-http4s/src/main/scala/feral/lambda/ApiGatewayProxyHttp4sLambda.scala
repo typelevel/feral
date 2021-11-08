@@ -22,6 +22,7 @@ import cats.effect.SyncIO
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
+import natchez.Trace
 import org.http4s.Charset
 import org.http4s.Header
 import org.http4s.Headers
@@ -47,7 +48,8 @@ abstract class ApiGatewayProxyHttp4sLambda
   override final def apply(
       event: ApiGatewayProxyEventV2,
       context: Context,
-      routes: HttpRoutes[IO]): IO[Some[ApiGatewayProxyStructuredResultV2]] =
+      routes: HttpRoutes[IO])(
+      implicit T: Trace[IO]): IO[Some[ApiGatewayProxyStructuredResultV2]] =
     for {
       method <- IO.fromEither(Method.fromString(event.requestContext.http.method))
       uri <- IO.fromEither(Uri.fromString(event.rawPath))

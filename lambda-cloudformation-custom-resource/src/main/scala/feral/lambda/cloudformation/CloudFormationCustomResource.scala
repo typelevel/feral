@@ -16,17 +16,17 @@
 
 package feral.lambda.cloudformation
 
-import cats.effect._
-import cats.effect.kernel.Resource
+import cats.effect.{IO, Resource}
 import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationCustomResourceHandler.stackTraceLines
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import feral.lambda.{Context, IOLambda}
 import io.circe._
 import io.circe.syntax._
+import natchez.Trace
 import org.http4s.Method.POST
-import org.http4s.client.Client
 import org.http4s.circe._
+import org.http4s.client.Client
 import org.http4s.client.dsl.io._
 import org.http4s.ember.client.EmberClientBuilder
 
@@ -59,7 +59,7 @@ abstract class CloudFormationCustomResourceHandler[Input: Decoder, Output: Encod
   override def apply(
       event: CloudFormationCustomResourceRequest[Input],
       context: Context,
-      setup: Setup): IO[Option[Unit]] =
+      setup: Setup)(implicit T: Trace[IO]): IO[Option[Unit]] =
     (event.RequestType match {
       case CreateRequest => setup._2.createResource(event, context)
       case UpdateRequest => setup._2.updateResource(event, context)

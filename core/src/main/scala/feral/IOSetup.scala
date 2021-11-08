@@ -17,10 +17,12 @@
 package feral
 
 import cats.effect.unsafe.IORuntime
-import cats.effect.kernel.Resource
-import cats.effect.IO
-import cats.effect.kernel.Deferred
+import cats.effect.{Deferred, IO, Resource}
 import cats.syntax.all._
+import natchez.Span
+import natchez.noop.NoopSpan
+
+import scala.annotation.nowarn
 
 private[feral] trait IOSetup {
 
@@ -28,6 +30,10 @@ private[feral] trait IOSetup {
 
   protected type Setup
   protected def setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
+
+  @nowarn(value = "msg=parameter value name in method traceRootSpan is never used")
+  protected def traceRootSpan(name: String): Resource[IO, Span[IO]] =
+    Resource.pure(NoopSpan[IO]())
 
   private[feral] final lazy val setupMemo: IO[Setup] = {
     val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]

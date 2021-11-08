@@ -18,8 +18,8 @@ package feral
 package lambda
 
 import cats.effect.IO
-import io.circe.Decoder
-import io.circe.Encoder
+import io.circe.{Decoder, Encoder}
+import natchez.Trace
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
@@ -27,5 +27,6 @@ abstract class IOLambda[Event, Result](
 ) extends IOLambdaPlatform[Event, Result]
     with IOSetup {
 
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+  def apply(event: Event, context: Context, setup: Setup)(
+      implicit T: Trace[IO]): IO[Option[Result]]
 }

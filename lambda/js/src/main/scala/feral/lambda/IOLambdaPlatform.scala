@@ -16,8 +16,10 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
+import cats.syntax.all._
 import io.circe.scalajs._
+import natchez.Trace.ioTrace
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
@@ -26,11 +28,21 @@ import scala.scalajs.js.|
 private[lambda] trait IOLambdaPlatform[Event, Result] {
   this: IOLambda[Event, Result] =>
 
+  private def ioHandler(event: js.Any, context: facade.Context): IO[js.Any | Unit] =
+    Resource
+      .pure(Context.fromJS(context))
+      .flatMap { (context: Context) =>
+        traceRootSpan(context.functionName).evalMap(ioTrace).evalMap { implicit trace =>
+          for {
+            setup <- setupMemo
+            event <- IO.fromEither(decodeJs[Event](event))
+            result <- apply(event, context, setup)
+          } yield result.map(_.asJsAny).orUndefined
+        }
+      }
+      .use(_.pure[IO])
+
   // @JSExportTopLevel("handler") // TODO
   final def handler(event: js.Any, context: facade.Context): js.Promise[js.Any | Unit] =
-    (for {
-      setup <- setupMemo
-      event <- IO.fromEither(decodeJs[Event](event))
-      result <- apply(event, Context.fromJS(context), setup)
-    } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
+    ioHandler(event, context).unsafeToPromise()(runtime)
 }

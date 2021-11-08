@@ -38,6 +38,7 @@ val catsEffectVersion = "3.2.9"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.2"
 val http4sVersion = "0.23.6"
+val natchezVersion = "0.1.5"
 
 lazy val root =
   project
@@ -62,7 +63,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-core",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.tpolecat" %%% "natchez-noop" % natchezVersion, // TODO Rob needs to publish this for SJS
     )
   )
 
@@ -71,7 +74,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion,
+//      "org.tpolecat" %%% "natchez-xray" % natchezVersion, // TODO uncomment when this is published
     )
   )
   .jsSettings(
