@@ -16,9 +16,10 @@
 
 package feral.lambda
 
-import cats.effect.IO
 import cats.effect.Resource
-import cats.effect.SyncIO
+import cats.effect.Sync
+import cats.effect.syntax.all._
+import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
@@ -33,56 +34,52 @@ import org.http4s.Uri
 import org.typelevel.vault.Key
 import org.typelevel.vault.Vault
 
-abstract class ApiGatewayProxyHttp4sLambda
-    extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
+object ApiGatewayProxyHttp4sLambda {
 
-  val ContextKey = Key.newKey[SyncIO, Context].unsafeRunSync()
-  val EventKey = Key.newKey[SyncIO, ApiGatewayProxyEventV2].unsafeRunSync()
-
-  def routes: Resource[IO, HttpRoutes[IO]]
-
-  protected type Setup = HttpRoutes[IO]
-  protected override final val setup: Resource[IO, HttpRoutes[IO]] = routes
-
-  override final def apply(
-      event: ApiGatewayProxyEventV2,
-      context: Context,
-      routes: HttpRoutes[IO]): IO[Some[ApiGatewayProxyStructuredResultV2]] =
+  def apply[F[_]: Sync](
+      f: (Key[Context], Key[ApiGatewayProxyEventV2]) => Resource[F, HttpRoutes[F]])
+      : Resource[F, Lambda[F, ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2]] =
     for {
-      method <- IO.fromEither(Method.fromString(event.requestContext.http.method))
-      uri <- IO.fromEither(Uri.fromString(event.rawPath))
-      headers = Headers(event.headers.toList)
-      requestBody =
-        if (event.isBase64Encoded)
-          Stream.fromOption[IO](event.body).through(fs2.text.base64.decode)
-        else
-          Stream.fromOption[IO](event.body).through(fs2.text.utf8.encode)
-      request = Request(
-        method,
-        uri,
-        headers = headers,
-        body = requestBody,
-        attributes = Vault.empty.insert(ContextKey, context).insert(EventKey, event))
-      response <- routes(request).getOrElse(Response.notFound[IO])
-      isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
-      responseBody <- (if (isBase64Encoded)
-                         response.body.through(fs2.text.base64.encode)
-                       else
-                         response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
-    } yield Some(
-      ApiGatewayProxyStructuredResultV2(
-        response.status.code,
-        response
-          .headers
-          .headers
-          .map {
-            case Header.Raw(name, value) =>
-              name.toString -> value
-          }
-          .toMap,
-        responseBody,
-        isBase64Encoded
+      contextKey <- Key.newKey[F, Context].toResource
+      eventKey <- Key.newKey[F, ApiGatewayProxyEventV2].toResource
+      routes <- f(contextKey, eventKey)
+    } yield { (event: ApiGatewayProxyEventV2, context: Context) =>
+      for {
+        method <- Method.fromString(event.requestContext.http.method).liftTo[F]
+        uri <- Uri.fromString(event.rawPath).liftTo[F]
+        headers = Headers(event.headers.toList)
+        requestBody =
+          if (event.isBase64Encoded)
+            Stream.fromOption[F](event.body).through(fs2.text.base64.decode)
+          else
+            Stream.fromOption[F](event.body).through(fs2.text.utf8.encode)
+        request = Request(
+          method,
+          uri,
+          headers = headers,
+          body = requestBody,
+          attributes = Vault.empty.insert(contextKey, context).insert(eventKey, event))
+        response <- routes(request).getOrElse(Response.notFound[F])
+        isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
+        responseBody <- (if (isBase64Encoded)
+                           response.body.through(fs2.text.base64.encode)
+                         else
+                           response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
+      } yield Some(
+        ApiGatewayProxyStructuredResultV2(
+          response.status.code,
+          response
+            .headers
+            .headers
+            .map {
+              case Header.Raw(name, value) =>
+                name.toString -> value
+            }
+            .toMap,
+          responseBody,
+          isBase64Encoded
+        )
       )
-    )
+    }
 
 }

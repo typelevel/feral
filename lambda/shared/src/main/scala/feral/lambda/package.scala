@@ -15,23 +15,7 @@
  */
 
 package feral
-package lambda
 
-import cats.effect.IO
-import io.circe.Decoder
-import io.circe.Encoder
-import cats.effect.kernel.Resource
-
-abstract class IOLambda[Event, Result](
-    implicit private[lambda] val decoder: Decoder[Event],
-    private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
-
-  final type Setup = Lambda[IO, Event, Result]
-
-  final override protected def setup: Resource[IO, Setup] = run
-
-  def run: Resource[IO, Lambda[IO, Event, Result]]
-
+package object lambda {
+  type Lambda[F[_], Event, Result] = (Event, Context) => F[Option[Result]]
 }
