@@ -21,6 +21,7 @@
 
 package feral.lambda
 
+import cats.effect.std.Random
 import cats.effect.{IO, Resource}
 import feral.IOSetup
 import natchez.xray.{XRay, XRayEnvironment}
@@ -28,10 +29,12 @@ import natchez.{EntryPoint, Span}
 
 trait XRayTracing extends IOSetup {
   private def traceEntryPoint: Resource[IO, EntryPoint[IO]] =
-    Resource.eval(XRayEnvironment[IO].daemonAddress).flatMap {
-      case Some(addr) => XRay.entryPoint(addr)
-      case None => XRay.entryPoint()
-    }
+    Resource.eval(Random.scalaUtilRandom[IO]).flatMap { implicit random =>
+      Resource.eval(XRayEnvironment[IO].daemonAddress).flatMap {
+        case Some(addr) => XRay.entryPoint[IO](addr)
+        case None => XRay.entryPoint[IO]()
+      }
+  }
 
   override protected def traceRootSpan(name: String): Resource[IO, Span[IO]] =
     Resource.eval(XRayEnvironment[IO].kernelFromEnvironment).flatMap { kernel =>
