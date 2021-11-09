@@ -33,15 +33,12 @@ import org.http4s.ember.client.EmberClientBuilder
 import java.io.{PrintWriter, StringWriter}
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
-  def createResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
-  def updateResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
-  def deleteResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+  def createResource(event: CloudFormationCustomResourceRequest[Input], context: Context)(
+      implicit T: Trace[F]): F[HandlerResponse[Output]]
+  def updateResource(event: CloudFormationCustomResourceRequest[Input], context: Context)(
+      implicit T: Trace[F]): F[HandlerResponse[Output]]
+  def deleteResource(event: CloudFormationCustomResourceRequest[Input], context: Context)(
+      implicit T: Trace[F]): F[HandlerResponse[Output]]
 }
 
 abstract class CloudFormationCustomResourceHandler[Input: Decoder, Output: Encoder]
