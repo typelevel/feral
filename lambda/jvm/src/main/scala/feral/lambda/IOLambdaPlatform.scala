@@ -36,7 +36,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
     Resource
       .eval {
         for {
-          setup <- setupMemo
+          lambda <- setupMemo
           event <- fs2
             .io
             .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
@@ -46,7 +46,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .compile
             .lastOrError
           context <- IO(Context.fromJava(context))
-          _ <- OptionT(apply(event, context, setup)).foldF(IO.unit) { result =>
+          _ <- OptionT(lambda(event, context)).foldF(IO.unit) { result =>
             // TODO can circe write directly to output?
             IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
           }

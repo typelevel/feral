@@ -20,6 +20,7 @@ package lambda
 import cats.effect.IO
 import io.circe.Decoder
 import io.circe.Encoder
+import cats.effect.kernel.Resource
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
@@ -27,5 +28,10 @@ abstract class IOLambda[Event, Result](
 ) extends IOLambdaPlatform[Event, Result]
     with IOSetup {
 
-  def apply(event: Event, context: Context, setup: Setup): IO[Option[Result]]
+  final type Setup = ((Event, Context)) => IO[Option[Result]]
+
+  final override protected def setup: Resource[IO, Setup] = run
+
+  def run: Feral[IO, (Event, Context), Option[Result]]
+
 }
