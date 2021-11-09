@@ -16,23 +16,13 @@
 
 package feral.lambda
 
-import cats.effect.IO
-import cats.effect.Resource
-import cats.effect.SyncIO
-import feral.lambda.events.ApiGatewayProxyEventV2
-import feral.lambda.events.ApiGatewayProxyStructuredResultV2
+import cats.effect.{IO, Resource, SyncIO}
+import feral.lambda.events.{ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2}
 import fs2.Stream
-import natchez.Trace
-import org.http4s.Charset
-import org.http4s.Header
-import org.http4s.Headers
-import org.http4s.HttpRoutes
-import org.http4s.Method
-import org.http4s.Request
-import org.http4s.Response
-import org.http4s.Uri
-import org.typelevel.vault.Key
-import org.typelevel.vault.Vault
+import natchez.http4s.NatchezMiddleware
+import natchez.{Span, Trace}
+import org.http4s.{Charset, Header, Headers, HttpRoutes, Method, Request, Response, Uri}
+import org.typelevel.vault.{Key, Vault}
 
 abstract class ApiGatewayProxyHttp4sLambda
     extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
@@ -44,6 +34,8 @@ abstract class ApiGatewayProxyHttp4sLambda
 
   protected type Setup = HttpRoutes[IO]
   protected override final val setup: Resource[IO, HttpRoutes[IO]] = routes
+
+  override protected def traceRootSpan(name: String): Resource[IO, Span[IO]] = super.traceRootSpan(name)
 
   override final def apply(
       event: ApiGatewayProxyEventV2,
@@ -65,7 +57,7 @@ abstract class ApiGatewayProxyHttp4sLambda
         headers = headers,
         body = requestBody,
         attributes = Vault.empty.insert(ContextKey, context).insert(EventKey, event))
-      response <- routes(request).getOrElse(Response.notFound[IO])
+      response <- NatchezMiddleware.server(routes).run(request).getOrElse(Response.notFound[IO])
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- (if (isBase64Encoded)
                          response.body.through(fs2.text.base64.encode)

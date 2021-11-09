@@ -108,7 +108,8 @@ lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-api-gateway-proxy-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-core" % http4sVersion
+      "org.http4s" %%% "http4s-core" % http4sVersion,
+      "org.tpolecat" %% "natchez-http4s" % "0.1.3",
     )
   )
   .dependsOn(lambda, lambdaEvents)
