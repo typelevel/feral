@@ -28,10 +28,10 @@ abstract class IOLambda[Event, Result](
 ) extends IOLambdaPlatform[Event, Result]
     with IOSetup {
 
-  final type Setup = ((Event, Context)) => IO[Option[Result]]
+  final type Setup = (Event, Context) => IO[Option[Result]]
 
   final override protected def setup: Resource[IO, Setup] = run
 
-  def run: Feral[IO, (Event, Context), Option[Result]]
+  def run: Resource[IO, (Event, Context) => IO[Option[Result]]]
 
 }
