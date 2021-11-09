@@ -30,17 +30,16 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
 
   private def ioHandler(event: js.Any, context: facade.Context): IO[js.Any | Unit] =
     Resource
-      .pure(Context.fromJS(context))
-      .flatMap { (context: Context) =>
-        traceRootSpan(context.functionName).evalMap(ioTrace).evalMap { implicit trace =>
+      .pure[IO, Context](Context.fromJS(context))
+      .mproduct(context => traceRootSpan(context.functionName).evalMap(ioTrace))
+      .use {
+        case (context, trace) =>
           for {
             setup <- setupMemo
             event <- IO.fromEither(decodeJs[Event](event))
-            result <- apply(event, context, setup)
+            result <- apply(event, context, setup)(trace)
           } yield result.map(_.asJsAny).orUndefined
-        }
       }
-      .use(_.pure[IO])
 
   // @JSExportTopLevel("handler") // TODO
   final def handler(event: js.Any, context: facade.Context): js.Promise[js.Any | Unit] =
