@@ -34,6 +34,14 @@ replaceCommandAlias(
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
 )
 
+ThisBuild / githubWorkflowBuildPreamble +=
+  WorkflowStep.Use(
+    UseRef.Public("actions", "setup-node", "v2"),
+    name = Some("Setup NodeJS v14 LTS"),
+    params = Map("node-version" -> "14"),
+    cond = Some("matrix.ci == 'ciJS'")
+  )
+
 val catsEffectVersion = "3.2.9"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.2"
