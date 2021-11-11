@@ -21,7 +21,6 @@ import cats.ApplicativeThrow
 import cats.MonadThrow
 import cats.effect.kernel.Resource
 import cats.syntax.all._
-import feral.lambda.Context
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import io.circe._
 import io.circe.syntax._
@@ -36,13 +35,13 @@ import java.io.StringWriter
 trait CloudFormationCustomResource[F[_], Input, Output] {
   def createResource(
       event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+      context: Context[F]): F[HandlerResponse[Output]]
   def updateResource(
       event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+      context: Context[F]): F[HandlerResponse[Output]]
   def deleteResource(
       event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+      context: Context[F]): F[HandlerResponse[Output]]
 }
 
 object CloudFormationCustomResource {

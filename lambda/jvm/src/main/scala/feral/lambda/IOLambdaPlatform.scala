@@ -45,7 +45,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .head
             .compile
             .lastOrError
-          context <- IO(Context.fromJava(context))
+          context <- IO(Context.fromJava[IO](context))
           _ <- OptionT(lambda(event, context)).foldF(IO.unit) { result =>
             // TODO can circe write directly to output?
             IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))

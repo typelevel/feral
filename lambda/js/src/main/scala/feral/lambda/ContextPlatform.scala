@@ -16,13 +16,13 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.effect.Sync
 
 import scala.concurrent.duration._
 
 private[lambda] trait ContextCompanionPlatform {
 
-  private[lambda] def fromJS(context: facade.Context): Context =
+  private[lambda] def fromJS[F[_]: Sync](context: facade.Context): Context[F] =
     Context(
       context.functionName,
       context.functionVersion,
@@ -55,6 +55,6 @@ private[lambda] trait ContextCompanionPlatform {
             )
           )
         },
-      IO(context.getRemainingTimeInMillis().millis)
+      Sync[F].delay(context.getRemainingTimeInMillis().millis)
     )
 }

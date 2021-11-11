@@ -17,5 +17,5 @@
 package feral
 
 package object lambda {
-  type Lambda[F[_], Event, Result] = (Event, Context) => F[Option[Result]]
+  type Lambda[F[_], Event, Result] = (Event, Context[F]) => F[Option[Result]]
 }

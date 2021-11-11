@@ -37,13 +37,13 @@ import org.typelevel.vault.Vault
 object ApiGatewayProxyHttp4sLambda {
 
   def apply[F[_]: Sync](
-      f: (Key[Context], Key[ApiGatewayProxyEventV2]) => Resource[F, HttpRoutes[F]])
+      f: (Key[Context[F]], Key[ApiGatewayProxyEventV2]) => Resource[F, HttpRoutes[F]])
       : Resource[F, Lambda[F, ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2]] =
     for {
-      contextKey <- Key.newKey[F, Context].toResource
+      contextKey <- Key.newKey[F, Context[F]].toResource
       eventKey <- Key.newKey[F, ApiGatewayProxyEventV2].toResource
       routes <- f(contextKey, eventKey)
-    } yield { (event: ApiGatewayProxyEventV2, context: Context) =>
+    } yield { (event: ApiGatewayProxyEventV2, context: Context[F]) =>
       for {
         method <- Method.fromString(event.requestContext.http.method).liftTo[F]
         uri <- Uri.fromString(event.rawPath).liftTo[F]
