@@ -71,7 +71,10 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion,
+      "org.tpolecat" %%% "natchez-core" % "0.1.5+47-0f7e4bf4-SNAPSHOT",
+      "org.tpolecat" %%% "natchez-xray" % "0.1.5+47-0f7e4bf4-SNAPSHOT",
+      "org.tpolecat" %%% "natchez-noop" % "0.1.5+47-0f7e4bf4-SNAPSHOT",
     )
   )
   .jsSettings(
