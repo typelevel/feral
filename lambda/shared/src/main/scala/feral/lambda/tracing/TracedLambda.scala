@@ -17,74 +17,26 @@
 package feral.lambda.tracing
 
 import cats._
-import cats.data._
-import cats.effect.std.Random
+import cats.data.Kleisli
 import cats.effect.{Trace => _, _}
-import natchez._
 import feral.lambda._
-import natchez.noop.NoopSpan
-import natchez.xray.{XRay, XRayEnvironment}
+import natchez._
 
-abstract class TracedLambda[F[_]: MonadCancelThrow, G[_], Event] {
-  def extractKernel(event: Event, context: Context[F]): F[Kernel]
+object TracedLambda {
+  def evalKernel[Event] = new PartiallyAppliedEvalKernel[Event]()
 
-  def runTraced[A](span: Span[F])(ga: G[A]): F[A]
-
-  def apply[Result](entryPoint: EntryPoint[F], fk: F ~> G)(
-      lambda: Lambda[G, Event, Result]): Lambda[F, Event, Result] =
+  def apply[F[_]: MonadCancelThrow, G[_], Event, Result](
+      entryPoint: EntryPoint[F],
+      fk: F ~> G,
+      extractKernel: Kleisli[F, (Event, Context[F]), Kernel])(lambda: Lambda[G, Event, Result])(
+      implicit LT: LiftTrace[F, G]): Lambda[F, Event, Result] =
     (event, context) =>
       Resource
-        .eval(extractKernel(event, context))
+        .eval(extractKernel((event, context)))
         .flatMap { kernel => entryPoint.continueOrElseRoot(context.functionName, kernel) }
-        .use { span => runTraced(span)(lambda(event, context.mapK(fk))) }
+        .use { span => LiftTrace[F, G].lift(span, lambda(event, context.mapK(fk))) }
 }
 
-abstract class KleisliTracedLambda[F[_]: MonadCancelThrow, Event]
-    extends TracedLambda[F, Kleisli[F, Span[F], *], Event] {
-  override def runTraced[A](span: Span[F])(ga: Kleisli[F, Span[F], A]): F[A] = ga(span)
-}
-
-sealed abstract class TracedIO[A] {
-  def run(span: Span[IO]): IO[A]
-}
-
-object TracedIO {
-  def apply[A](f: Trace[IO] => IO[A]): TracedIO[A] =
-    new TracedIO[A] {
-      def run(span: Span[IO]): IO[A] = Trace.ioTrace(span).flatMap(f)
-    }
-}
-
-abstract class TracedIOLambda[Event] extends TracedLambda[IO, TracedIO, Event] {
-  override def runTraced[A](span: Span[IO])(ga: TracedIO[A]): IO[A] = ga.run(span)
-}
-
-class XRayKleisliTracedLambda[F[_]: Sync, Event] extends KleisliTracedLambda[F, Event] {
-  override def extractKernel(event: Event, context: Context[F]): F[Kernel] =
-    XRayEnvironment[F].kernelFromEnvironment
-}
-
-object XRayKleisliTracedLambda {
-  def apply[F[_]: Async, Event, Result](
-      installer: Resource[
-        Kleisli[F, Span[F], *],
-        Lambda[Kleisli[F, Span[F], *], Event, Result]]): Resource[F, Lambda[F, Event, Result]] =
-    installer
-      .mapK(
-        Kleisli.applyK(new NoopSpan[F])
-      ) // TODO does this work? I think yes, b/c I think it only affects the Resource acquisition, not the actual resource?
-      .flatMap(XRayKleisliTracedLambda(_))
-
-  def apply[F[_]: Async, Event, Result](lambda: Lambda[Kleisli[F, Span[F], *], Event, Result])
-      : Resource[F, Lambda[F, Event, Result]] = {
-    Resource.eval(Random.scalaUtilRandom[F]).flatMap { implicit random =>
-      Resource
-        .eval(XRayEnvironment[F].daemonAddress)
-        .flatMap {
-          case Some(addr) => XRay.entryPoint[F](addr)
-          case None => XRay.entryPoint[F]()
-        }
-        .map(new XRayKleisliTracedLambda[F, Event].apply(_, Kleisli.liftK[F, Span[F]])(lambda))
-    }
-  }
+class PartiallyAppliedEvalKernel[Event](private val dummy: Unit = ()) extends AnyVal {
+  def apply[F[_]](fa: F[Kernel]): Kleisli[F, (Event, Context[F]), Kernel] = Kleisli.liftF(fa)
 }
