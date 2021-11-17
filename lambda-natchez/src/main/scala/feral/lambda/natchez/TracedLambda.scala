@@ -16,18 +16,26 @@
 
 package feral.lambda.natchez
 
+import cats.Monad
 import cats.effect.kernel.MonadCancelThrow
+import cats.syntax.all._
 import feral.lambda.Lambda
 import natchez.EntryPoint
 import natchez.Trace
 
 object TracedLambda {
-  def apply[F[_]: MonadCancelThrow, G[_], Event: HasKernel, Result](entryPoint: EntryPoint[F])(
-      lambda: Trace[G] => Lambda[G, Event, Result])(
-      implicit lift: LiftTrace[F, G]): Lambda[F, Event, Result] = { (event, context) =>
+  def apply[F[_]: MonadCancelThrow, G[_]: Monad, Event: HasKernel, Result](
+      entryPoint: EntryPoint[F])(
+      lambda: Trace[G] => Lambda[G, Event, Result]
+  )(implicit lift: LiftTrace[F, G]): Lambda[F, Event, Result] = { (event, context) =>
     val kernel = HasKernel[Event].extract(event)
     entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
-      lift.run(span)(lambda(_)(event, context.mapK(lift.liftK)))
+      lift.run(span) { trace =>
+        trace.put(
+          Tags.arn(context.invokedFunctionArn),
+          Tags.requestId(context.awsRequestId)
+        ) >> lambda(trace)(event, context.mapK(lift.liftK))
+      }
     }
   }
 }
