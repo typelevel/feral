@@ -19,7 +19,6 @@ package feral.lambda.tracing
 import cats.data._
 import cats.effect.std.Random
 import cats.effect.{Trace => _, _}
-import cats.~>
 import feral.lambda._
 import feral.lambda.tracing.TracedLambda.evalKernel
 import natchez._
@@ -27,22 +26,19 @@ import natchez.noop.NoopSpan
 import natchez.xray.{XRay, XRayEnvironment}
 
 object XRayTracedLambda {
-  def apply[F[_]: Async, Event, Result](
-      installer: Resource[
-        Kleisli[F, Span[F], *],
-        Lambda[Kleisli[F, Span[F], *], Event, Result]]): Resource[F, Lambda[F, Event, Result]] =
+  def apply[F[_] : Async, Event, Result](installer: Resource[Kleisli[F, Span[F], *], Lambda[Kleisli[F, Span[F], *], Event, Result]])
+                                        (implicit LT: LiftTrace[F, Kleisli[F, Span[F], *]]): Resource[F, Lambda[F, Event, Result]] =
     installer
-      .mapK(Kleisli.applyK(new NoopSpan[F]))
-      .flatMap(XRayTracedLambda(Kleisli.liftK[F, Span[F]])(_))
+      .mapK(Kleisli.applyK(new NoopSpan[F]()))
+      .flatMap(XRayTracedLambda.usingEnvironment[F, Kleisli[F, Span[F], *], Event, Result](_))
 
-  def apply[F[_]: Async, G[_], Event, Result](fk: F ~> G)(lambda: Lambda[G, Event, Result])(
-      implicit LT: LiftTrace[F, G]): Resource[F, Lambda[F, Event, Result]] =
-    XRayTracedLambda(fk, evalKernel[Event](XRayEnvironment[F].kernelFromEnvironment))(lambda)
+  def usingEnvironment[F[_] : Async, G[_], Event, Result](lambda: Lambda[G, Event, Result])
+                                                         (implicit LT: LiftTrace[F, G]): Resource[F, Lambda[F, Event, Result]] =
+    XRayTracedLambda(evalKernel[Event](XRayEnvironment[F].kernelFromEnvironment))(lambda)
 
-  def apply[F[_]: Async, G[_], Event, Result](
-      fk: F ~> G,
-      extractKernel: Kleisli[F, (Event, Context[F]), Kernel])(lambda: Lambda[G, Event, Result])(
-      implicit LT: LiftTrace[F, G]): Resource[F, Lambda[F, Event, Result]] = {
+  def apply[F[_] : Async, G[_], Event, Result](extractKernel: Kleisli[F, (Event, Context[F]), Kernel])
+                                              (lambda: Lambda[G, Event, Result])
+                                              (implicit LT: LiftTrace[F, G]): Resource[F, Lambda[F, Event, Result]] = {
     Resource.eval(Random.scalaUtilRandom[F]).flatMap { implicit random =>
       Resource
         .eval(XRayEnvironment[F].daemonAddress)
@@ -50,7 +46,7 @@ object XRayTracedLambda {
           case Some(addr) => XRay.entryPoint[F](addr)
           case None => XRay.entryPoint[F]()
         }
-        .map(TracedLambda(_, fk, extractKernel)(lambda))
+        .map(TracedLambda(_, extractKernel)(lambda))
     }
   }
 }

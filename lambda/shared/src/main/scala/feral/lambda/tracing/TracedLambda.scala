@@ -16,7 +16,6 @@
 
 package feral.lambda.tracing
 
-import cats._
 import cats.data.Kleisli
 import cats.effect.{Trace => _, _}
 import feral.lambda._
@@ -25,16 +24,15 @@ import natchez._
 object TracedLambda {
   def evalKernel[Event] = new PartiallyAppliedEvalKernel[Event]()
 
-  def apply[F[_]: MonadCancelThrow, G[_], Event, Result](
-      entryPoint: EntryPoint[F],
-      fk: F ~> G,
-      extractKernel: Kleisli[F, (Event, Context[F]), Kernel])(lambda: Lambda[G, Event, Result])(
-      implicit LT: LiftTrace[F, G]): Lambda[F, Event, Result] =
+  def apply[F[_] : MonadCancelThrow, G[_], Event, Result](entryPoint: EntryPoint[F],
+                                                          extractKernel: Kleisli[F, (Event, Context[F]), Kernel])
+                                                         (lambda: Lambda[G, Event, Result])
+                                                         (implicit LT: LiftTrace[F, G]): Lambda[F, Event, Result] =
     (event, context) =>
       Resource
         .eval(extractKernel((event, context)))
         .flatMap { kernel => entryPoint.continueOrElseRoot(context.functionName, kernel) }
-        .use { span => LiftTrace[F, G].lift(span, lambda(event, context.mapK(fk))) }
+        .use(LiftTrace[F, G].run(_)((_: Trace[G]) => lambda(event, context.mapK(LiftTrace[F, G].liftK))))
 }
 
 class PartiallyAppliedEvalKernel[Event](private val dummy: Unit = ()) extends AnyVal {

@@ -14,26 +14,36 @@
  * limitations under the License.
  */
 
+// TODO remove and replace with version in Natchez
 package feral.lambda.tracing
 
+import cats.arrow.FunctionK
 import cats.data.Kleisli
 import cats.effect.IO
-import natchez.Span
+import cats.effect.kernel.MonadCancelThrow
+import cats.~>
+import natchez._
 
-// TODO remove and replace with version in Natchez
 trait LiftTrace[F[_], G[_]] {
-  def lift[A](span: Span[F], ga: G[A]): F[A]
+  def run[A](span: Span[F])(f: Trace[G] => G[A]): F[A]
+  def liftK: F ~> G
 }
 
-object LiftTrace {
+object LiftTrace extends LiftTraceLowPriority {
   def apply[F[_], G[_]](implicit LT: LiftTrace[F, G]): LiftTrace[F, G] = LT
 
-  implicit def kleisliInstance[F[_]]: LiftTrace[F, Kleisli[F, Span[F], *]] =
-    new LiftTrace[F, Kleisli[F, Span[F], *]] {
-      def lift[A](span: Span[F], ga: Kleisli[F, Span[F], A]): F[A] = ga(span)
-    }
-
-  implicit val tracedIOInstance: LiftTrace[IO, TracedIO] = new LiftTrace[IO, TracedIO] {
-    override def lift[A](span: Span[IO], ga: TracedIO[A]): IO[A] = ga.run(span)
+  implicit val ioInstance: LiftTrace[IO, IO] = new LiftTrace[IO, IO] {
+    def run[A](span: Span[IO])(f: Trace[IO] => IO[A]): IO[A] =
+      Trace.ioTrace(span).flatMap(f)
+    def liftK: IO ~> IO = FunctionK.id
   }
+}
+
+private[tracing] trait LiftTraceLowPriority {
+  implicit def kleisliInstance[F[_]: MonadCancelThrow]: LiftTrace[F, Kleisli[F, Span[F], *]] =
+    new LiftTrace[F, Kleisli[F, Span[F], *]] {
+      def run[A](span: Span[F])(f: Trace[Kleisli[F, Span[F], *]] => Kleisli[F, Span[F], A]): F[A] =
+        f(Trace.kleisliInstance).run(span)
+      def liftK: F ~> Kleisli[F, Span[F], *] = Kleisli.liftK
+    }
 }
