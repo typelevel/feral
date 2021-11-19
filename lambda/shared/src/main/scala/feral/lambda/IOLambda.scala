@@ -30,8 +30,8 @@ abstract class IOLambda[Event, Result](
 
   final type Setup = Lambda[IO, Event, Result]
 
-  final override protected def setup: Resource[IO, Setup] = run
+  final override protected def setup: Resource[IO, Setup] = handler
 
-  def run: Resource[IO, Lambda[IO, Event, Result]]
+  def handler: Resource[IO, Lambda[IO, Event, Result]]
 
 }
