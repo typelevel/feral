@@ -19,21 +19,18 @@ package feral.lambda
 import cats.data.Kleisli
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import io.circe.Encoder
 
 class LambdaSuite {
 
-  // Test for Nothing type inference
+  // Test for INothing type inference
 
-  def lambda[F[_]]: Lambda[F, Unit, Nothing] = ???
+  def lambda[F[_]]: Lambda[F, Unit, INothing] = ???
 
   def middleware[F[_], Event, Result](lambda: Lambda[Kleisli[F, Unit, *], Event, Result])
       : Resource[F, Lambda[F, Event, Result]] = ???
 
-  implicit def nothingEncoder: Encoder[Nothing] = ???
-
-  class NothingLambda extends IOLambda[Unit, Nothing] {
-    def handler = middleware /*[IO, Unit, Nothing]*/ (lambda[Kleisli[IO, Unit, *]])
+  class NothingLambda extends IOLambda[Unit, INothing] {
+    def handler = middleware(lambda[Kleisli[IO, Unit, *]])
   }
 
   // end test

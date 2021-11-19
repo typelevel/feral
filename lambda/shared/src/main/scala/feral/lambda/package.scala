@@ -18,4 +18,10 @@ package feral
 
 package object lambda {
   type Lambda[F[_], Event, Result] = (Event, Context[F]) => F[Option[Result]]
+
+  /**
+   * Alias for `Nothing` which works better with type inference. Inspired by fs2, but inlined
+   * here to avoid pulling in an otherwise-unnecessary dependency.
+   */
+  type INothing <: Nothing
 }
