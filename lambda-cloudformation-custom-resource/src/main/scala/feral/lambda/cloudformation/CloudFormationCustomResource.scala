@@ -94,7 +94,7 @@ object CloudFormationCustomResource {
       Data = res.data.asJson
     )
 
-  def stackTraceLines(throwable: Throwable): List[String] = {
+  private def stackTraceLines(throwable: Throwable): List[String] = {
     val writer = new StringWriter()
     throwable.printStackTrace(new PrintWriter(writer))
     writer.toString.linesIterator.toList
