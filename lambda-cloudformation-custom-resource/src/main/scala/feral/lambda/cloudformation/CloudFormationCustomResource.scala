@@ -48,7 +48,7 @@ object CloudFormationCustomResource {
 
   def apply[F[_]: MonadThrow, Input, Output: Encoder](client: Client[F])(
       handler: Resource[F, CloudFormationCustomResource[F, Input, Output]])
-      : Resource[F, Lambda[F, CloudFormationCustomResourceRequest[Input], Unit]] =
+      : Resource[F, Lambda[F, CloudFormationCustomResourceRequest[Input], INothing]] =
     handler.map { handler => (event, context) =>
       val http4sClientDsl = new Http4sClientDsl[F] {}
       import http4sClientDsl._
