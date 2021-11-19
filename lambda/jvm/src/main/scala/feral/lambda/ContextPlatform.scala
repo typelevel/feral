@@ -24,7 +24,7 @@ import scala.concurrent.duration._
 private[lambda] trait ContextCompanionPlatform {
 
   private[lambda] def fromJava[F[_]: Sync](context: runtime.Context): Context[F] =
-    Context(
+    new Context(
       context.getFunctionName(),
       context.getFunctionVersion(),
       context.getInvokedFunctionArn(),
@@ -33,18 +33,18 @@ private[lambda] trait ContextCompanionPlatform {
       context.getLogGroupName(),
       context.getLogStreamName(),
       Option(context.getIdentity()).map { identity =>
-        CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
+        new CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
       },
       Option(context.getClientContext()).map { clientContext =>
-        ClientContext(
-          ClientContextClient(
+        new ClientContext(
+          new ClientContextClient(
             clientContext.getClient().getInstallationId(),
             clientContext.getClient().getAppTitle(),
             clientContext.getClient().getAppVersionName(),
             clientContext.getClient().getAppVersionCode(),
             clientContext.getClient().getAppPackageName()
           ),
-          ClientContextEnv(
+          new ClientContextEnv(
             clientContext.getEnvironment().get("platformVersion"),
             clientContext.getEnvironment().get("platform"),
             clientContext.getEnvironment().get("make"),
