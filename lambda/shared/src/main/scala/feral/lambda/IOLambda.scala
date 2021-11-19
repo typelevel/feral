@@ -18,9 +18,9 @@ package feral
 package lambda
 
 import cats.effect.IO
+import cats.effect.kernel.Resource
 import io.circe.Decoder
 import io.circe.Encoder
-import cats.effect.kernel.Resource
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
@@ -30,8 +30,8 @@ abstract class IOLambda[Event, Result](
 
   final type Setup = Lambda[IO, Event, Result]
 
-  final override protected def setup: Resource[IO, Setup] = run
+  final override protected def setup: Resource[IO, Setup] = handler
 
-  def run: Resource[IO, Lambda[IO, Event, Result]]
+  def handler: Resource[IO, Lambda[IO, Event, Result]]
 
 }
