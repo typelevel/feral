@@ -21,18 +21,10 @@ import cats.syntax.all._
 import feral.lambda.Lambda
 import natchez.EntryPoint
 import natchez.Span
-import natchez.Trace
 
 object TracedLambda {
 
-  def apply[F[_]: MonadCancelThrow, G[_], Event: HasKernel, Result](entryPoint: EntryPoint[F])(
-      lambda: Trace[G] => Lambda[G, Event, Result]
-  )(implicit lift: LiftTrace[F, G]): Lambda[F, Event, Result] =
-    viaSpan(entryPoint) { span => (event, context) =>
-      lift.run(span)(lambda(_)(event, context.mapK(lift.liftK)))
-    }
-
-  def viaSpan[F[_]: MonadCancelThrow, Event: HasKernel, Result](entryPoint: EntryPoint[F])(
+  def apply[F[_]: MonadCancelThrow, Event: HasKernel, Result](entryPoint: EntryPoint[F])(
       lambda: Span[F] => Lambda[F, Event, Result]): Lambda[F, Event, Result] = {
     (event, context) =>
       val kernel = HasKernel[Event].extract(event)
