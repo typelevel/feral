@@ -31,6 +31,12 @@ ThisBuild / developers := List(
 
 ThisBuild / githubWorkflowJavaVersions := List("corretto@8", "corretto@11")
 ThisBuild / githubWorkflowEnv += ("JABBA_INDEX" -> "https://github.com/typelevel/jdk-index/raw/main/index.json")
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    scala <- (ThisBuild / crossScalaVersions).value.init
+    java <- (ThisBuild / githubWorkflowJavaVersions).value.tail
+  } yield MatrixExclude(Map("scala" -> scala, "java" -> java))
+}
 
 replaceCommandAlias(
   "ci",

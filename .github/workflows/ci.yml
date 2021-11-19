@@ -25,6 +25,11 @@ jobs:
         os: [ubuntu-latest]
         scala: [3.1.0, 2.12.15, 2.13.7]
         java: [corretto@8, corretto@11]
+        exclude:
+          - scala: 3.1.0
+            java: corretto@11
+          - scala: 2.12.15
+            java: corretto@11
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
