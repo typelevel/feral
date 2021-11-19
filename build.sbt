@@ -29,10 +29,26 @@ ThisBuild / developers := List(
   Developer("djspiewak", "Daniel Spiewak", "@djspiewak", url("https://github.com/djspiewak"))
 )
 
+ThisBuild / githubWorkflowJavaVersions := List("corretto@8", "corretto@11")
+ThisBuild / githubWorkflowEnv += ("JABBA_INDEX" -> "https://github.com/typelevel/jdk-index/raw/main/index.json")
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    scala <- (ThisBuild / crossScalaVersions).value.init
+    java <- (ThisBuild / githubWorkflowJavaVersions).value.tail
+  } yield MatrixExclude(Map("scala" -> scala, "java" -> java))
+}
+
 replaceCommandAlias(
   "ci",
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
 )
+
+ThisBuild / githubWorkflowBuildPreamble +=
+  WorkflowStep.Use(
+    UseRef.Public("actions", "setup-node", "v2"),
+    name = Some("Setup NodeJS v14 LTS"),
+    params = Map("node-version" -> "14")
+  )
 
 val catsEffectVersion = "3.2.9"
 val circeVersion = "0.14.1"
