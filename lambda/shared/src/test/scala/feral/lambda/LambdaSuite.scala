@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package not.my.lambda // Verify implicit resolution works from the outside
 
 import cats.data.Kleisli
 import cats.effect.IO
 import cats.effect.kernel.Resource
+import feral.lambda.INothing
+import feral.lambda.IOLambda
+import feral.lambda.Lambda
 
 class LambdaSuite {
 

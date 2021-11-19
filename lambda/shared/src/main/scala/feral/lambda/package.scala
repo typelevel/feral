@@ -16,6 +16,10 @@
 
 package feral
 
+import io.circe.Encoder
+
+import scala.annotation.nowarn
+
 package object lambda {
   type Lambda[F[_], Event, Result] = (Event, Context[F]) => F[Option[Result]]
 
@@ -24,4 +28,13 @@ package object lambda {
    * here to avoid pulling in an otherwise-unnecessary dependency.
    */
   type INothing <: Nothing
+
+  /**
+   * This can't actually be used. It's here because `IOLambda` demands an Encoder for its result
+   * type, which should be `Nothing` when no output is desired. Userland code will return an
+   * `Option[Nothing]` which is only inhabited by `None`, and the encoder is only used when the
+   * userland code returns `Some`.
+   */
+  @nowarn("msg=dead code following this construct")
+  implicit val nothingEncoder: Encoder[INothing] = (_: INothing) => ???
 }
