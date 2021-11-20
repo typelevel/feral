@@ -17,11 +17,7 @@
 package feral.lambda.natchez
 
 import feral.lambda.events.ApiGatewayProxyEventV2
-import feral.lambda.events.ApiGatewayProxyResultV2
-import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import natchez.Kernel
-
-import scala.annotation.nowarn
 
 trait KernelSource[Event] {
   def extract(event: Event): Kernel
@@ -36,20 +32,4 @@ object KernelSource extends KernelSourceLowPriority {
 
 private[natchez] sealed class KernelSourceLowPriority {
   implicit def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
-}
-
-trait KernelSink[Result] {
-  def seed(result: Result, kernel: Kernel): Result
-}
-
-object KernelSink {
-  @inline def apply[R](implicit ev: KernelSink[R]): ev.type = ev
-
-  implicit val apiGateProxyResultV2KernelSink: KernelSink[ApiGatewayProxyResultV2] = {
-    case (result: ApiGatewayProxyStructuredResultV2, kernel) =>
-      result.copy(headers = kernel.toHeaders ++ result.headers)
-  }
-
-  @nowarn("msg=dead code following this construct")
-  implicit val nothingKernelSink: KernelSink[Nothing] = (result, _) => result
 }
