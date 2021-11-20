@@ -16,6 +16,7 @@
 
 package feral.lambda.natchez
 
+import cats.data.OptionT
 import cats.effect.kernel.MonadCancelThrow
 import cats.syntax.all._
 import feral.lambda.Lambda
@@ -24,15 +25,19 @@ import natchez.Span
 
 object TracedLambda {
 
-  def apply[F[_]: MonadCancelThrow, Event: HasKernel, Result](entryPoint: EntryPoint[F])(
+  def apply[F[_]: MonadCancelThrow, Event: KernelSource, Result: KernelSink](
+      entryPoint: EntryPoint[F])(
       lambda: Span[F] => Lambda[F, Event, Result]): Lambda[F, Event, Result] = {
     (event, context) =>
-      val kernel = HasKernel[Event].extract(event)
+      val kernel = KernelSource[Event].extract(event)
       entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
-        span.put(
+        val result = span.put(
           Tags.arn(context.invokedFunctionArn),
           Tags.requestId(context.awsRequestId)
         ) >> lambda(span)(event, context)
+        OptionT(result).semiflatMap { result =>
+          span.kernel.map(KernelSink[Result].seed(result, _))
+        }.value
       }
   }
 
