@@ -18,7 +18,7 @@ package feral.lambda.natchez
 
 import natchez.TraceValue
 
-object Tags {
+object AwsTags {
   private[this] val prefix = "aws"
   def arn(s: String): (String, TraceValue) = s"$prefix.arn" -> s
   def requestId(s: String): (String, TraceValue) = s"$prefix.requestId" -> s

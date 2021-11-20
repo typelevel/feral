@@ -32,8 +32,8 @@ object TracedLambda {
       val kernel = KernelSource[Event].extract(event)
       entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
         val result = span.put(
-          Tags.arn(context.invokedFunctionArn),
-          Tags.requestId(context.awsRequestId)
+          AwsTags.arn(context.invokedFunctionArn),
+          AwsTags.requestId(context.awsRequestId)
         ) >> lambda(span)(event, context)
         OptionT(result).semiflatMap { result =>
           span.kernel.map(KernelSink[Result].seed(result, _))
