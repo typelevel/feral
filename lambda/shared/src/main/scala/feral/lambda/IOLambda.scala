@@ -21,6 +21,7 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import io.circe.Decoder
 import io.circe.Encoder
+import cats.effect.IOLocal
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
@@ -28,10 +29,18 @@ abstract class IOLambda[Event, Result](
 ) extends IOLambdaPlatform[Event, Result]
     with IOSetup {
 
-  final type Setup = Lambda[IO, Event, Result]
+  final type Setup = (Event, Context[IO]) => IO[Option[Result]]
+  final override protected def setup: Resource[IO, Setup] =
+    Resource
+      .eval((IOLocal(null.asInstanceOf[Event]).product(IOLocal[Context[IO]](null))))
+      .flatMap {
+        case (localEvent, localContext) =>
+          handler(LambdaEnv.ioLambdaEnv(localEvent, localContext)).map {
+            result => (event, context) =>
+              localEvent.set(event) *> localContext.set(context) *> result
+          }
+      }
 
-  final override protected def setup: Resource[IO, Setup] = handler
-
-  def handler: Resource[IO, Lambda[IO, Event, Result]]
+  def handler(implicit env: LambdaEnv[IO, Event]): Resource[IO, IO[Option[Result]]]
 
 }

@@ -33,34 +33,34 @@ import java.io.StringWriter
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
   def createResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context[F]): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
   def updateResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context[F]): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
   def deleteResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context[F]): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
 }
 
 object CloudFormationCustomResource {
 
-  def apply[F[_]: MonadThrow, Input, Output: Encoder](client: Client[F])(
-      handler: CloudFormationCustomResource[F, Input, Output])
-      : Lambda[F, CloudFormationCustomResourceRequest[Input], Unit] = {
+  def apply[F[_]: MonadThrow, Input, Output: Encoder](
+      client: Client[F],
+      handler: CloudFormationCustomResource[F, Input, Output])(
+      implicit
+      env: LambdaEnv[F, CloudFormationCustomResourceRequest[Input]]): F[Option[Unit]] = {
     val http4sClientDsl = new Http4sClientDsl[F] {}
     import http4sClientDsl._
 
-    (event, context) =>
+    env.event.flatMap { event =>
       (event.RequestType match {
-        case CreateRequest => handler.createResource(event, context)
-        case UpdateRequest => handler.updateResource(event, context)
-        case DeleteRequest => handler.deleteResource(event, context)
+        case CreateRequest => handler.createResource(event)
+        case UpdateRequest => handler.updateResource(event)
+        case DeleteRequest => handler.deleteResource(event)
         case OtherRequestType(other) => illegalRequestType(other)
       }).attempt
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
         .flatMap { resp => client.successful(POST(resp.asJson, event.ResponseURL)) }
         .as(None)
+    }
   }
 
   private def illegalRequestType[F[_]: ApplicativeThrow, A](other: String): F[A] =

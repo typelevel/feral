@@ -14,8 +14,22 @@
  * limitations under the License.
  */
 
-package feral
+package feral.lambda
 
-package object lambda {
-  type Lambda[F[_], Event, Result] = (Event, Context[F]) => F[Option[Result]]
+import cats.effect.IOLocal
+import cats.effect.IO
+
+trait LambdaEnv[F[_], Event] {
+  def event: F[Event]
+  def context: F[Context[F]]
+}
+
+object LambdaEnv {
+  private[lambda] def ioLambdaEnv[Event](
+      localEvent: IOLocal[Event],
+      localContext: IOLocal[Context[IO]]): LambdaEnv[IO, Event] =
+    new LambdaEnv[IO, Event] {
+      def event = localEvent.get
+      def context = localContext.get
+    }
 }
