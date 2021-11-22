@@ -16,12 +16,21 @@
 
 package feral.lambda
 
-import cats.effect.IOLocal
+import cats.Functor
 import cats.effect.IO
+import cats.effect.IOLocal
+import cats.syntax.all._
+import cats.~>
 
-trait LambdaEnv[F[_], Event] {
+trait LambdaEnv[F[_], Event] { outer =>
   def event: F[Event]
   def context: F[Context[F]]
+
+  final def mapK[G[_]: Functor](f: F ~> G): LambdaEnv[G, Event] =
+    new LambdaEnv[G, Event] {
+      def event = f(outer.event)
+      def context = f(outer.context).map(_.mapK(f))
+    }
 }
 
 object LambdaEnv {
