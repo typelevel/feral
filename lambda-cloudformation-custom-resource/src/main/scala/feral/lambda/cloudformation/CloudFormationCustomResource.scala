@@ -19,7 +19,6 @@ package cloudformation
 
 import cats.ApplicativeThrow
 import cats.MonadThrow
-import cats.effect.kernel.Resource
 import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import io.circe._
@@ -47,12 +46,12 @@ trait CloudFormationCustomResource[F[_], Input, Output] {
 object CloudFormationCustomResource {
 
   def apply[F[_]: MonadThrow, Input, Output: Encoder](client: Client[F])(
-      handler: Resource[F, CloudFormationCustomResource[F, Input, Output]])
-      : Resource[F, Lambda[F, CloudFormationCustomResourceRequest[Input], Unit]] =
-    handler.map { handler => (event, context) =>
-      val http4sClientDsl = new Http4sClientDsl[F] {}
-      import http4sClientDsl._
+      handler: CloudFormationCustomResource[F, Input, Output])
+      : Lambda[F, CloudFormationCustomResourceRequest[Input], Unit] = {
+    val http4sClientDsl = new Http4sClientDsl[F] {}
+    import http4sClientDsl._
 
+    (event, context) =>
       (event.RequestType match {
         case CreateRequest => handler.createResource(event, context)
         case UpdateRequest => handler.updateResource(event, context)
@@ -62,7 +61,7 @@ object CloudFormationCustomResource {
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
         .flatMap { resp => client.successful(POST(resp.asJson, event.ResponseURL)) }
         .as(None)
-    }
+  }
 
   private def illegalRequestType[F[_]: ApplicativeThrow, A](other: String): F[A] =
     (new IllegalArgumentException(
