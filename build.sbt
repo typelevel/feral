@@ -50,7 +50,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
     params = Map("node-version" -> "14")
   )
 
-val catsEffectVersion = "3.2.9"
+val catsEffectVersion = "3.3.0"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.2"
 val http4sVersion = "0.23.6"
