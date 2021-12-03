@@ -24,12 +24,14 @@ import natchez.Span
 
 object TracedLambda {
 
-  def apply[F[_]: MonadCancelThrow, Event: KernelSource, Result](entryPoint: EntryPoint[F])(
+  def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
       lambda: Span[F] => F[Option[Result]])(
-      implicit env: LambdaEnv[F, Event]): F[Option[Result]] = for {
+      // env first helps bind Event for KernelSource. h/t @bpholt
+      implicit env: LambdaEnv[F, Event],
+      KS: KernelSource[Event]): F[Option[Result]] = for {
     event <- env.event
     context <- env.context
-    kernel = KernelSource[Event].extract(event)
+    kernel = KS.extract(event)
     result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
       span.put(
         AwsTags.arn(context.invokedFunctionArn),
