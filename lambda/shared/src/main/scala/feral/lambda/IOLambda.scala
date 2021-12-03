@@ -18,10 +18,10 @@ package feral
 package lambda
 
 import cats.effect.IO
+import cats.effect.IOLocal
 import cats.effect.kernel.Resource
 import io.circe.Decoder
 import io.circe.Encoder
-import cats.effect.IOLocal
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
