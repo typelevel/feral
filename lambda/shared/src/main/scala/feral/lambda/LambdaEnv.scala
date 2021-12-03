@@ -16,9 +16,15 @@
 
 package feral.lambda
 
+import cats.Applicative
 import cats.Functor
+import cats.data.EitherT
+import cats.data.Kleisli
+import cats.data.OptionT
+import cats.data.WriterT
 import cats.effect.IO
 import cats.effect.IOLocal
+import cats.kernel.Monoid
 import cats.syntax.all._
 import cats.~>
 
@@ -34,6 +40,24 @@ trait LambdaEnv[F[_], Event] { outer =>
 }
 
 object LambdaEnv {
+  def apply[F[_], A](implicit env: LambdaEnv[F, A]): LambdaEnv[F, A] = env
+
+  implicit def kleisliLambdaEnv[F[_]: Functor, A, B](
+      implicit env: LambdaEnv[F, A]): LambdaEnv[Kleisli[F, B, *], A] =
+    env.mapK(Kleisli.liftK)
+
+  implicit def optionTLambdaEnv[F[_]: Functor, A](
+      implicit env: LambdaEnv[F, A]): LambdaEnv[OptionT[F, *], A] =
+    env.mapK(OptionT.liftK)
+
+  implicit def eitherTLambdaEnv[F[_]: Functor, A, B](
+      implicit env: LambdaEnv[F, A]): LambdaEnv[EitherT[F, B, *], A] =
+    env.mapK(EitherT.liftK)
+
+  implicit def writerTLambdaEnv[F[_]: Applicative, A, B: Monoid](
+      implicit env: LambdaEnv[F, A]): LambdaEnv[WriterT[F, B, *], A] =
+    env.mapK(WriterT.liftK[F, B])
+
   private[lambda] def ioLambdaEnv[Event](
       localEvent: IOLocal[Event],
       localContext: IOLocal[Context[IO]]): LambdaEnv[IO, Event] =
