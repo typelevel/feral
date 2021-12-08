@@ -53,7 +53,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
 val catsEffectVersion = "3.3.0"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
-val http4sVersion = "0.23.6"
+val http4sVersion = "0.23.7"
 
 lazy val root =
   project
