@@ -16,16 +16,19 @@
 
 package feral.lambda.natchez
 
+import cats.data.Kleisli
+import cats.effect.IO
 import cats.effect.kernel.MonadCancelThrow
 import cats.syntax.all._
 import feral.lambda.LambdaEnv
 import natchez.EntryPoint
 import natchez.Span
+import natchez.Trace
 
 object TracedLambda {
 
   def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
-      lambda: Span[F] => F[Option[Result]])(
+      lambda: Kleisli[F, Span[F], Option[Result]])(
       // env first helps bind Event for KernelSource. h/t @bpholt
       implicit env: LambdaEnv[F, Event],
       KS: KernelSource[Event]): F[Option[Result]] = for {
@@ -37,6 +40,20 @@ object TracedLambda {
         AwsTags.arn(context.invokedFunctionArn),
         AwsTags.requestId(context.awsRequestId)
       ) >> lambda(span)
+    }
+  } yield result
+
+  def apply[Event, Result](entryPoint: EntryPoint[IO])(lambda: Trace[IO] => IO[Option[Result]])(
+      implicit env: LambdaEnv[IO, Event],
+      KS: KernelSource[Event]): IO[Option[Result]] = for {
+    event <- env.event
+    context <- env.context
+    kernel = KS.extract(event)
+    result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
+      span.put(
+        AwsTags.arn(context.invokedFunctionArn),
+        AwsTags.requestId(context.awsRequestId)
+      ) >> Trace.ioTrace(span) >>= lambda
     }
   } yield result
 
