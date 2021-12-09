@@ -23,13 +23,11 @@ trait KernelSource[Event] {
   def extract(event: Event): Kernel
 }
 
-object KernelSource extends KernelSourceLowPriority {
+object KernelSource {
   @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
 
   implicit val apiGatewayProxyEventV2KernelSource: KernelSource[ApiGatewayProxyEventV2] =
     e => Kernel(e.headers)
-}
 
-private[natchez] sealed class KernelSourceLowPriority {
-  implicit def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
+  def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
 }
