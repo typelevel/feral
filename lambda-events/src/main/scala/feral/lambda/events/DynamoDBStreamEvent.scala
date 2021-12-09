@@ -94,7 +94,7 @@ object DynamoDBRecord {
 }
 
 final case class DynamoDBStreamEvent(
-    Records: List[DynamoDBRecord]
+    records: List[DynamoDBRecord]
 )
 
 object DynamoDBStreamEvent {
