@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
+package events
 
 import io.circe.Decoder
+import natchez.Kernel
 
 final case class Http(method: String)
 object Http {
@@ -48,4 +50,6 @@ object ApiGatewayProxyEventV2 {
     "body",
     "isBase64Encoded"
   )(ApiGatewayProxyEventV2.apply)
+
+  implicit def kernelSource: KernelSource[ApiGatewayProxyEventV2] = e => Kernel(e.headers)
 }

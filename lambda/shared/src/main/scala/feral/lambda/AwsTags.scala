@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package feral.lambda.natchez
+package feral.lambda
 
-import feral.lambda.events.ApiGatewayProxyEventV2
-import natchez.Kernel
+import natchez.TraceValue
 
-trait KernelSource[Event] {
-  def extract(event: Event): Kernel
-}
-
-object KernelSource extends KernelSourceLowPriority {
-  @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
-
-  implicit val apiGatewayProxyEventV2KernelSource: KernelSource[ApiGatewayProxyEventV2] =
-    e => Kernel(e.headers)
-}
-
-private[natchez] sealed class KernelSourceLowPriority {
-  implicit def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
+object AwsTags {
+  private[this] val prefix = "aws"
+  def arn(s: String): (String, TraceValue) = s"$prefix.arn" -> s
+  def requestId(s: String): (String, TraceValue) = s"$prefix.requestId" -> s
 }

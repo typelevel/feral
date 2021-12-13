@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
+package events
 
 import io.circe.Decoder
 import io.circe.Json
@@ -111,4 +112,6 @@ final case class DynamoDBStreamEvent(
 object DynamoDBStreamEvent {
   implicit val decoder: Decoder[DynamoDBStreamEvent] =
     Decoder.forProduct1("records")(DynamoDBStreamEvent.apply)
+
+  implicit def kernelSource: KernelSource[DynamoDBStreamEvent] = KernelSource.emptyKernelSource
 }
