@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.natchez
 
-type Lambda[F[_], Event, Result] = (Event, Context[F]) => F[Option[Result]]
+import natchez.TraceValue
+
+object AwsTags {
+  private[this] val prefix = "aws"
+  def arn(s: String): (String, TraceValue) = s"$prefix.arn" -> s
+  def requestId(s: String): (String, TraceValue) = s"$prefix.requestId" -> s
+}

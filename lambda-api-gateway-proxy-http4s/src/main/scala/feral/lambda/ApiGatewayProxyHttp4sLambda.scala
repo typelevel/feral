@@ -16,9 +16,7 @@
 
 package feral.lambda
 
-import cats.effect.Resource
-import cats.effect.Sync
-import cats.effect.syntax.all._
+import cats.effect.kernel.Concurrent
 import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
@@ -31,55 +29,43 @@ import org.http4s.Method
 import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
-import org.typelevel.vault.Key
-import org.typelevel.vault.Vault
 
 object ApiGatewayProxyHttp4sLambda {
 
-  def apply[F[_]: Sync](
-      f: (Key[Context[F]], Key[ApiGatewayProxyEventV2]) => Resource[F, HttpRoutes[F]])
-      : Resource[F, Lambda[F, ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2]] =
+  def apply[F[_]: Concurrent](routes: HttpRoutes[F])(
+      implicit
+      env: LambdaEnv[F, ApiGatewayProxyEventV2]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
-      contextKey <- Key.newKey[F, Context[F]].toResource
-      eventKey <- Key.newKey[F, ApiGatewayProxyEventV2].toResource
-      routes <- f(contextKey, eventKey)
-    } yield { (event: ApiGatewayProxyEventV2, context: Context[F]) =>
-      for {
-        method <- Method.fromString(event.requestContext.http.method).liftTo[F]
-        uri <- Uri.fromString(event.rawPath).liftTo[F]
-        headers = Headers(event.headers.toList)
-        requestBody =
-          if (event.isBase64Encoded)
-            Stream.fromOption[F](event.body).through(fs2.text.base64.decode)
-          else
-            Stream.fromOption[F](event.body).through(fs2.text.utf8.encode)
-        request = Request(
-          method,
-          uri,
-          headers = headers,
-          body = requestBody,
-          attributes = Vault.empty.insert(contextKey, context).insert(eventKey, event))
-        response <- routes(request).getOrElse(Response.notFound[F])
-        isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
-        responseBody <- (if (isBase64Encoded)
-                           response.body.through(fs2.text.base64.encode)
-                         else
-                           response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
-      } yield Some(
-        ApiGatewayProxyStructuredResultV2(
-          response.status.code,
-          response
-            .headers
-            .headers
-            .map {
-              case Header.Raw(name, value) =>
-                name.toString -> value
-            }
-            .toMap,
-          responseBody,
-          isBase64Encoded
-        )
+      event <- env.event
+      method <- Method.fromString(event.requestContext.http.method).liftTo[F]
+      uri <- Uri.fromString(event.rawPath).liftTo[F]
+      headers = Headers(event.headers.toList)
+      requestBody =
+        if (event.isBase64Encoded)
+          Stream.fromOption[F](event.body).through(fs2.text.base64.decode)
+        else
+          Stream.fromOption[F](event.body).through(fs2.text.utf8.encode)
+      request = Request(method, uri, headers = headers, body = requestBody)
+      response <- routes(request).getOrElse(Response.notFound[F])
+      isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
+      responseBody <- (if (isBase64Encoded)
+                         response.body.through(fs2.text.base64.encode)
+                       else
+                         response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
+    } yield Some(
+      ApiGatewayProxyStructuredResultV2(
+        response.status.code,
+        response
+          .headers
+          .headers
+          .map {
+            case Header.Raw(name, value) =>
+              name.toString -> value
+          }
+          .toMap,
+        responseBody,
+        isBase64Encoded
       )
-    }
+    )
 
 }

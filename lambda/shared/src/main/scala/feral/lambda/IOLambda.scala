@@ -18,6 +18,7 @@ package feral
 package lambda
 
 import cats.effect.IO
+import cats.effect.IOLocal
 import cats.effect.kernel.Resource
 import io.circe.Decoder
 import io.circe.Encoder
@@ -28,10 +29,17 @@ abstract class IOLambda[Event, Result](
 ) extends IOLambdaPlatform[Event, Result]
     with IOSetup {
 
-  final type Setup = Lambda[IO, Event, Result]
+  final type Setup = (Event, Context[IO]) => IO[Option[Result]]
+  final override protected def setup: Resource[IO, Setup] =
+    handler.map { handler => (event, context) =>
+      for {
+        event <- IOLocal(event)
+        context <- IOLocal(context)
+        env = LambdaEnv.ioLambdaEnv(event, context)
+        result <- handler(env)
+      } yield result
+    }
 
-  final override protected def setup: Resource[IO, Setup] = handler
-
-  def handler: Resource[IO, Lambda[IO, Event, Result]]
+  def handler: Resource[IO, LambdaEnv[IO, Event] => IO[Option[Result]]]
 
 }
