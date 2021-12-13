@@ -29,8 +29,8 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
   // @JSExportTopLevel("handler") // TODO
   final def handler(event: js.Any, context: facade.Context): js.Promise[js.Any | Unit] =
     (for {
-      setup <- setupMemo
+      lambda <- setupMemo
       event <- IO.fromEither(decodeJs[Event](event))
-      result <- apply(event, Context.fromJS(context), setup)
+      result <- lambda(event, Context.fromJS(context))
     } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
 }

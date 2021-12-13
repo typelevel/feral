@@ -69,7 +69,7 @@ jobs:
       - run: sbt ++${{ matrix.scala }} ci
 
       - name: Compress target directories
-        run: tar cf targets.tar lambda-events/.jvm/target lambda-events/.js/target target lambda-cloudformation-custom-resource/.js/target core/.js/target core/.jvm/target lambda/js/target lambda/jvm/target lambda-api-gateway-proxy-http4s/.jvm/target lambda-api-gateway-proxy-http4s/.js/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: tar cf targets.tar lambda-natchez/.jvm/target lambda-events/.jvm/target lambda-natchez/.js/target lambda-events/.js/target target lambda-cloudformation-custom-resource/.js/target core/.js/target core/.jvm/target lambda/js/target lambda/jvm/target lambda-api-gateway-proxy-http4s/.jvm/target lambda-api-gateway-proxy-http4s/.js/target lambda-cloudformation-custom-resource/.jvm/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v2

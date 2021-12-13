@@ -14,67 +14,60 @@
  * limitations under the License.
  */
 
-package feral.lambda.cloudformation
+package feral.lambda
+package cloudformation
 
-import cats.effect._
-import cats.effect.kernel.Resource
+import cats.ApplicativeThrow
+import cats.MonadThrow
 import cats.syntax.all._
-import feral.lambda.cloudformation.CloudFormationCustomResourceHandler.stackTraceLines
 import feral.lambda.cloudformation.CloudFormationRequestType._
-import feral.lambda.{Context, IOLambda}
 import io.circe._
 import io.circe.syntax._
 import org.http4s.Method.POST
-import org.http4s.client.Client
 import org.http4s.circe._
-import org.http4s.client.dsl.io._
-import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.client.Client
+import org.http4s.client.dsl.Http4sClientDsl
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.PrintWriter
+import java.io.StringWriter
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
   def createResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
   def updateResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
   def deleteResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
 }
 
-abstract class CloudFormationCustomResourceHandler[Input: Decoder, Output: Encoder]
-    extends IOLambda[CloudFormationCustomResourceRequest[Input], Unit] {
-  type Setup = (Client[IO], CloudFormationCustomResource[IO, Input, Output])
+object CloudFormationCustomResource {
 
-  override final def setup: Resource[IO, Setup] =
-    client.mproduct(handler)
+  def apply[F[_]: MonadThrow, Input, Output: Encoder](
+      client: Client[F],
+      handler: CloudFormationCustomResource[F, Input, Output])(
+      implicit
+      env: LambdaEnv[F, CloudFormationCustomResourceRequest[Input]]): F[Option[Unit]] = {
+    val http4sClientDsl = new Http4sClientDsl[F] {}
+    import http4sClientDsl._
 
-  protected def client: Resource[IO, Client[IO]] =
-    EmberClientBuilder.default[IO].build
+    env.event.flatMap { event =>
+      (event.RequestType match {
+        case CreateRequest => handler.createResource(event)
+        case UpdateRequest => handler.updateResource(event)
+        case DeleteRequest => handler.deleteResource(event)
+        case OtherRequestType(other) => illegalRequestType(other)
+      }).attempt
+        .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
+        .flatMap { resp => client.successful(POST(resp.asJson, event.ResponseURL)) }
+        .as(None)
+    }
+  }
 
-  def handler(client: Client[IO]): Resource[IO, CloudFormationCustomResource[IO, Input, Output]]
-
-  override def apply(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context,
-      setup: Setup): IO[Option[Unit]] =
-    (event.RequestType match {
-      case CreateRequest => setup._2.createResource(event, context)
-      case UpdateRequest => setup._2.updateResource(event, context)
-      case DeleteRequest => setup._2.deleteResource(event, context)
-      case OtherRequestType(other) => illegalRequestType(other)
-    }).attempt
-      .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
-      .flatMap { resp => setup._1.successful(POST(resp.asJson, event.ResponseURL)) }
-      .as(None)
-
-  private def illegalRequestType[A](other: String): IO[A] =
+  private def illegalRequestType[F[_]: ApplicativeThrow, A](other: String): F[A] =
     (new IllegalArgumentException(
-      s"unexpected CloudFormation request type `$other``"): Throwable).raiseError[IO, A]
+      s"unexpected CloudFormation request type `$other``"): Throwable).raiseError[F, A]
 
-  private def exceptionResponse(req: CloudFormationCustomResourceRequest[Input])(
+  private def exceptionResponse[Input](req: CloudFormationCustomResourceRequest[Input])(
       ex: Throwable): CloudFormationCustomResourceResponse =
     CloudFormationCustomResourceResponse(
       Status = RequestResponseStatus.Failed,
@@ -87,7 +80,8 @@ abstract class CloudFormationCustomResourceHandler[Input: Decoder, Output: Encod
         "StackTrace" -> Json.arr(stackTraceLines(ex).map(Json.fromString): _*)).asJson
     )
 
-  private def successResponse(req: CloudFormationCustomResourceRequest[Input])(
+  private def successResponse[Input, Output: Encoder](
+      req: CloudFormationCustomResourceRequest[Input])(
       res: HandlerResponse[Output]): CloudFormationCustomResourceResponse =
     CloudFormationCustomResourceResponse(
       Status = RequestResponseStatus.Success,
@@ -99,12 +93,10 @@ abstract class CloudFormationCustomResourceHandler[Input: Decoder, Output: Encod
       Data = res.data.asJson
     )
 
-}
-
-object CloudFormationCustomResourceHandler {
-  def stackTraceLines(throwable: Throwable): List[String] = {
+  private def stackTraceLines(throwable: Throwable): List[String] = {
     val writer = new StringWriter()
     throwable.printStackTrace(new PrintWriter(writer))
     writer.toString.linesIterator.toList
   }
+
 }

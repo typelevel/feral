@@ -16,11 +16,11 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.~>
 
 import scala.concurrent.duration.FiniteDuration
 
-final case class Context(
+final case class Context[F[_]](
     functionName: String,
     functionVersion: String,
     invokedFunctionArn: String,
@@ -30,8 +30,10 @@ final case class Context(
     logStreamName: String,
     identity: Option[CognitoIdentity],
     clientContext: Option[ClientContext],
-    remainingTime: IO[FiniteDuration]
-)
+    remainingTime: F[FiniteDuration]
+) {
+  def mapK[G[_]](f: F ~> G): Context[G] = copy(remainingTime = f(remainingTime))
+}
 
 object Context extends ContextCompanionPlatform
 
