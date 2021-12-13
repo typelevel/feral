@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.events
 
 import io.circe.Decoder
 import io.circe.Json
