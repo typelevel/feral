@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package feral.lambda.natchez
+package feral.lambda
 
 import cats.data.Kleisli
 import cats.effect.IO

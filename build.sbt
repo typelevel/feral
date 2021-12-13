@@ -71,8 +71,6 @@ lazy val root =
       core.jvm,
       lambda.js,
       lambda.jvm,
-      lambdaNatchez.js,
-      lambdaNatchez.jvm,
       lambdaApiGatewayProxyHttp4s.js,
       lambdaApiGatewayProxyHttp4s.jvm,
       lambdaCloudFormationCustomResource.js,
@@ -97,7 +95,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion,
+      "org.tpolecat" %%% "natchez-core" % natchezVersion
     )
   )
   .jsSettings(
@@ -113,17 +112,6 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .dependsOn(core)
-
-lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("lambda-natchez"))
-  .settings(
-    name := "feral-lambda-natchez",
-    libraryDependencies ++= Seq(
-      "org.tpolecat" %%% "natchez-core" % natchezVersion
-    )
-  )
-  .dependsOn(lambda)
 
 lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)

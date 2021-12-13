@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
-package feral.lambda.natchez
+package feral.lambda
 
-import natchez.TraceValue
+import feral.lambda.events.ApiGatewayProxyEventV2
+import feral.lambda.events.DynamoDBStreamEvent
+import natchez.Kernel
 
-object AwsTags {
-  private[this] val prefix = "aws"
-  def arn(s: String): (String, TraceValue) = s"$prefix.arn" -> s
-  def requestId(s: String): (String, TraceValue) = s"$prefix.requestId" -> s
+trait KernelSource[Event] {
+  def extract(event: Event): Kernel
+}
+
+object KernelSource {
+  @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
+
+  implicit val apiGatewayProxyEventV2KernelSource: KernelSource[ApiGatewayProxyEventV2] =
+    e => Kernel(e.headers)
+
+  implicit val dynamoDBStreamEventKernelSource: KernelSource[DynamoDBStreamEvent] =
+    emptyKernelSource
+
+  def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
 }
