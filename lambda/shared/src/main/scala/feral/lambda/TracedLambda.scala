@@ -27,6 +27,20 @@ import natchez.Trace
 
 object TracedLambda {
 
+  def apply[Event, Result](entryPoint: EntryPoint[IO])(lambda: Trace[IO] => IO[Option[Result]])(
+      implicit env: LambdaEnv[IO, Event],
+      KS: KernelSource[Event]): IO[Option[Result]] = for {
+    event <- env.event
+    context <- env.context
+    kernel = KS.extract(event)
+    result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
+      span.put(
+        AwsTags.arn(context.invokedFunctionArn),
+        AwsTags.requestId(context.awsRequestId)
+      ) >> Trace.ioTrace(span) >>= lambda
+    }
+  } yield result
+
   def apply[F[_]: MonadCancelThrow, Event, Result](
       entryPoint: EntryPoint[F],
       lambda: Kleisli[F, Span[F], Option[Result]])(
@@ -41,20 +55,6 @@ object TracedLambda {
         AwsTags.arn(context.invokedFunctionArn),
         AwsTags.requestId(context.awsRequestId)
       ) >> lambda(span)
-    }
-  } yield result
-
-  def apply[Event, Result](entryPoint: EntryPoint[IO])(lambda: Trace[IO] => IO[Option[Result]])(
-      implicit env: LambdaEnv[IO, Event],
-      KS: KernelSource[Event]): IO[Option[Result]] = for {
-    event <- env.event
-    context <- env.context
-    kernel = KS.extract(event)
-    result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
-      span.put(
-        AwsTags.arn(context.invokedFunctionArn),
-        AwsTags.requestId(context.awsRequestId)
-      ) >> Trace.ioTrace(span) >>= lambda
     }
   } yield result
 
