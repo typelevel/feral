@@ -19,7 +19,6 @@ package feral.lambda
 import cats.syntax.all._
 import io.circe._
 import io.circe.syntax._
-import io.circe.generic.semiauto._
 import monix.newtypes._
 import org.http4s.Uri
 import org.http4s.circe.CirceInstances
@@ -60,7 +59,7 @@ package cloudformation {
     case object CreateRequest extends CloudFormationRequestType
     case object UpdateRequest extends CloudFormationRequestType
     case object DeleteRequest extends CloudFormationRequestType
-    case class OtherRequestType(requestType: String) extends CloudFormationRequestType
+    final case class OtherRequestType(requestType: String) extends CloudFormationRequestType
 
     implicit val encoder: Encoder[CloudFormationRequestType] = {
       case CreateRequest => "Create".asJson
@@ -94,7 +93,7 @@ package cloudformation {
     }
   }
 
-  case class CloudFormationCustomResourceRequest[A](
+  final case class CloudFormationCustomResourceRequest[A](
       RequestType: CloudFormationRequestType,
       ResponseURL: Uri,
       StackId: StackId,
@@ -108,13 +107,46 @@ package cloudformation {
   object CloudFormationCustomResourceRequest extends CirceInstances {
     implicit def CloudFormationCustomResourceRequestDecoder[A: Decoder]
         : Decoder[CloudFormationCustomResourceRequest[A]] =
-      deriveDecoder[CloudFormationCustomResourceRequest[A]]
+      Decoder.forProduct9(
+        "RequestType",
+        "ResponseURL",
+        "StackId",
+        "RequestId",
+        "ResourceType",
+        "LogicalResourceId",
+        "PhysicalResourceId",
+        "ResourceProperties",
+        "OldResourceProperties"
+      )(CloudFormationCustomResourceRequest.apply[A])
+
     implicit def CloudFormationCustomResourceRequestEncoder[A: Encoder]
         : Encoder[CloudFormationCustomResourceRequest[A]] =
-      deriveEncoder[CloudFormationCustomResourceRequest[A]]
+      Encoder.forProduct9(
+        "RequestType",
+        "ResponseURL",
+        "StackId",
+        "RequestId",
+        "ResourceType",
+        "LogicalResourceId",
+        "PhysicalResourceId",
+        "ResourceProperties",
+        "OldResourceProperties"
+      ) { r =>
+        (
+          r.RequestType,
+          r.ResponseURL,
+          r.StackId,
+          r.RequestId,
+          r.ResourceType,
+          r.LogicalResourceId,
+          r.PhysicalResourceId,
+          r.ResourceProperties,
+          r.OldResourceProperties
+        )
+      }
   }
 
-  case class CloudFormationCustomResourceResponse(
+  final case class CloudFormationCustomResourceResponse(
       Status: RequestResponseStatus,
       Reason: Option[String],
       PhysicalResourceId: Option[PhysicalResourceId],
@@ -126,17 +158,46 @@ package cloudformation {
   object CloudFormationCustomResourceResponse {
     implicit val CloudFormationCustomResourceResponseDecoder
         : Decoder[CloudFormationCustomResourceResponse] =
-      deriveDecoder[CloudFormationCustomResourceResponse]
+      Decoder.forProduct7(
+        "Status",
+        "Reason",
+        "PhysicalResourceId",
+        "StackId",
+        "RequestId",
+        "LogicalResourceId",
+        "Data"
+      )(CloudFormationCustomResourceResponse.apply)
+
     implicit val CloudFormationCustomResourceResponseEncoder
         : Encoder[CloudFormationCustomResourceResponse] =
-      deriveEncoder[CloudFormationCustomResourceResponse]
+      Encoder.forProduct7(
+        "Status",
+        "Reason",
+        "PhysicalResourceId",
+        "StackId",
+        "RequestId",
+        "LogicalResourceId",
+        "Data"
+      ) { r =>
+        (
+          r.Status,
+          r.Reason,
+          r.PhysicalResourceId,
+          r.StackId,
+          r.RequestId,
+          r.LogicalResourceId,
+          r.Data
+        )
+      }
   }
 
-  case class HandlerResponse[A](physicalId: PhysicalResourceId, data: Option[A])
+  final case class HandlerResponse[A](physicalId: PhysicalResourceId, data: Option[A])
 
   object HandlerResponse {
     implicit def HandlerResponseCodec[A: Encoder: Decoder]: Codec[HandlerResponse[A]] =
-      deriveCodec[HandlerResponse[A]]
+      Codec.forProduct2("PhysicalResourceId", "Data")(HandlerResponse.apply[A]) { r =>
+        (r.physicalId, r.data)
+      }
   }
 
   object MissingResourceProperties extends RuntimeException

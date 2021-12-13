@@ -17,8 +17,17 @@
 package feral.lambda.events
 
 import io.circe.Decoder
-import io.circe.generic.auto._
-import io.circe.generic.semiauto
+
+final case class Http(method: String)
+object Http {
+  implicit val decoder: Decoder[Http] = Decoder.forProduct1("method")(Http.apply)
+}
+final case class RequestContext(http: Http)
+
+object RequestContext {
+  implicit val decoder: Decoder[RequestContext] =
+    Decoder.forProduct1("http")(RequestContext.apply)
+}
 
 // TODO Just the bare minimum for proof-of-concept
 final case class ApiGatewayProxyEventV2(
@@ -31,9 +40,12 @@ final case class ApiGatewayProxyEventV2(
 )
 
 object ApiGatewayProxyEventV2 {
-  implicit def decoder: Decoder[ApiGatewayProxyEventV2] = semiauto.deriveDecoder
+  implicit def decoder: Decoder[ApiGatewayProxyEventV2] = Decoder.forProduct6(
+    "rawPath",
+    "rawQueryString",
+    "headers",
+    "requestContext",
+    "body",
+    "isBase64Encoded"
+  )(ApiGatewayProxyEventV2.apply)
 }
-
-final case class RequestContext(http: Http)
-
-final case class Http(method: String)
