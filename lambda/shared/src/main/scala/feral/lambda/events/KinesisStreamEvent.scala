@@ -69,5 +69,5 @@ object KinesisStreamEvent {
   implicit val decoder: Decoder[KinesisStreamEvent] =
     Decoder.forProduct1("Records")(KinesisStreamEvent.apply)
 
-  implicit def kernelSource: KernelSource[DynamoDBStreamEvent] = KernelSource.emptyKernelSource
+  implicit def kernelSource: KernelSource[KinesisStreamEvent] = KernelSource.emptyKernelSource
 }
