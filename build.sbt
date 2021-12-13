@@ -122,7 +122,7 @@ lazy val lambdaEvents = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-events",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-generic" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion
     )
   )
 
@@ -159,7 +159,6 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     }),
     libraryDependencies ++= Seq(
       "io.monix" %%% "newtypes-core" % "0.0.1",
-      "io.circe" %%% "circe-generic" % circeVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion
     )

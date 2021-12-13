@@ -17,7 +17,6 @@
 package feral.lambda.events
 
 import io.circe.Encoder
-import io.circe.generic.semiauto._
 
 sealed abstract class ApiGatewayProxyResultV2
 
@@ -29,5 +28,10 @@ final case class ApiGatewayProxyStructuredResultV2(
 ) extends ApiGatewayProxyResultV2
 
 object ApiGatewayProxyStructuredResultV2 {
-  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = deriveEncoder
+  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct4(
+    "statusCode",
+    "headers",
+    "body",
+    "isBase64Encoded"
+  )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded))
 }
