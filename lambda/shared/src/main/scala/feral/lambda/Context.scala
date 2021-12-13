@@ -16,9 +16,11 @@
 
 package feral.lambda
 
+import cats.~>
+
 import scala.concurrent.duration.FiniteDuration
 
-final class Context[F[_]](
+final class Context[F[_]] private[lambda] (
     val functionName: String,
     val functionVersion: String,
     val invokedFunctionArn: String,
@@ -29,7 +31,19 @@ final class Context[F[_]](
     val identity: Option[CognitoIdentity],
     val clientContext: Option[ClientContext],
     val remainingTime: F[FiniteDuration]
-)
+) {
+  def mapK[G[_]](f: F ~> G): Context[G] = new Context(
+    functionName,
+    functionVersion,
+    invokedFunctionArn,
+    memoryLimitInMB,
+    awsRequestId,
+    logGroupName,
+    logStreamName,
+    identity,
+    clientContext,
+    f(remainingTime))
+}
 
 object Context extends ContextCompanionPlatform
 

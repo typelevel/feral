@@ -19,7 +19,6 @@ package cloudformation
 
 import cats.ApplicativeThrow
 import cats.MonadThrow
-import cats.effect.kernel.Resource
 import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import io.circe._
@@ -34,35 +33,35 @@ import java.io.StringWriter
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
   def createResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context[F]): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
   def updateResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context[F]): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
   def deleteResource(
-      event: CloudFormationCustomResourceRequest[Input],
-      context: Context[F]): F[HandlerResponse[Output]]
+      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
 }
 
 object CloudFormationCustomResource {
 
-  def apply[F[_]: MonadThrow, Input, Output: Encoder](client: Client[F])(
-      handler: Resource[F, CloudFormationCustomResource[F, Input, Output]])
-      : Resource[F, Lambda[F, CloudFormationCustomResourceRequest[Input], Unit]] =
-    handler.map { handler => (event, context) =>
-      val http4sClientDsl = new Http4sClientDsl[F] {}
-      import http4sClientDsl._
+  def apply[F[_]: MonadThrow, Input, Output: Encoder](
+      client: Client[F],
+      handler: CloudFormationCustomResource[F, Input, Output])(
+      implicit
+      env: LambdaEnv[F, CloudFormationCustomResourceRequest[Input]]): F[Option[INothing]] = {
+    val http4sClientDsl = new Http4sClientDsl[F] {}
+    import http4sClientDsl._
 
+    env.event.flatMap { event =>
       (event.RequestType match {
-        case CreateRequest => handler.createResource(event, context)
-        case UpdateRequest => handler.updateResource(event, context)
-        case DeleteRequest => handler.deleteResource(event, context)
+        case CreateRequest => handler.createResource(event)
+        case UpdateRequest => handler.updateResource(event)
+        case DeleteRequest => handler.deleteResource(event)
         case OtherRequestType(other) => illegalRequestType(other)
       }).attempt
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
         .flatMap { resp => client.successful(POST(resp.asJson, event.ResponseURL)) }
         .as(None)
     }
+  }
 
   private def illegalRequestType[F[_]: ApplicativeThrow, A](other: String): F[A] =
     (new IllegalArgumentException(
@@ -94,7 +93,7 @@ object CloudFormationCustomResource {
       Data = res.data.asJson
     )
 
-  def stackTraceLines(throwable: Throwable): List[String] = {
+  private def stackTraceLines(throwable: Throwable): List[String] = {
     val writer = new StringWriter()
     throwable.printStackTrace(new PrintWriter(writer))
     writer.toString.linesIterator.toList
