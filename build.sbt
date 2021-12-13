@@ -29,15 +29,38 @@ ThisBuild / developers := List(
   Developer("djspiewak", "Daniel Spiewak", "@djspiewak", url("https://github.com/djspiewak"))
 )
 
+enablePlugins(SonatypeCiReleasePlugin)
+ThisBuild / spiewakCiReleaseSnapshots := true
+ThisBuild / spiewakMainBranches := Seq("main")
+ThisBuild / homepage := Some(url("https://github.com/typelevel/feral"))
+ThisBuild / scmInfo := Some(
+  ScmInfo(url("https://github.com/typelevel/feral"), "git@github.com:typelevel/feral.git"))
+
+ThisBuild / githubWorkflowJavaVersions := List("corretto@8", "corretto@11")
+ThisBuild / githubWorkflowEnv += ("JABBA_INDEX" -> "https://github.com/typelevel/jdk-index/raw/main/index.json")
+ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
+  for {
+    scala <- (ThisBuild / crossScalaVersions).value.init
+    java <- (ThisBuild / githubWorkflowJavaVersions).value.tail
+  } yield MatrixExclude(Map("scala" -> scala, "java" -> java))
+}
+
 replaceCommandAlias(
   "ci",
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
 )
 
-val catsEffectVersion = "3.2.9"
+ThisBuild / githubWorkflowBuildPreamble +=
+  WorkflowStep.Use(
+    UseRef.Public("actions", "setup-node", "v2"),
+    name = Some("Setup NodeJS v14 LTS"),
+    params = Map("node-version" -> "14")
+  )
+
+val catsEffectVersion = "3.3.0"
 val circeVersion = "0.14.1"
-val fs2Version = "3.2.2"
-val http4sVersion = "0.23.6"
+val fs2Version = "3.2.3"
+val http4sVersion = "0.23.7"
 val natchezVersion = "0.1.5"
 
 lazy val root =
