@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
 
-import io.circe.Decoder
-import io.circe.generic.auto._
-import io.circe.generic.semiauto
+import natchez.Kernel
 
-// TODO Just the bare minimum for proof-of-concept
-final case class ApiGatewayProxyEventV2(
-    rawPath: String,
-    rawQueryString: String,
-    headers: Map[String, String],
-    requestContext: RequestContext,
-    body: Option[String],
-    isBase64Encoded: Boolean
-)
-
-object ApiGatewayProxyEventV2 {
-  implicit def decoder: Decoder[ApiGatewayProxyEventV2] = semiauto.deriveDecoder
+trait KernelSource[Event] {
+  def extract(event: Event): Kernel
 }
 
-final case class RequestContext(http: Http)
+object KernelSource {
+  @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
 
-final case class Http(method: String)
+  def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
+}
