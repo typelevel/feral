@@ -20,12 +20,7 @@ import cats.effect._
 import feral.lambda._
 import feral.lambda.events.KinesisStreamEvent
 
-object KinesisLambda extends IOLambda[KinesisStreamEvent, INothing] {
-  val handler: Resource[IO, LambdaEnv[IO, KinesisStreamEvent] => IO[Option[Nothing]]] =
-    Resource.pure { env =>
-      env
-        .event
-        .flatMap { event => IO.println(s"Received event with ${event.records.size} records") }
-        .as(None)
-    }
+object KinesisLambda extends IOLambda.Simple[KinesisStreamEvent, INothing] {
+  def handle(event: KinesisStreamEvent, context: Context[IO], init: Init) =
+    IO.println(s"Received event with ${event.records.size} records").as(None)
 }
