@@ -16,8 +16,6 @@
 
 package feral.lambda
 
-import feral.lambda.events.ApiGatewayProxyEventV2
-import feral.lambda.events.DynamoDBStreamEvent
 import natchez.Kernel
 
 trait KernelSource[Event] {
@@ -26,12 +24,6 @@ trait KernelSource[Event] {
 
 object KernelSource {
   @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
-
-  implicit val apiGatewayProxyEventV2KernelSource: KernelSource[ApiGatewayProxyEventV2] =
-    e => Kernel(e.headers)
-
-  implicit val dynamoDBStreamEventKernelSource: KernelSource[DynamoDBStreamEvent] =
-    emptyKernelSource
 
   def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
 }

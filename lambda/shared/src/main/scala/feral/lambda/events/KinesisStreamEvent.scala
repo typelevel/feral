@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
+package events
 
 import io.circe.Decoder
 
@@ -67,4 +68,6 @@ final case class KinesisStreamEvent(
 object KinesisStreamEvent {
   implicit val decoder: Decoder[KinesisStreamEvent] =
     Decoder.forProduct1("Records")(KinesisStreamEvent.apply)
+
+  implicit def kernelSource: KernelSource[DynamoDBStreamEvent] = KernelSource.emptyKernelSource
 }
