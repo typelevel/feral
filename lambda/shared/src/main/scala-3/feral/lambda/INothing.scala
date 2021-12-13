@@ -34,5 +34,5 @@ object INothing {
    * userland code returns `Some`.
    */
   @nowarn("msg=dead code following this construct")
-  implicit val nothingEncoder: Encoder[INothing] = (_: INothing) => ???
+  implicit val nothingEncoder: Encoder[INothing] = identity(_)
 }
