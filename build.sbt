@@ -78,7 +78,9 @@ lazy val root =
       lambdaApiGatewayProxyHttp4s.js,
       lambdaApiGatewayProxyHttp4s.jvm,
       lambdaCloudFormationCustomResource.js,
-      lambdaCloudFormationCustomResource.jvm
+      lambdaCloudFormationCustomResource.jvm,
+      examples.js,
+      examples.jvm
     )
     .enablePlugins(NoPublishPlugin)
 
@@ -163,3 +165,9 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     )
   )
   .dependsOn(lambda)
+
+lazy val examples = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("examples"))
+  .dependsOn(core, lambdaEvents, lambda)
+  .enablePlugins(NoPublishPlugin)
