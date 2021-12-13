@@ -40,12 +40,16 @@ object ApiGatewayProxyHttp4sLambda {
       method <- Method.fromString(event.requestContext.http.method).liftTo[F]
       uri <- Uri.fromString(event.rawPath).liftTo[F]
       headers = Headers(event.headers.toList)
-      requestBody =
+      readBody =
         if (event.isBase64Encoded)
-          Stream.fromOption[F](event.body).through(fs2.text.base64.decode)
+          fs2.text.base64.decode[F]
         else
-          Stream.fromOption[F](event.body).through(fs2.text.utf8.encode)
-      request = Request(method, uri, headers = headers, body = requestBody)
+          fs2.text.utf8.encode[F]
+      request = Request(
+        method,
+        uri,
+        headers = headers,
+        body = Stream.fromOption[F](event.body).through(readBody))
       response <- routes(request).getOrElse(Response.notFound[F])
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- (if (isBase64Encoded)
