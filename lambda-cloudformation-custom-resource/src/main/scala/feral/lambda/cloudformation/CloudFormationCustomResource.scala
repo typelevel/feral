@@ -46,7 +46,7 @@ object CloudFormationCustomResource {
       client: Client[F],
       handler: CloudFormationCustomResource[F, Input, Output])(
       implicit
-      env: LambdaEnv[F, CloudFormationCustomResourceRequest[Input]]): F[Option[Unit]] = {
+      env: LambdaEnv[F, CloudFormationCustomResourceRequest[Input]]): F[Option[INothing]] = {
     val http4sClientDsl = new Http4sClientDsl[F] {}
     import http4sClientDsl._
 
