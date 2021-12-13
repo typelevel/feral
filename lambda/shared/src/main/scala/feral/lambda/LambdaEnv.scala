@@ -28,7 +28,7 @@ import cats.kernel.Monoid
 import cats.syntax.all._
 import cats.~>
 
-trait LambdaEnv[F[_], Event] { outer =>
+sealed trait LambdaEnv[F[_], Event] { outer =>
   def event: F[Event]
   def context: F[Context[F]]
 
