@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
+package events
 
 import io.circe.Decoder
+import natchez.Kernel
 
 import scala.util.Try
 
@@ -102,6 +104,8 @@ object SQSRecordAttributes {
       messageGroupId,
       messageDeduplicationId
     ))
+
+  implicit def kernelSource: KernelSource[SQSRecordAttributes] = a => Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
 }
 
 sealed trait SQSMessageAttribute
