@@ -43,3 +43,26 @@ abstract class IOLambda[Event, Result](
   def handler: Resource[IO, LambdaEnv[IO, Event] => IO[Option[Result]]]
 
 }
+
+object IOLambda {
+
+  abstract class Simple[Event, Result](
+      implicit decoder: Decoder[Event],
+      encoder: Encoder[Result])
+      extends IOLambda[Event, Result] {
+
+    type Init
+    def init: Resource[IO, Init] = Resource.pure(null.asInstanceOf[Init])
+
+    final def handler = init.map { init => env =>
+      for {
+        event <- env.event
+        ctx <- env.context
+        result <- handle(event, ctx, init)
+      } yield result
+    }
+
+    def handle(event: Event, context: Context[IO], init: Init): IO[Option[Result]]
+  }
+
+}
