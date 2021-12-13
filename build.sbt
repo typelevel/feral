@@ -71,8 +71,6 @@ lazy val root =
       core.jvm,
       lambda.js,
       lambda.jvm,
-      lambdaEvents.js,
-      lambdaEvents.jvm,
       lambdaNatchez.js,
       lambdaNatchez.jvm,
       lambdaApiGatewayProxyHttp4s.js,
@@ -116,16 +114,6 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(core)
 
-lazy val lambdaEvents = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("lambda-events"))
-  .settings(
-    name := "feral-lambda-events",
-    libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
-    )
-  )
-
 lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lambda-natchez"))
@@ -135,7 +123,7 @@ lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion
     )
   )
-  .dependsOn(lambda, lambdaEvents)
+  .dependsOn(lambda)
 
 lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -146,7 +134,7 @@ lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-core" % http4sVersion
     )
   )
-  .dependsOn(lambda, lambdaEvents)
+  .dependsOn(lambda)
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -168,5 +156,5 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("examples"))
-  .dependsOn(core, lambdaEvents, lambda)
+  .dependsOn(lambda)
   .enablePlugins(NoPublishPlugin)
