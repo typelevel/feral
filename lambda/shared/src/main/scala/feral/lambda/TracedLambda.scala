@@ -27,7 +27,8 @@ import natchez.Trace
 
 object TracedLambda {
 
-  def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
+  def apply[F[_]: MonadCancelThrow, Event, Result](
+      entryPoint: EntryPoint[F],
       lambda: Kleisli[F, Span[F], Option[Result]])(
       // env first helps bind Event for KernelSource. h/t @bpholt
       implicit env: LambdaEnv[F, Event],
