@@ -27,24 +27,35 @@ final case class AttributeValue(
     m: Option[Map[String, AttributeValue]],
     n: Option[String],
     ns: Option[List[String]],
-    nul: Option[true],
+    nul: Boolean,
     s: Option[String],
     ss: Option[List[String]]
 )
 
 object AttributeValue {
-  implicit val decoder: Decoder[AttributeValue] = Decoder.forProduct10(
-    "B",
-    "BS",
-    "BOOL",
-    "L",
-    "M",
-    "N",
-    "NS",
-    "NULL",
-    "S",
-    "SS"
-  )(AttributeValue.apply)
+  implicit val decoder: Decoder[AttributeValue] = for {
+    b <- Decoder[Option[String]].at("B")
+    bs <- Decoder[Option[String]].at("BS")
+    bool <- Decoder[Option[Boolean]].at("BOOL")
+    l <- Decoder[Option[List[AttributeValue]]].at("L")
+    m <- Decoder[Option[Map[String, AttributeValue]]].at("M")
+    n <- Decoder[Option[String]].at("N")
+    ns <- Decoder[Option[List[String]]].at("NS")
+    nul <- Decoder[Option[true]].at("NULL")
+    s <- Decoder[Option[String]].at("S")
+    ss <- Decoder[Option[List[String]]].at("SS")
+  } yield AttributeValue(
+    b = b,
+    bs = bs,
+    bool = bool,
+    l = l,
+    m = m,
+    n = n,
+    ns = ns,
+    nul = nul.getOrElse(false),
+    s = s,
+    ss = ss
+  )
 }
 
 final case class StreamRecord(
@@ -99,5 +110,5 @@ final case class DynamoDBStreamEvent(
 
 object DynamoDBStreamEvent {
   implicit val decoder: Decoder[DynamoDBStreamEvent] =
-    Decoder.forProduct1("Records")(DynamoDBStreamEvent.apply)
+    Decoder.forProduct1("records")(DynamoDBStreamEvent.apply)
 }
