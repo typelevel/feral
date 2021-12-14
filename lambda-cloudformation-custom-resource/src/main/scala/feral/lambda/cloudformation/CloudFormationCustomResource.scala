@@ -49,9 +49,9 @@ object CloudFormationCustomResource {
 
     env.event.flatMap { event =>
       (event.RequestType match {
-        case CreateRequest => handler.createResource(event)
-        case UpdateRequest => handler.updateResource(event)
-        case DeleteRequest => handler.deleteResource(event)
+        case CreateRequest => handler.createResource(event.ResourceProperties)
+        case UpdateRequest => handler.updateResource(event.ResourceProperties)
+        case DeleteRequest => handler.deleteResource(event.ResourceProperties)
         case OtherRequestType(other) => illegalRequestType(other)
       }).attempt
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
