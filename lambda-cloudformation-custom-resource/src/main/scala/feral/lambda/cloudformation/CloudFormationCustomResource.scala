@@ -32,12 +32,9 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
-  def createResource(
-      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
-  def updateResource(
-      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
-  def deleteResource(
-      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
+  def createResource(input: Input): F[HandlerResponse[Output]]
+  def updateResource(input: Input): F[HandlerResponse[Output]]
+  def deleteResource(input: Input): F[HandlerResponse[Output]]
 }
 
 object CloudFormationCustomResource {
