@@ -111,7 +111,7 @@ final case class DynamoDBStreamEvent(
 
 object DynamoDBStreamEvent {
   implicit val decoder: Decoder[DynamoDBStreamEvent] =
-    Decoder.forProduct1("records")(DynamoDBStreamEvent.apply)
+    Decoder.forProduct1("Records")(DynamoDBStreamEvent.apply)
 
   implicit def kernelSource: KernelSource[DynamoDBStreamEvent] = KernelSource.emptyKernelSource
 }
