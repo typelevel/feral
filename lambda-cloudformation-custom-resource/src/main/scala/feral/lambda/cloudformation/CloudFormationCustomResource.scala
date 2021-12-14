@@ -32,12 +32,9 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
-  def createResource(
-      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
-  def updateResource(
-      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
-  def deleteResource(
-      event: CloudFormationCustomResourceRequest[Input]): F[HandlerResponse[Output]]
+  def createResource(input: Input): F[HandlerResponse[Output]]
+  def updateResource(input: Input): F[HandlerResponse[Output]]
+  def deleteResource(input: Input): F[HandlerResponse[Output]]
 }
 
 object CloudFormationCustomResource {
@@ -52,9 +49,9 @@ object CloudFormationCustomResource {
 
     env.event.flatMap { event =>
       (event.RequestType match {
-        case CreateRequest => handler.createResource(event)
-        case UpdateRequest => handler.updateResource(event)
-        case DeleteRequest => handler.deleteResource(event)
+        case CreateRequest => handler.createResource(event.ResourceProperties)
+        case UpdateRequest => handler.updateResource(event.ResourceProperties)
+        case DeleteRequest => handler.deleteResource(event.ResourceProperties)
         case OtherRequestType(other) => illegalRequestType(other)
       }).attempt
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
