@@ -71,8 +71,8 @@ lazy val root =
       core.jvm,
       lambda.js,
       lambda.jvm,
-      lambdaApiGatewayProxyHttp4s.js,
-      lambdaApiGatewayProxyHttp4s.jvm,
+      lambdaHttp4s.js,
+      lambdaHttp4s.jvm,
       lambdaCloudFormationCustomResource.js,
       lambdaCloudFormationCustomResource.jvm,
       examples.js,
@@ -113,13 +113,13 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(core)
 
-lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
+lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .in(file("lambda-api-gateway-proxy-http4s"))
+  .in(file("lambda-http4s"))
   .settings(
-    name := "feral-lambda-api-gateway-proxy-http4s",
+    name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-core" % http4sVersion
+      "org.http4s" %%% "http4s-server" % http4sVersion
     )
   )
   .dependsOn(lambda)
