@@ -34,11 +34,11 @@ class TracedLambdaSuite {
     def ioEntryPoint: EntryPoint[IO] = ???
     def needsTrace[F[_]: Trace]: F[Option[INothing]] = ???
 
-    TracedLambda(ioEntryPoint) { implicit trace =>
+    TracedHandler(ioEntryPoint) { implicit trace =>
       needsTrace[IO]
     }
 
-    TracedLambda(ioEntryPoint, Kleisli[IO, Span[IO], Option[INothing]](???))
+    TracedHandler(ioEntryPoint, Kleisli[IO, Span[IO], Option[INothing]](???))
   }
 
 }

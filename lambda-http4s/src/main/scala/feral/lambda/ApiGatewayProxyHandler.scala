@@ -30,7 +30,7 @@ import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
 
-object ApiGatewayProxyHttp4sLambda {
+object ApiGatewayProxyHandler {
 
   def apply[F[_]: Concurrent](routes: HttpRoutes[F])(
       implicit
