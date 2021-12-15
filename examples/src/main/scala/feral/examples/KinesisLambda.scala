@@ -19,9 +19,9 @@ package feral.examples
 import cats.effect._
 import feral.lambda._
 import feral.lambda.events.KinesisStreamEvent
-import skunk.Session
-import natchez.noop.NoopEntrypoint
 import natchez.Trace
+import natchez.noop.NoopEntrypoint
+import skunk.Session
 
 /**
  * On Scala.js, implement your lambda as an object. This will be the name your JavaScript
@@ -32,6 +32,8 @@ import natchez.Trace
  * Every lambda is triggered by an `Event` for which there must be a circe `Decoder[Event]`. It
  * should then return `Some[Result]` for which there must be a circe `Encoder[Result]`. If your
  * lambda has no result (as is often the case), use `INothing` and return `None` in the handler.
+ * 
+ * For a more advanced example, see the `Http4sLambda` next.
  */
 object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
 

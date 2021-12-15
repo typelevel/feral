@@ -146,6 +146,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .in(file("examples"))
   .settings(
     libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %% "natchez-noop" % natchezVersion, // TODO %%%
       "org.tpolecat" %% "natchez-http4s" % "0.1.3", // TODO %%%
