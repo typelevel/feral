@@ -33,7 +33,7 @@ import org.http4s.syntax.all._
  * `IOLambda.Simple`.
  *
  * The `IOLambda` uses a slightly more complicated encoding by introducing an effect
- * `LambdaEnv[F]` which provides access the trigger event and context in `F`. This allows you to
+ * `LambdaEnv[F]` which provides access to the event and context in `F`. This allows you to
  * compose your handler as a stack of "middlewares", making it easy to e.g. add tracing to your
  * lambda.
  */
