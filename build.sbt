@@ -250,7 +250,6 @@ lazy val netlifyFunctions =
       name := "feral-netlify-functions",
       libraryDependencies ++= Seq(
         "org.http4s" %%% "http4s-server" % http4sVersion,
-        "io.circe" %%% "circe-core" % circeVersion,
         "io.circe" %%% "circe-scalajs" % circeVersion
       )
     )
