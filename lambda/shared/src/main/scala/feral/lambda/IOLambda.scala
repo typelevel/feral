@@ -58,11 +58,11 @@ object IOLambda {
       for {
         event <- env.event
         ctx <- env.context
-        result <- handle(event, ctx, init)
+        result <- apply(event, ctx, init)
       } yield result
     }
 
-    def handle(event: Event, context: Context[IO], init: Init): IO[Option[Result]]
+    def apply(event: Event, context: Context[IO], init: Init): IO[Option[Result]]
   }
 
 }

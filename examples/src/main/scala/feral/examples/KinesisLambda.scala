@@ -19,8 +19,47 @@ package feral.examples
 import cats.effect._
 import feral.lambda._
 import feral.lambda.events.KinesisStreamEvent
+import skunk.Session
+import natchez.noop.NoopEntrypoint
+import natchez.Trace
 
-object KinesisLambda extends IOLambda.Simple[KinesisStreamEvent, INothing] {
-  def handle(event: KinesisStreamEvent, context: Context[IO], init: Init) =
+/**
+ * On Scala.js, implement your lambda as an object. This will be the name your JavaScript
+ * function is exported as.
+ *
+ * On JVM, implement your lambda as a class.
+ *
+ * Every lambda is triggered by an `Event` for which there must be a circe `Decoder[Event]`. It
+ * should then return `Some[Result]` for which there must be a circe `Encoder[Result]`. If your
+ * lambda has no result (as is often the case), use `INothing` and return `None` in the handler.
+ */
+object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
+
+  /**
+   * Optional initialization section. This is a resource that will be acquired exactly once when
+   * your lambda starts and re-used for each event that it processes.
+   *
+   * If you do not need to perform any such initialization, you may omit this section.
+   */
+  type Init = Session[IO] // a skunk session
+  override def init =
+    Resource.pure(NoopEntrypoint[IO]()).flatMap { entrypoint => // TODO replace w/ X-Ray
+      entrypoint.root("root").evalMap(Trace.ioTrace).flatMap { implicit trace =>
+        Session.single[IO](host = "host", user = "user", database = "db")
+      }
+    }
+
+  /**
+   * This is where you implement the logic of your handler.
+   *
+   * @param event
+   *   that triggered your lambda
+   * @param context
+   *   provides information about the invocation, function, and execution environment
+   * @param init
+   *   in this example, the skunk session we setup above
+   */
+  def apply(event: KinesisStreamEvent, context: Context[IO], init: Init) =
     IO.println(s"Received event with ${event.records.size} records").as(None)
+
 }

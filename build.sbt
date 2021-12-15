@@ -144,5 +144,13 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("examples"))
-  .dependsOn(lambda)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.tpolecat" %% "natchez-noop" % natchezVersion, // TODO %%%
+      "org.tpolecat" %% "natchez-http4s" % "0.1.3", // TODO %%%
+      "org.tpolecat" %%% "skunk-core" % "0.2.2",
+    )
+  )
+  .dependsOn(lambda, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)
