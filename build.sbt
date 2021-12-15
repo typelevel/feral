@@ -55,6 +55,18 @@ ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
   mkdirStep +: steps
 }
 
+ThisBuild / githubWorkflowBuildPreamble += WorkflowStep.Sbt(
+  List(s"++$Scala213", "publishLocal"),
+  name = Some("Publish local"),
+  cond = Some(s"matrix.scala == '$Scala212'")
+)
+
+ThisBuild / githubWorkflowBuild += WorkflowStep.Sbt(
+  List(s"scripted"),
+  name = Some("Run sbt scripted tests"),
+  cond = Some(s"matrix.scala == '$Scala212'")
+)
+
 replaceCommandAlias(
   "ci",
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"

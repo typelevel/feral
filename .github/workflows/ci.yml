@@ -58,6 +58,10 @@ jobs:
             ~/Library/Caches/Coursier/v1
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
+      - name: Publish local
+        if: matrix.scala == '2.12.15'
+        run: sbt ++${{ matrix.scala }} ++2.13.7 publishLocal
+
       - name: Setup NodeJS v14 LTS
         uses: actions/setup-node@v2
         with:
@@ -67,6 +71,10 @@ jobs:
         run: sbt ++${{ matrix.scala }} githubWorkflowCheck
 
       - run: sbt ++${{ matrix.scala }} ci
+
+      - name: Run sbt scripted tests
+        if: matrix.scala == '2.12.15'
+        run: sbt ++${{ matrix.scala }} scripted
 
       - name: Make target directories
         run: mkdir -p target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target lambda/js/target examples/.jvm/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
