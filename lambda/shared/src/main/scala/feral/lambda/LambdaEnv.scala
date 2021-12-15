@@ -48,6 +48,9 @@ object LambdaEnv {
       val context = c.pure
     }
 
+  def event[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Event] = env.event
+  def context[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Context[F]] = env.context
+
   implicit def kleisliLambdaEnv[F[_]: Functor, A, B](
       implicit env: LambdaEnv[F, A]): LambdaEnv[Kleisli[F, B, *], A] =
     env.mapK(Kleisli.liftK)
