@@ -29,7 +29,7 @@ private[netlify] sealed trait Context extends js.Object {
   def awsRequestId: String = js.native
   def logGroupName: String = js.native
   def logStreamName: String = js.native
-  def identity: UndefOr[Null | js.Object] = js.native
-  def clientContext: UndefOr[Null | js.Object] = js.native
+  def identity: UndefOr[js.Object] = js.native
+  def clientContext: UndefOr[js.Object] = js.native
   def getRemainingTimeInMillis(): Double = js.native
 }

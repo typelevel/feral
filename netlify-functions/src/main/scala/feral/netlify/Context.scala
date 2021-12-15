@@ -23,9 +23,7 @@ import io.circe.scalajs._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._
-import scala.annotation.nowarn
 
-//todo remodel
 final class Context[F[_]] private[netlify] (
     val functionName: String,
     val functionVersion: String,
@@ -52,14 +50,6 @@ final class Context[F[_]] private[netlify] (
 }
 
 object Context {
-  import scalajs.js.|
-
-  @nowarn("msg=unreachable code")
-  private def nullableToOption[A](nora: Null | A): Option[A] = nora match {
-    case null => None
-    case v => Some(v.asInstanceOf[A])
-  }
-
   private[netlify] def fromJS[F[_]: Sync](context: facade.Context): Context[F] =
     new Context(
       context.functionName,
@@ -69,10 +59,10 @@ object Context {
       context.awsRequestId,
       context.logGroupName,
       context.logStreamName,
-      context.identity.toOption.flatMap(nullableToOption).map {
+      context.identity.toOption.flatMap(Option(_)).map {
         decodeJs[Map[String, Json]](_).toOption.get
       },
-      context.clientContext.toOption.flatMap(nullableToOption).map {
+      context.clientContext.toOption.flatMap(Option(_)).map {
         decodeJs[Map[String, Json]](_).toOption.get
       },
       Sync[F].delay(context.getRemainingTimeInMillis().millis)
