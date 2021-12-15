@@ -32,7 +32,7 @@ object NetlifyHttp4sHandler {
 
   def apply[F[_]: Concurrent](
       routes: HttpRoutes[F]
-  )(implicit env: LambdaEnv[F, NetlifyHttpEvent]): F[Option[NetlifyHttpResult]] =
+  )(implicit env: FunctionEnv[F, NetlifyHttpEvent]): F[Option[NetlifyHttpResult]] =
     for {
       event <- env.event
       method <- Method.fromString(event.httpMethod).liftTo[F]

@@ -40,7 +40,7 @@ abstract class IOLambda[Event, Result](
       for {
         event <- IOLocal(event)
         context <- IOLocal(context)
-        env = LambdaEnv.ioLambdaEnv(event, context)
+        env = FunctionEnv.ioLambdaEnv(event, context)
         result <- handler(env)
       } yield result
     }
@@ -60,7 +60,7 @@ abstract class IOLambda[Event, Result](
       } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
   }
 
-  def handler: Resource[IO, LambdaEnv[IO, Event] => IO[Option[Result]]]
+  def handler: Resource[IO, FunctionEnv[IO, Event] => IO[Option[Result]]]
 
 }
 
