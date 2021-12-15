@@ -58,6 +58,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
   )
 
 val catsEffectVersion = "3.3.0"
+val catsMtlVersion = "1.2.1"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
@@ -96,7 +97,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core" % circeVersion,
-      "org.tpolecat" %%% "natchez-core" % natchezVersion
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.typelevel" %% "cats-mtl" % catsMtlVersion
     )
   )
   .jsSettings(
