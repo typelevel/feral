@@ -32,7 +32,7 @@ object NetlifyHttp4sHandler {
 
   def apply[F[_]: Concurrent](
       routes: HttpRoutes[F]
-  )(implicit env: FunctionEnv[F, NetlifyHttpEvent]): F[Option[NetlifyHttpResult]] =
+  )(implicit env: FunctionEnv[F, HttpFunctionEvent]): F[Option[HttpFunctionResult]] =
     for {
       event <- env.event
       method <- Method.fromString(event.httpMethod).liftTo[F]
@@ -55,7 +55,7 @@ object NetlifyHttp4sHandler {
                        else
                          response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
     } yield Some(
-      NetlifyHttpResult(
+      HttpFunctionResult(
         response.status.code,
         response
           .headers

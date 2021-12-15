@@ -28,7 +28,7 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
 
-abstract class IOLambda[Event, Result](
+abstract class IOFunction[Event, Result](
     implicit private[netlify] val decoder: Decoder[Event],
     private[netlify] val encoder: Encoder[Result]
 ) extends IOSetup {
@@ -64,12 +64,12 @@ abstract class IOLambda[Event, Result](
 
 }
 
-object IOLambda {
+object IOFunction {
 
   abstract class Simple[Event, Result](
       implicit decoder: Decoder[Event],
       encoder: Encoder[Result])
-      extends IOLambda[Event, Result] {
+      extends IOFunction[Event, Result] {
 
     type Init
     def init: Resource[IO, Init] = Resource.pure(null.asInstanceOf[Init])

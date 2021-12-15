@@ -18,7 +18,7 @@ package feral.netlify
 import io.circe.Decoder
 import cats.data.NonEmptyList
 
-final case class NetlifyHttpEvent(
+final case class HttpFunctionEvent(
     rawUrl: String,
     rawQuery: String,
     path: String,
@@ -31,8 +31,8 @@ final case class NetlifyHttpEvent(
     isBase64Encoded: Boolean
 )
 
-object NetlifyHttpEvent {
-  implicit def decoder: Decoder[NetlifyHttpEvent] = Decoder.forProduct10(
+object HttpFunctionEvent {
+  implicit def decoder: Decoder[HttpFunctionEvent] = Decoder.forProduct10(
     "rawUrl",
     "rawQuery",
     "path",
@@ -43,20 +43,20 @@ object NetlifyHttpEvent {
     "multiValueQueryStringParameters",
     "body",
     "isBase64Encoded"
-  )(NetlifyHttpEvent.apply)
+  )(HttpFunctionEvent.apply)
 }
 
 import io.circe.Encoder
 
-final case class NetlifyHttpResult(
+final case class HttpFunctionResult(
     statusCode: Int,
     headers: Map[String, String],
     body: String,
     isBase64Encoded: Boolean
 )
 
-object NetlifyHttpResult {
-  implicit def encoder: Encoder[NetlifyHttpResult] = Encoder.forProduct4(
+object HttpFunctionResult {
+  implicit def encoder: Encoder[HttpFunctionResult] = Encoder.forProduct4(
     "statusCode",
     "headers",
     "body",
