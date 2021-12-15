@@ -90,6 +90,7 @@ lazy val root =
       core.jvm,
       lambda.js,
       lambda.jvm,
+      sbtLambda,
       lambdaHttp4s.js,
       lambdaHttp4s.jvm,
       lambdaCloudFormationCustomResource.js,
