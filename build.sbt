@@ -95,7 +95,6 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion,
       "org.tpolecat" %%% "natchez-core" % natchezVersion
     )
   )
@@ -108,6 +107,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
       "co.fs2" %%% "fs2-io" % fs2Version,
+      "io.circe" %%% "circe-jawn" % circeVersion,
       "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
@@ -135,7 +135,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     }),
     libraryDependencies ++= Seq(
       "io.monix" %%% "newtypes-core" % "0.0.1",
-      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion
     )
   )
