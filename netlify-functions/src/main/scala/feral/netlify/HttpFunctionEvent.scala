@@ -15,8 +15,10 @@
  */
 
 package feral.netlify
-import io.circe.Decoder
+
 import cats.data.NonEmptyList
+import io.circe.Decoder
+import io.circe.Encoder
 
 final case class HttpFunctionEvent(
     rawUrl: String,
@@ -45,8 +47,6 @@ object HttpFunctionEvent {
     "isBase64Encoded"
   )(HttpFunctionEvent.apply)
 }
-
-import io.circe.Encoder
 
 final case class HttpFunctionResult(
     statusCode: Int,
