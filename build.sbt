@@ -43,6 +43,18 @@ ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
   } yield MatrixExclude(Map("scala" -> scala, "java" -> java))
 }
 
+ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
+  val mkdirStep = steps.head match {
+    case WorkflowStep.Run(command :: _, _, _, _, _) =>
+      WorkflowStep.Run(
+        commands = List(command.replace("tar cf targets.tar", "mkdir -p")),
+        name = Some("Make target directories")
+      )
+    case _ => sys.error("Can't generate make target dirs workflow step")
+  }
+  mkdirStep +: steps
+}
+
 replaceCommandAlias(
   "ci",
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
