@@ -144,7 +144,10 @@ lazy val sbtLambda = project
     addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
     addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.0.5"),
     buildInfoPackage := "feral.lambda.sbt",
-    buildInfoKeys += organization
+    buildInfoKeys += organization,
+    scriptedLaunchOpts := {
+      scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+    }
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
