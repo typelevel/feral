@@ -46,8 +46,8 @@ abstract class IOFunction[Event, Result](
     }
 
   def main(args: Array[String]): Unit = {
-    val handlerName = getClass.getSimpleName.init
-    js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
+    // Netlify functions require the entrypoint to be called `handler`
+    js.Dynamic.global.exports.updateDynamic("handler")(handlerFn)
   }
 
   private lazy val handlerFn
