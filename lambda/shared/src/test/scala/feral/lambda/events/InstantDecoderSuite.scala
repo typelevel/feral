@@ -16,24 +16,24 @@
 
 package feral.lambda.events
 
-import io.circe.Encoder
+import io.circe.Json
+import munit.ScalaCheckSuite
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
 
-sealed abstract class ApiGatewayProxyResultV2
+import java.time.Instant
 
-final case class ApiGatewayProxyStructuredResultV2(
-    statusCode: Int,
-    headers: Map[String, String],
-    body: String,
-    isBase64Encoded: Boolean,
-    cookies: List[String]
-) extends ApiGatewayProxyResultV2
+class InstantDecoderSuite extends ScalaCheckSuite {
 
-object ApiGatewayProxyStructuredResultV2 {
-  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct5(
-    "statusCode",
-    "headers",
-    "body",
-    "isBase64Encoded",
-    "cookies"
-  )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded, r.cookies))
+  implicit val arbitraryInstant: Arbitrary[Instant] = Arbitrary(
+    Gen.long.map(Instant.ofEpochMilli(_)))
+
+  property("round-trip") {
+    forAll { (instant: Instant) =>
+      val decoded = Json.fromLong(instant.toEpochMilli()).as[Instant].toTry.get
+      assertEquals(decoded, instant)
+    }
+  }
+
 }
