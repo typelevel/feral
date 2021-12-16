@@ -139,7 +139,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     ),
     libraryDependencies ++= {
       if (isDotty.value) Nil
@@ -188,8 +189,7 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-server" % http4sVersion,
-      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
+      "org.http4s" %%% "http4s-server" % http4sVersion
     )
   )
   .settings(commonSettings)
