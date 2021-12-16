@@ -20,6 +20,7 @@ package events
 import io.circe.Decoder
 import natchez.Kernel
 
+import java.time.Instant
 import scala.util.Try
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/sqs.d.ts
@@ -74,9 +75,9 @@ object SQSRecord {
 final case class SQSRecordAttributes(
     awsTraceHeader: Option[String],
     approximateReceiveCount: String,
-    sentTimestamp: String,
+    sentTimestamp: Instant,
     senderId: String,
-    approximateFirstReceiveTimestamp: String,
+    approximateFirstReceiveTimestamp: Instant,
     sequenceNumber: Option[String],
     messageGroupId: Option[String],
     messageDeduplicationId: Option[String]
@@ -88,9 +89,9 @@ object SQSRecordAttributes {
     for {
       awsTraceHeader <- i.get[Option[String]]("AWSTraceHeader")
       approximateReceiveCount <- i.get[String]("ApproximateReceiveCount")
-      sentTimestamp <- i.get[String]("SentTimestamp")
+      sentTimestamp <- i.get[Instant]("SentTimestamp")
       senderId <- i.get[String]("SenderId")
-      approximateFirstReceiveTimestamp <- i.get[String]("ApproximateFirstReceiveTimestamp")
+      approximateFirstReceiveTimestamp <- i.get[Instant]("ApproximateFirstReceiveTimestamp")
       sequenceNumber <- i.get[Option[String]]("SequenceNumber")
       messageGroupId <- i.get[Option[String]]("MessageGroupId")
       messageDeduplicationId <- i.get[Option[String]]("MessageDeduplicationId")

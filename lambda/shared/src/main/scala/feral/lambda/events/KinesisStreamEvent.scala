@@ -19,8 +19,10 @@ package events
 
 import io.circe.Decoder
 
+import java.time.Instant
+
 final case class KinesisStreamRecordPayload(
-    approximateArrivalTimestamp: Double,
+    approximateArrivalTimestamp: Instant,
     data: String,
     kinesisSchemaVersion: String,
     partitionKey: String,

@@ -23,12 +23,14 @@ import scala.util.Try
 
 package object events {
 
-  implicit lazy val instantDecoder: Decoder[Instant] = Decoder.decodeBigDecimal.emapTry { millis =>
-    Try {
-      val seconds = millis.toLongExact / 1000
-      val nanos = ((millis % 1000) * 1e6).toLongExact
-      Instant.ofEpochSecond(seconds, nanos)
+  implicit lazy val instantDecoder: Decoder[Instant] =
+    Decoder.decodeBigDecimal.emapTry { millis =>
+      def round(x: BigDecimal) = x.setScale(0, BigDecimal.RoundingMode.DOWN)
+      Try {
+        val seconds = round(millis / 1000).toLongExact
+        val nanos = round((millis % 1000) * 1e6).toLongExact
+        Instant.ofEpochSecond(seconds, nanos)
+      }
     }
-  }
 
 }
