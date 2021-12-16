@@ -89,6 +89,8 @@ val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
 val natchezVersion = "0.1.5"
+val munitVersion = "0.7.29"
+val munitCEVersion = "1.0.7"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -128,13 +130,25 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "org.tpolecat" %%% "natchez-core" % natchezVersion
-    )
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "org.scodec" %%% "scodec-bits" % "1.1.30",
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
+    ),
+    libraryDependencies ++= {
+      if (isDotty.value) Nil
+      else
+        Seq(
+          "io.circe" %%% "circe-literal" % circeVersion % Test,
+          "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
+        )
+    }
   )
   .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
     )
   )
   .jvmSettings(
@@ -168,11 +182,12 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-server" % http4sVersion
+      "org.http4s" %%% "http4s-server" % http4sVersion,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda)
+  .dependsOn(lambda % "compile->compile;test->test")
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
