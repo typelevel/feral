@@ -19,6 +19,6 @@ package feral.lambda
 import events._
 
 type ApiGatewayProxyLambdaEnv[F[_]] = LambdaEnv[F, ApiGatewayProxyEventV2]
-type DynamoDBStreamLambdaEnv[F[_]] = LambdaEnv[F, DynamoDBStreamEvent]
+type DynamoDbStreamLambdaEnv[F[_]] = LambdaEnv[F, DynamoDbStreamEvent]
 type KinesisStreamLambdaEnv[F[_]] = LambdaEnv[F, KinesisStreamEvent]
 type SqsLambdaEnv[F[_]] = LambdaEnv[F, SqsEvent]
