@@ -42,12 +42,6 @@ sealed trait LambdaEnv[F[_], Event] { outer =>
 object LambdaEnv {
   def apply[F[_], A](implicit env: LambdaEnv[F, A]): LambdaEnv[F, A] = env
 
-  def of[F[_]: Applicative, Event](e: Event, c: Context[F]): LambdaEnv[F, Event] =
-    new LambdaEnv[F, Event] {
-      val event = e.pure
-      val context = c.pure
-    }
-
   def event[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Event] = env.event
   def context[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Context[F]] = env.context
 
