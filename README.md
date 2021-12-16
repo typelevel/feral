@@ -1,27 +1,40 @@
 # feral [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/AJASeCq8gN)
 
-feral is a framework for writing serverless functions in Scala with [Cats Effect](https://github.com/typelevel/cats-effect) and deploying them to the cloud, targeting both JVM and JavaScript runtimes. Integrations with libraries such as [circe](https://github.com/circe/circe) and [http4s](https://github.com/http4s/http4s) enable feral to provide an idiomatic, purely functional interface that is flexible and composable. The initial focus has been on supporting [AWS Lambda](https://aws.amazon.com/lambda/) and will eventually expand to other serverless providers.
+feral is a framework for writing serverless functions in Scala with [Cats Effect](https://github.com/typelevel/cats-effect) and deploying them to the cloud, targeting both JVM and JavaScript runtimes. By providing an idiomatic, purely functional interface, feral is composable—integrations with [natchez](https://github.com/tpolecat/natchez) and [http4s](https://github.com/http4s/http4s) are provided out-of-the-box—and also highly customizable. The initial focus has been on supporting [AWS Lambda](https://aws.amazon.com/lambda/) and will eventually expand to other serverless providers.
 
 ## Getting started
 
 Feral is published for Scala 2.13 and 3.1+ with artifacts for both JVM and Scala.js 1.8+.
 
 ```scala
-// Everything you need to write your AWS Lambda
-libraryDependencies += "org.typelevel" %%% "feral-lambda" % "0.1.0-M1"
+// Scala.js setup
+addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.1.0-M1") // in plugins.sbt
+enable(LambdaJSPlugin) // in build.sbt
 
-// Specialized integrations
-libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.1.0-M1"
-libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.1.0-M1"
+// JVM setup
+libraryDependencies += "org.typelevel" %% "feral-lambda-http4s" % "0.1.0-M1"
+
+// Optional, specialized integrations. Available for both JS and JVM
+libraryDependencies += "org.typelevel" %% "feral-lambda-http4s" % "0.1.0-M1"
+libraryDependencies += "org.typelevel" %% "feral-lambda-cloudformation-custom-resource" % "0.1.0-M1"
 ```
 
-`IOLambda[Event, Result]` or `IOLambda.Simple[Event, Result]` are the entrypoint for your Lambda (comparable to `IOApp` in Cats Effect). `Event` and `Result` can be any type for which a circe `Decoder` and `Encoder` are defined and must correspond to the "trigger" event and (optional) result for your Lambda. The `feral.lambda.events` package provides some of these models already ([please consider contributing!](https://github.com/typelevel/feral/issues/48)).
+Next, implement your Lambda. Please refer to the [examples](https://github.com/typelevel/feral/tree/main/examples/src/main/scala/feral/examples) for a tutorial.
 
-The [examples](https://github.com/typelevel/feral/tree/main/examples/src/main/scala/feral/examples) provide an in-depth demonstration of how to implement your Lambda.
+There are several options to deploy your Lambda. For example you can use the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
+
+To deploy a Scala.js Lambda, you will need to know the following:
+1. The runtime for your Lambda is Node.js 14.
+2. Run `sbt npmPackage` to package your Lambda for deployment and point your tooling to the `target/scala-2.13/npm-package/` directory.
+3. The handler for your Lambda is `index.yourLambdaName`.
+    - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
+    - `yourLambdaName` is the name of the Scala `object` you created that extends from `IOLambda`.
+
+As the feral project develops, one of the goals is to provide an sbt plugin that simplifies and automates the deployment process. If this appeals to you, please contribute feature requests, ideas, and/or code!
 
 ## Why go feral?
 
-The premise that you can (and should!) write production-ready serverless functions in Scala targeting JavaScript may be a surprising one. Here, we motivate feral—and the rapid maturity of the Typelevel.js ecosystem—based on three ideas.
+The premise that you can (and should!) write production-ready serverless functions in Scala targeting JavaScript may be a surprising one. This project—and the rapid maturity of the Typelevel.js ecosystem—is motivated by three ideas.
 
 1. **JavaScript is the ideal compile target for serverless functions.** 
   
@@ -37,13 +50,11 @@ The premise that you can (and should!) write production-ready serverless functio
 
    Cats Effect takes this a step further by establishing [semantics for _asynchronous_ programming](https://typelevel.org/cats-effect/docs/typeclasses) (aka "laws") and guaranteeing them across the JVM and JS. In fact, the initial testing of these semantics on Scala.js revealed a [fundamental fairness issue](https://github.com/scala-js/scala-js/issues/4129) that culminated in [the deprecation](http://www.scala-js.org/news/2021/12/10/announcing-scalajs-1.8.0/#new-compiler-warnings-with-broad-applicability) of the default global `ExecutionContext` in Scala.js. As a replacement, the [`MacrotaskExecutor` project](https://github.com/scala-js/scala-js-macrotask-executor) was extracted from Cats Effect and is now the official recommendation for all Scala.js applications. Cats Effect `IO` is specifically optimized to take advantage of the `MacrotaskExecutor`'s fairness properties while maximizing throughput and performance.
 
-   Besides the focus on performance, `IO` also has features to enrich the observability and debuggability of your JavaScript applications during development.
-    * [Tracing and enhanced exceptions](https://typelevel.org/cats-effect/docs/tracing) that enable you to follow the execution graph of a process in your program, even across asynchronous boundaries.
-    * [Fiber dumps](https://github.com/typelevel/cats-effect/releases/tag/v3.3.0) to introspect the traces of _all_ the concurrent processes in your program at a given time.
+   `IO` also has features to enrich the observability and debuggability of your JavaScript applications during development. [Tracing and enhanced exceptions](https://typelevel.org/cats-effect/docs/tracing) capture the execution graph of a process in your program, even across asynchronous boundaries, while [fiber dumps](https://github.com/typelevel/cats-effect/releases/tag/v3.3.0) enable you to introspect the traces of _all_ the concurrent processes in your program at any given time.
 
 3. **Your favorite Typelevel libraries are already designed for Scala.js.**
 
-   Thanks to the platform-independent semantics, software built using abstractions from Cats Effect and other Typelevel libraries can often be easily cross-compiled for Scala.js. One spectacular example of this is [skunk](https://github.com/tpolecat/skunk), a data access library for Postgres that was never intended to compile to JavaScript. However, due to its whole-hearted adoption of purely functional asynchronous programming, today it also runs on Node.js with _virtually no changes to its source code_.
+   Thanks to the platform-independent semantics, software built using abstractions from Cats Effect and other Typelevel libraries can often be easily cross-compiled for Scala.js. One spectacular example of this is [skunk](https://github.com/tpolecat/skunk), a data access library for Postgres that was never intended to target JavaScript. However, due to its whole-hearted adoption of purely functional asynchronous programming, today it also runs on Node.js with _virtually no changes to its source code_.
 
    In practice, this means you can directly transfer your knowledge and experience writing Scala for the JVM to writing Scala.js and in many cases _share code_ with your JVM applications. The following libraries offer _identical_ APIs across the JVM and JS platforms:
     * [Cats](https://github.com/typelevel/cats) and [Cats Effect](https://github.com/typelevel/cats-effect) for purely functional, asynchronous programming
