@@ -21,13 +21,20 @@ ThisBuild / baseVersion := "0.1"
 ThisBuild / organization := "org.typelevel"
 ThisBuild / organizationName := "Typelevel"
 
-ThisBuild / crossScalaVersions := Seq("3.1.0", "2.12.15", "2.13.7")
+ThisBuild / crossScalaVersions := Seq("3.1.0", "2.13.7")
 
 ThisBuild / developers := List(
   Developer("armanbilge", "Arman Bilge", "@armanbilge", url("https://github.com/armanbilge")),
   Developer("bpholt", "Brian Holt", "@bpholt", url("https://github.com/bpholt")),
   Developer("djspiewak", "Daniel Spiewak", "@djspiewak", url("https://github.com/djspiewak"))
 )
+
+enablePlugins(SonatypeCiReleasePlugin)
+ThisBuild / spiewakCiReleaseSnapshots := true
+ThisBuild / spiewakMainBranches := Seq("main")
+ThisBuild / homepage := Some(url("https://github.com/typelevel/feral"))
+ThisBuild / scmInfo := Some(
+  ScmInfo(url("https://github.com/typelevel/feral"), "git@github.com:typelevel/feral.git"))
 
 ThisBuild / githubWorkflowJavaVersions := List("corretto@8", "corretto@11")
 ThisBuild / githubWorkflowEnv += ("JABBA_INDEX" -> "https://github.com/typelevel/jdk-index/raw/main/index.json")
@@ -52,8 +59,10 @@ ThisBuild / githubWorkflowBuildPreamble +=
 
 val catsEffectVersion = "3.3.0"
 val circeVersion = "0.14.1"
-val fs2Version = "3.2.2"
-val http4sVersion = "0.23.6"
+val fs2Version = "3.2.3"
+val http4sVersion = "0.23.7"
+val natchezVersion = "0.1.5"
+val munitVersion = "0.7.29"
 
 lazy val root =
   project
@@ -61,14 +70,14 @@ lazy val root =
     .aggregate(
       core.js,
       core.jvm,
-      lambdaCloudFormationCustomResource.js,
-      lambdaCloudFormationCustomResource.jvm,
       lambda.js,
       lambda.jvm,
-      lambdaEvents.js,
-      lambdaEvents.jvm,
-      lambdaApiGatewayProxyHttp4s.js,
-      lambdaApiGatewayProxyHttp4s.jvm
+      lambdaHttp4s.js,
+      lambdaHttp4s.jvm,
+      lambdaCloudFormationCustomResource.js,
+      lambdaCloudFormationCustomResource.jvm,
+      examples.js,
+      examples.jvm
     )
     .enablePlugins(NoPublishPlugin)
 
@@ -87,43 +96,46 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
-    )
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "org.scodec" %%% "scodec-bits" % "1.1.30",
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
+    ),
+    libraryDependencies ++= {
+      if (isDotty.value) Nil
+      else
+        Seq(
+          "io.circe" %%% "circe-literal" % circeVersion % Test,
+          "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
+        )
+    }
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
     )
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
       "co.fs2" %%% "fs2-io" % fs2Version,
+      "io.circe" %%% "circe-jawn" % circeVersion,
       "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
   .dependsOn(core)
 
-lazy val lambdaEvents = crossProject(JSPlatform, JVMPlatform)
+lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .in(file("lambda-events"))
+  .in(file("lambda-http4s"))
   .settings(
-    name := "feral-lambda-events",
+    name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-generic" % circeVersion
+      "org.http4s" %%% "http4s-server" % http4sVersion
     )
   )
-
-lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("lambda-api-gateway-proxy-http4s"))
-  .settings(
-    name := "feral-lambda-api-gateway-proxy-http4s",
-    libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-core" % http4sVersion
-    )
-  )
-  .dependsOn(lambda, lambdaEvents)
+  .dependsOn(lambda)
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -136,9 +148,14 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     }),
     libraryDependencies ++= Seq(
       "io.monix" %%% "newtypes-core" % "0.0.1",
-      "io.circe" %%% "circe-generic" % circeVersion,
-      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion
     )
   )
   .dependsOn(lambda)
+
+lazy val examples = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("examples"))
+  .dependsOn(lambda)
+  .enablePlugins(NoPublishPlugin)

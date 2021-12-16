@@ -21,10 +21,12 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
 import io.circe
+import io.circe.Printer
+import io.circe.syntax._
 
 import java.io.InputStream
 import java.io.OutputStream
-import java.nio.charset.StandardCharsets
+import java.nio.channels.Channels
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
@@ -36,7 +38,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
     Resource
       .eval {
         for {
-          setup <- setupMemo
+          lambda <- setupMemo
           event <- fs2
             .io
             .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
@@ -45,10 +47,15 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .head
             .compile
             .lastOrError
-          context <- IO(Context.fromJava(context))
-          _ <- OptionT(apply(event, context, setup)).foldF(IO.unit) { result =>
-            // TODO can circe write directly to output?
-            IO(output.write(encoder(result).noSpaces.getBytes(StandardCharsets.UTF_8)))
+          context <- IO(Context.fromJava[IO](context))
+          _ <- OptionT(lambda(event, context)).foldF(IO.unit) { result =>
+            IO {
+              val json = result.asJson
+              val bb = Printer.noSpaces.printToByteBuffer(json)
+              val ch = Channels.newChannel(output)
+              ch.write(bb)
+              ()
+            }
           }
         } yield ()
       }

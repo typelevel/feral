@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
 
-import io.circe.Encoder
-import io.circe.generic.semiauto._
+import io.circe.Decoder
 
-sealed abstract class ApiGatewayProxyResultV2
+import java.time.Instant
+import scala.util.Try
 
-final case class ApiGatewayProxyStructuredResultV2(
-    statusCode: Int,
-    headers: Map[String, String],
-    body: String,
-    isBase64Encoded: Boolean
-) extends ApiGatewayProxyResultV2
+package object events {
 
-object ApiGatewayProxyStructuredResultV2 {
-  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = deriveEncoder
+  implicit lazy val instantDecoder: Decoder[Instant] =
+    Decoder.decodeBigDecimal.emapTry { millis =>
+      def round(x: BigDecimal) = x.setScale(0, BigDecimal.RoundingMode.DOWN)
+      Try {
+        val seconds = round(millis / 1000).toLongExact
+        val nanos = round((millis % 1000) * 1e6).toLongExact
+        Instant.ofEpochSecond(seconds, nanos)
+      }
+    }
+
 }
