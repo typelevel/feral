@@ -133,9 +133,9 @@ object SQSMessageAttribute {
 
     Decoder.instance(_.get[Predef.String]("dataType")).flatMap {
       case "String" => strValue.map(SQSMessageAttribute.String(_): SQSMessageAttribute)
-      case "Binary" => binValue.map(SQSMessageAttribute.Binary)
+      case "Binary" => binValue.map(SQSMessageAttribute.Binary(_))
       case "Number" =>
-        strValue.emapTry(n => Try(BigDecimal(n))).map(SQSMessageAttribute.Number)
+        strValue.emapTry(n => Try(BigDecimal(n))).map(SQSMessageAttribute.Number(_))
       case dataType =>
         Decoder.instance(i =>
           for {
