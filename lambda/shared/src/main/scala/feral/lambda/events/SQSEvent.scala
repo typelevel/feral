@@ -111,14 +111,13 @@ object SQSRecordAttributes {
   implicit def kernelSource: KernelSource[SQSRecordAttributes] = a => Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
 }
 
-sealed trait SQSMessageAttribute
+sealed abstract class SQSMessageAttribute
 object SQSMessageAttribute {
-  case class String(raw: Predef.String) extends SQSMessageAttribute
+  final case class String(value: Predef.String) extends SQSMessageAttribute
 
-  // we should probably represent this better, but I don't know how these are encoded, is it base64?
-  case class Binary(raw: ByteVector) extends SQSMessageAttribute
-  case class Number(raw: BigDecimal) extends SQSMessageAttribute
-  case class Unknown(
+  final case class Binary(value: ByteVector) extends SQSMessageAttribute
+  final case class Number(value: BigDecimal) extends SQSMessageAttribute
+  final case class Unknown(
       stringValue: Option[Predef.String],
       binaryValue: Option[Predef.String],
       dataType: Predef.String
