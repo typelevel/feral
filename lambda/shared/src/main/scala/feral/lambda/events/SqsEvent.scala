@@ -45,7 +45,7 @@ final case class SqsRecord(
     messageAttributes: Map[String, SqsMessageAttribute],
     md5OfBody: String,
     eventSource: String,
-    eventSourceARN: String,
+    eventSourceArn: String,
     awsRegion: String
 )
 
@@ -59,7 +59,7 @@ object SqsRecord {
       messageAttributes <- i.get[Map[String, SqsMessageAttribute]]("messageAttributes")
       md5OfBody <- i.get[String]("md5OfBody")
       eventSource <- i.get[String]("eventSource")
-      eventSourceARN <- i.get[String]("eventSourceARN")
+      eventSourceArn <- i.get[String]("eventSourceARN")
       awsRegion <- i.get[String]("awsRegion")
     } yield SqsRecord(
       messageId,
@@ -69,7 +69,7 @@ object SqsRecord {
       messageAttributes,
       md5OfBody,
       eventSource,
-      eventSourceARN,
+      eventSourceArn,
       awsRegion
     ))
 }

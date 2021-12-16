@@ -87,7 +87,7 @@ final case class DynamoDBRecord(
     eventID: Option[String],
     eventName: Option[String],
     eventSource: Option[String],
-    eventSourceARN: Option[String],
+    eventSourceArn: Option[String],
     eventVersion: Option[String],
     userIdentity: Option[Json]
 )
