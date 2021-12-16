@@ -93,7 +93,13 @@ val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 
 lazy val commonSettings = Seq(
-  crossScalaVersions := Seq(Scala3, Scala213)
+  crossScalaVersions := Seq(Scala3, Scala213),
+  scalacOptions ++= {
+    if (isDotty.value && githubIsWorkflowBuild.value)
+      Seq("-Xfatal-warnings")
+    else
+      Seq.empty
+  }
 )
 
 lazy val root =
