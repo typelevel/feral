@@ -42,6 +42,9 @@ sealed trait LambdaEnv[F[_], Event] { outer =>
 object LambdaEnv {
   def apply[F[_], A](implicit env: LambdaEnv[F, A]): LambdaEnv[F, A] = env
 
+  def event[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Event] = env.event
+  def context[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Context[F]] = env.context
+
   implicit def kleisliLambdaEnv[F[_]: Functor, A, B](
       implicit env: LambdaEnv[F, A]): LambdaEnv[Kleisli[F, B, *], A] =
     env.mapK(Kleisli.liftK)

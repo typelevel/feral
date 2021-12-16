@@ -16,6 +16,7 @@
 
 package feral
 
+import feral.lambda.events._
 import io.circe.Encoder
 
 import scala.annotation.nowarn
@@ -36,4 +37,9 @@ package object lambda {
    */
   @nowarn("msg=dead code following this construct")
   implicit val nothingEncoder: Encoder[INothing] = identity(_)
+
+  type ApiGatewayProxyLambdaEnv[F[_]] = LambdaEnv[F, ApiGatewayProxyEventV2]
+  type DynamoDBStreamLambdaEnv[F[_]] = LambdaEnv[F, DynamoDBStreamEvent]
+  type KinesisStreamLambdaEnv[F[_]] = LambdaEnv[F, KinesisStreamEvent]
+  type SQSLambdaEnv[F[_]] = LambdaEnv[F, SQSEvent]
 }
