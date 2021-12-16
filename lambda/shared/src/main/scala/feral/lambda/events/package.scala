@@ -16,29 +16,21 @@
 
 package feral.lambda
 
-import cats.data.Kleisli
-import cats.effect.IO
-import feral.lambda.events.KinesisStreamEvent
-import natchez.EntryPoint
-import natchez.Span
-import natchez.Trace
+import io.circe.Decoder
 
-import scala.annotation.nowarn
+import java.time.Instant
+import scala.util.Try
 
-class TracedLambdaSuite {
+package object events {
 
-  @nowarn
-  def syntaxTest = { // Checking for compilation, nothing more
-
-    implicit def env: LambdaEnv[IO, KinesisStreamEvent] = ???
-    def ioEntryPoint: EntryPoint[IO] = ???
-    def needsTrace[F[_]: Trace]: F[Option[INothing]] = ???
-
-    TracedLambda(ioEntryPoint) { implicit trace =>
-      needsTrace[IO]
+  implicit lazy val instantDecoder: Decoder[Instant] =
+    Decoder.decodeBigDecimal.emapTry { millis =>
+      def round(x: BigDecimal) = x.setScale(0, BigDecimal.RoundingMode.DOWN)
+      Try {
+        val seconds = round(millis / 1000).toLongExact
+        val nanos = round((millis % 1000) * 1e6).toLongExact
+        Instant.ofEpochSecond(seconds, nanos)
+      }
     }
-
-    TracedLambda(ioEntryPoint, Kleisli[IO, Span[IO], Option[INothing]](???))
-  }
 
 }

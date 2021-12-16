@@ -31,10 +31,10 @@ object RequestContext {
     Decoder.forProduct1("http")(RequestContext.apply)
 }
 
-// TODO Just the bare minimum for proof-of-concept
 final case class ApiGatewayProxyEventV2(
     rawPath: String,
     rawQueryString: String,
+    cookies: List[String],
     headers: Map[String, String],
     requestContext: RequestContext,
     body: Option[String],
@@ -42,9 +42,10 @@ final case class ApiGatewayProxyEventV2(
 )
 
 object ApiGatewayProxyEventV2 {
-  implicit def decoder: Decoder[ApiGatewayProxyEventV2] = Decoder.forProduct6(
+  implicit def decoder: Decoder[ApiGatewayProxyEventV2] = Decoder.forProduct7(
     "rawPath",
     "rawQueryString",
+    "cookies",
     "headers",
     "requestContext",
     "body",

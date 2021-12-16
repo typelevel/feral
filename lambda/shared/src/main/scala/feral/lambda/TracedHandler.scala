@@ -25,9 +25,10 @@ import natchez.EntryPoint
 import natchez.Span
 import natchez.Trace
 
-object TracedLambda {
+object TracedHandler {
 
-  def apply[Event, Result](entryPoint: EntryPoint[IO])(lambda: Trace[IO] => IO[Option[Result]])(
+  def apply[Event, Result](entryPoint: EntryPoint[IO])(
+      handler: Trace[IO] => IO[Option[Result]])(
       implicit env: LambdaEnv[IO, Event],
       KS: KernelSource[Event]): IO[Option[Result]] = for {
     event <- env.event
@@ -37,13 +38,13 @@ object TracedLambda {
       span.put(
         AwsTags.arn(context.invokedFunctionArn),
         AwsTags.requestId(context.awsRequestId)
-      ) >> Trace.ioTrace(span) >>= lambda
+      ) >> Trace.ioTrace(span) >>= handler
     }
   } yield result
 
   def apply[F[_]: MonadCancelThrow, Event, Result](
       entryPoint: EntryPoint[F],
-      lambda: Kleisli[F, Span[F], Option[Result]])(
+      handler: Kleisli[F, Span[F], Option[Result]])(
       // env first helps bind Event for KernelSource. h/t @bpholt
       implicit env: LambdaEnv[F, Event],
       KS: KernelSource[Event]): F[Option[Result]] = for {
@@ -54,7 +55,7 @@ object TracedLambda {
       span.put(
         AwsTags.arn(context.invokedFunctionArn),
         AwsTags.requestId(context.awsRequestId)
-      ) >> lambda(span)
+      ) >> handler(span)
     }
   } yield result
 
