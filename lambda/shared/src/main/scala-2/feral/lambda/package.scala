@@ -16,10 +16,10 @@
 
 package feral
 
+import feral.lambda.events._
 import io.circe.Encoder
 
 import scala.annotation.nowarn
-import feral.lambda.events._
 
 package object lambda {
 
