@@ -15,6 +15,7 @@
  */
 
 package feral.lambda
+package http4s
 
 import cats.effect.kernel.Concurrent
 import cats.syntax.all._
