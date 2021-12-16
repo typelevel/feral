@@ -1,4 +1,4 @@
-# feral [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/AJASeCq8gN)
+# feral [![feral-core Scala version support](https://index.scala-lang.org/typelevel/feral/feral-core/latest.svg?color=red)](https://index.scala-lang.org/typelevel/feral/feral-core) [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/AJASeCq8gN)
 
 feral is a framework for writing serverless functions in Scala with [Cats Effect](https://github.com/typelevel/cats-effect) and deploying them to the cloud, targeting both JVM and JavaScript runtimes. By providing an idiomatic, purely functional interface, feral is both composable—integrations with [natchez](https://github.com/tpolecat/natchez) and [http4s](https://github.com/http4s/http4s) are provided out-of-the-box—and also highly customizable. The initial focus has been on supporting [AWS Lambda](https://aws.amazon.com/lambda/) and will expand to other serverless providers.
 
