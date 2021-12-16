@@ -19,10 +19,10 @@ package feral.lambda.events
 import io.circe.literal._
 import munit.FunSuite
 
-class SQSEventSuite extends FunSuite {
+class SqsEventSuite extends FunSuite {
 
   test("decoder") {
-    event.as[SQSEvent].toTry.get
+    event.as[SqsEvent].toTry.get
   }
 
   def event = json"""
