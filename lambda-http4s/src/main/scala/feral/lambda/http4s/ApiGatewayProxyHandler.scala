@@ -77,4 +77,23 @@ object ApiGatewayProxyHandler {
       )
     }
 
+  private[http4s] def decodeEvent[F[_]: Concurrent](
+      event: ApiGatewayProxyEventV2): F[Request[F]] = for {
+    method <- Method.fromString(event.requestContext.http.method).liftTo[F]
+    uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
+    cookies = Some(event.cookies)
+      .filter(_.nonEmpty)
+      .map(Cookie.name.toString -> _.mkString("; "))
+    headers = Headers(cookies.toList ::: event.headers.toList)
+    readBody =
+      if (event.isBase64Encoded)
+        fs2.text.base64.decode[F]
+      else
+        fs2.text.utf8.encode[F]
+  } yield Request(
+    method,
+    uri,
+    headers = headers,
+    body = Stream.fromOption[F](event.body).through(readBody)
+  )
 }
