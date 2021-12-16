@@ -24,14 +24,16 @@ final case class ApiGatewayProxyStructuredResultV2(
     statusCode: Int,
     headers: Map[String, String],
     body: String,
-    isBase64Encoded: Boolean
+    isBase64Encoded: Boolean,
+    cookies: List[String]
 ) extends ApiGatewayProxyResultV2
 
 object ApiGatewayProxyStructuredResultV2 {
-  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct4(
+  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct5(
     "statusCode",
     "headers",
     "body",
-    "isBase64Encoded"
-  )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded))
+    "isBase64Encoded",
+    "cookies"
+  )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded, r.cookies))
 }

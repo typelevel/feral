@@ -22,13 +22,14 @@ import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
 import org.http4s.Charset
-import org.http4s.Header
 import org.http4s.Headers
 import org.http4s.HttpRoutes
 import org.http4s.Method
 import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
+import org.http4s.headers.Cookie
+import org.http4s.headers.`Set-Cookie`
 
 object ApiGatewayProxyHandler {
 
@@ -38,8 +39,11 @@ object ApiGatewayProxyHandler {
     for {
       event <- env.event
       method <- Method.fromString(event.requestContext.http.method).liftTo[F]
-      uri <- Uri.fromString(event.rawPath).liftTo[F]
-      headers = Headers(event.headers.toList)
+      uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
+      cookies = Some(event.cookies)
+        .filter(_.nonEmpty)
+        .map(Cookie.name.toString -> _.mkString("; "))
+      headers = Headers(cookies.toList ::: event.headers.toList)
       readBody =
         if (event.isBase64Encoded)
           fs2.text.base64.decode[F]
@@ -56,20 +60,20 @@ object ApiGatewayProxyHandler {
                          response.body.through(fs2.text.base64.encode)
                        else
                          response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
-    } yield Some(
-      ApiGatewayProxyStructuredResultV2(
-        response.status.code,
-        response
-          .headers
-          .headers
-          .map {
-            case Header.Raw(name, value) =>
-              name.toString -> value
-          }
-          .toMap,
-        responseBody,
-        isBase64Encoded
+    } yield {
+      val headers = response.headers.headers.groupMap(_.name)(_.value)
+      Some(
+        ApiGatewayProxyStructuredResultV2(
+          response.status.code,
+          (headers - `Set-Cookie`.name).map {
+            case (name, values) =>
+              name.toString -> values.mkString(",")
+          },
+          responseBody,
+          isBase64Encoded,
+          headers.getOrElse(`Set-Cookie`.name, Nil)
+        )
       )
-    )
+    }
 
 }
