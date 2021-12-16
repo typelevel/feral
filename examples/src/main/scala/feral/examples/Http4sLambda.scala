@@ -18,6 +18,7 @@ package feral.examples
 
 import cats.effect._
 import feral.lambda._
+import feral.lambda.http4s._
 import feral.lambda.events._
 import natchez.Trace
 import natchez.http4s.NatchezMiddleware

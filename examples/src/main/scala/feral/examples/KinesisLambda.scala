@@ -32,7 +32,7 @@ import skunk.Session
  * Every lambda is triggered by an `Event` for which there must be a circe `Decoder[Event]`. It
  * should then return `Some[Result]` for which there must be a circe `Encoder[Result]`. If your
  * lambda has no result (as is often the case), use `INothing` and return `None` in the handler.
- * 
+ *
  * For a more advanced example, see the `Http4sLambda` next.
  */
 object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
