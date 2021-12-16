@@ -100,7 +100,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
       "org.scalameta" %%% "munit" % munitVersion % Test,
-      "io.circe" %%% "circe-literal" % circeVersion % Test
+      "io.circe" %%% "circe-literal" % circeVersion % Test,
+      "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
     )
   )
   .jsSettings(

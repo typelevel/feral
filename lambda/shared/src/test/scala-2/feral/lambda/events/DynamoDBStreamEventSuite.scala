@@ -22,7 +22,7 @@ import munit.FunSuite
 class DynamoDBStreamEventSuite extends FunSuite {
 
   test("decoder") {
-    assert(event.as[DynamoDBStreamEvent].isRight)
+    event.as[DynamoDBStreamEvent].toTry.get
   }
 
   def event = json"""

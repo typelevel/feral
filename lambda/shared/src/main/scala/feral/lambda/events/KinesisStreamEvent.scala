@@ -20,7 +20,7 @@ package events
 import io.circe.Decoder
 
 final case class KinesisStreamRecordPayload(
-    approximateArrivalTimestamp: Long,
+    approximateArrivalTimestamp: Double,
     data: String,
     kinesisSchemaVersion: String,
     partitionKey: String,
