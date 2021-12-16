@@ -34,11 +34,10 @@ import org.http4s.headers.`Set-Cookie`
 
 object ApiGatewayProxyHandler {
 
-  def apply[F[_]: Concurrent](routes: HttpRoutes[F])(
-      implicit
-      env: LambdaEnv[F, ApiGatewayProxyEventV2]): F[Option[ApiGatewayProxyStructuredResultV2]] =
+  def apply[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
+      routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
-      event <- env.event
+      event <- LambdaEnv.event
       method <- Method.fromString(event.requestContext.http.method).liftTo[F]
       uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
       cookies = Some(event.cookies)
