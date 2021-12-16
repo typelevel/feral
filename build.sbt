@@ -99,10 +99,16 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
-      "org.scalameta" %%% "munit" % munitVersion % Test,
-      "io.circe" %%% "circe-literal" % circeVersion % Test,
-      "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
-    )
+      "org.scalameta" %%% "munit" % munitVersion % Test
+    ),
+    libraryDependencies ++= {
+      if (isDotty.value) Nil
+      else
+        Seq(
+          "io.circe" %%% "circe-literal" % circeVersion % Test,
+          "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
+        )
+    }
   )
   .jsSettings(
     libraryDependencies ++= Seq(
