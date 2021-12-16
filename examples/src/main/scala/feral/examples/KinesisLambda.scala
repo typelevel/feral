@@ -33,6 +33,10 @@ import skunk.Session
  * should then return `Some[Result]` for which there must be a circe `Encoder[Result]`. If your
  * lambda has no result (as is often the case), use `INothing` and return `None` in the handler.
  *
+ * Models for events/results are provided in the `feral.lambda.events` package. There are many
+ * more to implement! Please consider contributing to
+ * [[https://github.com/typelevel/feral/issues/48 #48]].
+ *
  * For a more advanced example, see the `Http4sLambda` next.
  */
 object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
