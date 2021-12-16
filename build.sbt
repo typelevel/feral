@@ -99,7 +99,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
-      "org.scalameta" %%% "munit" % munitVersion % Test
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
     ),
     libraryDependencies ++= {
       if (isDotty.value) Nil
