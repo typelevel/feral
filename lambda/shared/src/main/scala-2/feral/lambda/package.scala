@@ -21,6 +21,7 @@ import io.circe.Encoder
 import scala.annotation.nowarn
 
 package object lambda {
+
   /**
    * Alias for `Nothing` which works better with type inference. Inspired by fs2, but inlined
    * here to avoid pulling in an otherwise-unnecessary dependency.
