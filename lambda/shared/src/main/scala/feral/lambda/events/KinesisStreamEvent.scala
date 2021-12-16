@@ -18,12 +18,14 @@ package feral.lambda
 package events
 
 import io.circe.Decoder
+import io.circe.scodec._
+import scodec.bits.ByteVector
 
 import java.time.Instant
 
 final case class KinesisStreamRecordPayload(
     approximateArrivalTimestamp: Instant,
-    data: String,
+    data: ByteVector,
     kinesisSchemaVersion: String,
     partitionKey: String,
     sequenceNumber: String

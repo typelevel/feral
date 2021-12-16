@@ -18,7 +18,9 @@ package feral.lambda
 package events
 
 import io.circe.Decoder
+import io.circe.scodec._
 import natchez.Kernel
+import scodec.bits.ByteVector
 
 import java.time.Instant
 import scala.util.Try
@@ -114,7 +116,7 @@ object SQSMessageAttribute {
   case class String(raw: Predef.String) extends SQSMessageAttribute
 
   // we should probably represent this better, but I don't know how these are encoded, is it base64?
-  case class Binary(raw: Predef.String) extends SQSMessageAttribute
+  case class Binary(raw: ByteVector) extends SQSMessageAttribute
   case class Number(raw: BigDecimal) extends SQSMessageAttribute
   case class Unknown(
       stringValue: Option[Predef.String],
@@ -127,7 +129,7 @@ object SQSMessageAttribute {
       Decoder.instance(_.get[Predef.String]("stringValue"))
 
     val binValue =
-      Decoder.instance(_.get[Predef.String]("binaryValue"))
+      Decoder.instance(_.get[ByteVector]("binaryValue"))
 
     Decoder.instance(_.get[Predef.String]("dataType")).flatMap {
       case "String" => strValue.map(SQSMessageAttribute.String(_): SQSMessageAttribute)
