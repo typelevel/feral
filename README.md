@@ -9,7 +9,7 @@ Feral is published for Scala 2.13 and 3.1+ with artifacts for both JVM and Scala
 ```scala
 // Scala.js setup
 addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.1.0-M1") // in plugins.sbt
-enable(LambdaJSPlugin) // in build.sbt
+enablePlugins(LambdaJSPlugin) // in build.sbt
 
 // JVM setup
 libraryDependencies += "org.typelevel" %% "feral-lambda-http4s" % "0.1.0-M1"
