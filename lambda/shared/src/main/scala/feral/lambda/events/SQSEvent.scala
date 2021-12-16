@@ -18,8 +18,11 @@ package feral.lambda
 package events
 
 import io.circe.Decoder
+import io.circe.scodec._
 import natchez.Kernel
+import scodec.bits.ByteVector
 
+import java.time.Instant
 import scala.util.Try
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/sqs.d.ts
@@ -74,9 +77,9 @@ object SQSRecord {
 final case class SQSRecordAttributes(
     awsTraceHeader: Option[String],
     approximateReceiveCount: String,
-    sentTimestamp: String,
+    sentTimestamp: Instant,
     senderId: String,
-    approximateFirstReceiveTimestamp: String,
+    approximateFirstReceiveTimestamp: Instant,
     sequenceNumber: Option[String],
     messageGroupId: Option[String],
     messageDeduplicationId: Option[String]
@@ -88,9 +91,9 @@ object SQSRecordAttributes {
     for {
       awsTraceHeader <- i.get[Option[String]]("AWSTraceHeader")
       approximateReceiveCount <- i.get[String]("ApproximateReceiveCount")
-      sentTimestamp <- i.get[String]("SentTimestamp")
+      sentTimestamp <- i.get[Instant]("SentTimestamp")
       senderId <- i.get[String]("SenderId")
-      approximateFirstReceiveTimestamp <- i.get[String]("ApproximateFirstReceiveTimestamp")
+      approximateFirstReceiveTimestamp <- i.get[Instant]("ApproximateFirstReceiveTimestamp")
       sequenceNumber <- i.get[Option[String]]("SequenceNumber")
       messageGroupId <- i.get[Option[String]]("MessageGroupId")
       messageDeduplicationId <- i.get[Option[String]]("MessageDeduplicationId")
@@ -109,14 +112,13 @@ object SQSRecordAttributes {
     Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
 }
 
-sealed trait SQSMessageAttribute
+sealed abstract class SQSMessageAttribute
 object SQSMessageAttribute {
-  case class String(raw: Predef.String) extends SQSMessageAttribute
+  final case class String(value: Predef.String) extends SQSMessageAttribute
 
-  // we should probably represent this better, but I don't know how these are encoded, is it base64?
-  case class Binary(raw: Predef.String) extends SQSMessageAttribute
-  case class Number(raw: BigDecimal) extends SQSMessageAttribute
-  case class Unknown(
+  final case class Binary(value: ByteVector) extends SQSMessageAttribute
+  final case class Number(value: BigDecimal) extends SQSMessageAttribute
+  final case class Unknown(
       stringValue: Option[Predef.String],
       binaryValue: Option[Predef.String],
       dataType: Predef.String
@@ -127,7 +129,7 @@ object SQSMessageAttribute {
       Decoder.instance(_.get[Predef.String]("stringValue"))
 
     val binValue =
-      Decoder.instance(_.get[Predef.String]("binaryValue"))
+      Decoder.instance(_.get[ByteVector]("binaryValue"))
 
     Decoder.instance(_.get[Predef.String]("dataType")).flatMap {
       case "String" => strValue.map(SQSMessageAttribute.String(_): SQSMessageAttribute)

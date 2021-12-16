@@ -62,6 +62,7 @@ val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
 val natchezVersion = "0.1.5"
+val munitVersion = "0.7.29"
 
 lazy val root =
   project
@@ -95,12 +96,24 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "org.tpolecat" %%% "natchez-core" % natchezVersion
-    )
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "org.scodec" %%% "scodec-bits" % "1.1.30",
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
+    ),
+    libraryDependencies ++= {
+      if (isDotty.value) Nil
+      else
+        Seq(
+          "io.circe" %%% "circe-literal" % circeVersion % Test,
+          "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
+        )
+    }
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
     )
   )
   .jvmSettings(
