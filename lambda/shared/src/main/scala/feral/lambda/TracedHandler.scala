@@ -27,7 +27,8 @@ import natchez.Trace
 
 object TracedHandler {
 
-  def apply[Event, Result](entryPoint: EntryPoint[IO])(handler: Trace[IO] => IO[Option[Result]])(
+  def apply[Event, Result](entryPoint: EntryPoint[IO])(
+      handler: Trace[IO] => IO[Option[Result]])(
       implicit env: LambdaEnv[IO, Event],
       KS: KernelSource[Event]): IO[Option[Result]] = for {
     event <- env.event
