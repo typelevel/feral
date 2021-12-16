@@ -63,6 +63,7 @@ val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
 val natchezVersion = "0.1.5"
 val munitVersion = "0.7.29"
+val munitCEVersion = "1.0.7"
 
 lazy val root =
   project
@@ -132,10 +133,11 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-server" % http4sVersion
+      "org.http4s" %%% "http4s-server" % http4sVersion,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     )
   )
-  .dependsOn(lambda)
+  .dependsOn(lambda % "compile->compile;test->test")
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
