@@ -20,7 +20,7 @@ import io.circe.literal._
 import munit.FunSuite
 
 class SQSEventSuite extends FunSuite {
-  
+
   test("decoder") {
     event.as[SQSEvent].toTry.get
   }

@@ -20,7 +20,7 @@ import io.circe.literal._
 import munit.FunSuite
 
 class ApiGatewayProxyEventV2Suite extends FunSuite {
-  
+
   test("decoder") {
     event.as[ApiGatewayProxyEventV2].toTry.get
   }
