@@ -108,7 +108,8 @@ object SQSRecordAttributes {
       messageDeduplicationId
     ))
 
-  implicit def kernelSource: KernelSource[SQSRecordAttributes] = a => Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
+  implicit def kernelSource: KernelSource[SQSRecordAttributes] = a =>
+    Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
 }
 
 sealed abstract class SQSMessageAttribute
