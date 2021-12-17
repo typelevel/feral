@@ -25,10 +25,11 @@ There are several options to deploy your Lambda. For example you can use the [AW
 
 To deploy a Scala.js Lambda, you will need to know the following:
 1. The runtime for your Lambda is Node.js 14.
-2. Run `sbt npmPackage` to package your Lambda for deployment and point your tooling to the `target/scala-2.13/npm-package/` directory.
-3. The handler for your Lambda is `index.yourLambdaName`.
+2. The handler for your Lambda is `index.yourLambdaName`.
     - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
     - `yourLambdaName` is the name of the Scala `object` you created that extends from `IOLambda`.
+3. Run `sbt npmPackage` to package your Lambda for deployment. Note that you can currently only have one Lambda per sbt (sub-)project. If you have multiple, you will need to select the one to deploy using `mainClass := Some(...)`.
+4. For the tooling of your choice, follow their instructions for deploying a Node.js Lambda using the contents of the `target/scala-2.13/npm-package/` directory.
 
 As the feral project develops, one of the goals is to provide an sbt plugin that simplifies and automates the deployment process. If this appeals to you, please contribute feature requests, ideas, and/or code!
 
