@@ -21,7 +21,7 @@ libraryDependencies += "org.typelevel" %% "feral-lambda-cloudformation-custom-re
 
 Next, implement your Lambda. Please refer to the [examples](https://github.com/typelevel/feral/tree/main/examples/src/main/scala/feral/examples) for a tutorial.
 
-There are several options to deploy your Lambda. For example you can use the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
+There are several options to deploy your Lambda. For example you can use the [Lambda console](https://docs.aws.amazon.com/lambda/latest/dg/foundation-console.html), the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
 
 To deploy a Scala.js Lambda, you will need to know the following:
 1. The runtime for your Lambda is Node.js 14.
