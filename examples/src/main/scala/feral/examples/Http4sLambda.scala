@@ -17,12 +17,13 @@
 package feral.examples
 
 import cats.effect._
+import cats.effect.std.Random
 import feral.lambda._
-import feral.lambda.http4s._
 import feral.lambda.events._
+import feral.lambda.http4s._
 import natchez.Trace
 import natchez.http4s.NatchezMiddleware
-import natchez.noop.NoopEntrypoint
+import natchez.xray.XRay
 import org.http4s.HttpRoutes
 import org.http4s.client.Client
 import org.http4s.dsl.Http4sDsl
@@ -51,7 +52,9 @@ object http4sHandler
    * it becomes a step in your program.
    */
   def handler = for {
-    entrypoint <- Resource.pure(NoopEntrypoint[IO]()) // TODO replace with X-Ray
+    entrypoint <- Resource
+      .eval(Random.scalaUtilRandom[IO])
+      .flatMap(implicit r => XRay.entryPoint[IO]())
     client <- EmberClientBuilder.default[IO].build
   } yield { implicit env => // the LambdaEnv provides access to the event and context
 

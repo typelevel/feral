@@ -17,10 +17,11 @@
 package feral.examples
 
 import cats.effect._
+import cats.effect.std.Random
 import feral.lambda._
 import feral.lambda.events.KinesisStreamEvent
 import natchez.Trace
-import natchez.noop.NoopEntrypoint
+import natchez.xray.XRay
 import skunk.Session
 
 /**
@@ -49,9 +50,11 @@ object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
    */
   type Init = Session[IO] // a skunk session
   override def init =
-    Resource.pure(NoopEntrypoint[IO]()).flatMap { entrypoint => // TODO replace w/ X-Ray
-      entrypoint.root("root").evalMap(Trace.ioTrace).flatMap { implicit trace =>
-        Session.single[IO](host = "host", user = "user", database = "db")
+    Resource.eval(Random.scalaUtilRandom[IO]).flatMap { implicit random =>
+      XRay.entryPoint[IO]().flatMap { entrypoint =>
+        entrypoint.root("root").evalMap(Trace.ioTrace).flatMap { implicit trace =>
+          Session.single[IO](host = "host", user = "user", database = "db")
+        }
       }
     }
 

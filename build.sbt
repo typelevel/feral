@@ -88,7 +88,7 @@ val catsEffectVersion = "3.3.0"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
-val natchezVersion = "0.1.5"
+val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 
@@ -214,7 +214,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
-      "org.tpolecat" %% "natchez-noop" % natchezVersion, // TODO %%%
+      "org.tpolecat" %%% "natchez-xray" % natchezVersion, // TODO %%%
       "org.tpolecat" %% "natchez-http4s" % "0.1.3", // TODO %%%
       "org.tpolecat" %%% "skunk-core" % "0.2.2"
     )
