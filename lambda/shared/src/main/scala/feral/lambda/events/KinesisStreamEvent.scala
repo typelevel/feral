@@ -46,7 +46,7 @@ final case class KinesisStreamRecord(
     eventID: String,
     eventName: String,
     eventSource: String,
-    eventSourceARN: String,
+    eventSourceArn: String,
     eventVersion: String,
     invokeIdentityArn: String,
     kinesis: KinesisStreamRecordPayload
