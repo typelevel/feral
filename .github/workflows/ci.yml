@@ -70,7 +70,8 @@ jobs:
       - name: Check that workflows are up to date
         run: sbt ++${{ matrix.scala }} githubWorkflowCheck
 
-      - run: sbt ++${{ matrix.scala }} ci
+      - if: matrix.scala != '2.12.15'
+        run: sbt ++${{ matrix.scala }} ci
 
       - name: Run sbt scripted tests
         if: matrix.scala == '2.12.15'
