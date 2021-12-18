@@ -44,8 +44,8 @@ ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
 }
 
 ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
-  val mkdirStep = steps.head match {
-    case WorkflowStep.Run(command :: _, _, _, _, _) =>
+  val mkdirStep = steps.headOption match {
+    case Some(WorkflowStep.Run(command :: _, _, _, _, _)) =>
       WorkflowStep.Run(
         commands = List(command.replace("tar cf targets.tar", "mkdir -p")),
         name = Some("Make target directories")
@@ -61,11 +61,19 @@ ThisBuild / githubWorkflowBuildPreamble += WorkflowStep.Sbt(
   cond = Some(s"matrix.scala == '$Scala212'")
 )
 
-ThisBuild / githubWorkflowBuild += WorkflowStep.Sbt(
-  List(s"scripted"),
-  name = Some("Run sbt scripted tests"),
-  cond = Some(s"matrix.scala == '$Scala212'")
-)
+ThisBuild / githubWorkflowBuild ~= { steps =>
+  val ciStep = steps.headOption match {
+    case Some(step @ WorkflowStep.Sbt(_, _, _, _, _)) =>
+      step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
+    case _ => sys.error("Can't generate ci step")
+  }
+  val scriptedStep = WorkflowStep.Sbt(
+    List(s"scripted"),
+    name = Some("Run sbt scripted tests"),
+    cond = Some(s"matrix.scala == '$Scala212'")
+  )
+  List(ciStep, scriptedStep)
+}
 
 replaceCommandAlias(
   "ci",
@@ -139,7 +147,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     ),
     libraryDependencies ++= {
       if (isDotty.value) Nil
@@ -188,8 +197,7 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-server" % http4sVersion,
-      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
+      "org.http4s" %%% "http4s-server" % http4sVersion
     )
   )
   .settings(commonSettings)
