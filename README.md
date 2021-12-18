@@ -19,7 +19,7 @@ libraryDependencies += "org.typelevel" %% "feral-lambda-http4s" % "0.1.0-M1"
 libraryDependencies += "org.typelevel" %% "feral-lambda-cloudformation-custom-resource" % "0.1.0-M1"
 ```
 
-Next, implement your Lambda. Please refer to the [examples](https://github.com/typelevel/feral/tree/main/examples/src/main/scala/feral/examples) for a tutorial.
+Next, implement your Lambda. Please refer to the [examples](examples/src/main/scala/feral/examples) for a tutorial.
 
 There are several options to deploy your Lambda. For example you can use the [Lambda console](https://docs.aws.amazon.com/lambda/latest/dg/foundation-console.html), the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
 
