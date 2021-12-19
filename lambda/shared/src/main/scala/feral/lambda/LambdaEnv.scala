@@ -21,6 +21,7 @@ import cats.Functor
 import cats.data.EitherT
 import cats.data.Kleisli
 import cats.data.OptionT
+import cats.data.StateT
 import cats.data.WriterT
 import cats.effect.IO
 import cats.effect.IOLocal
@@ -60,6 +61,10 @@ object LambdaEnv {
   implicit def writerTLambdaEnv[F[_]: Applicative, A, B: Monoid](
       implicit env: LambdaEnv[F, A]): LambdaEnv[WriterT[F, B, *], A] =
     env.mapK(WriterT.liftK[F, B])
+
+  implicit def stateTLambdaEnv[F[_]: Applicative, S, A](
+      implicit env: LambdaEnv[F, A]): LambdaEnv[StateT[F, S, *], A] =
+    env.mapK(StateT.liftK[F, S])
 
   private[lambda] def ioLambdaEnv[Event](
       localEvent: IOLocal[Event],
