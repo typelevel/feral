@@ -228,9 +228,9 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
-      "org.tpolecat" %%% "natchez-xray" % natchezVersion, // TODO %%%
-      "org.tpolecat" %% "natchez-http4s" % "0.1.3", // TODO %%%
-      "org.tpolecat" %%% "skunk-core" % "0.2.2"
+      "org.tpolecat" %%% "natchez-xray" % natchezVersion,
+      "org.tpolecat" %%% "natchez-http4s" % "0.2.1",
+      "org.tpolecat" %%% "skunk-core" % "0.2.3"
     )
   )
   .settings(commonSettings)
