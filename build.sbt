@@ -28,6 +28,7 @@ ThisBuild / developers := List(
 )
 
 enablePlugins(SonatypeCiReleasePlugin)
+sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / spiewakCiReleaseSnapshots := true
 ThisBuild / spiewakMainBranches := Seq("main")
 ThisBuild / homepage := Some(url("https://github.com/typelevel/feral"))
@@ -107,7 +108,8 @@ lazy val commonSettings = Seq(
       Seq("-Xfatal-warnings")
     else
       Seq.empty
-  }
+  },
+  sonatypeCredentialHost := "s01.oss.sonatype.org"
 )
 
 lazy val root =
@@ -188,7 +190,8 @@ lazy val sbtLambda = project
     buildInfoKeys += organization,
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
-    }
+    },
+    sonatypeCredentialHost := "s01.oss.sonatype.org"
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
