@@ -25,14 +25,12 @@ import natchez.xray.XRay
 import skunk.Session
 
 /**
- * On Scala.js, implement your lambda as an object. This will be the name your JavaScript
- * function is exported as.
+ * On Scala.js, implement your Lambda as an `object`. This will be the name your JavaScript
+ * function is exported as. On JVM, implement your Lambda as a `class`.
  *
- * On JVM, implement your lambda as a class.
- *
- * Every lambda is triggered by an `Event` for which there must be a circe `Decoder[Event]`. It
+ * Every Lambda is triggered by an `Event` for which there must be a circe `Decoder[Event]`. It
  * should then return `Some[Result]` for which there must be a circe `Encoder[Result]`. If your
- * lambda has no result (as is often the case), use `INothing` and return `None` in the handler.
+ * Lambda has no result (as is often the case), use `INothing` and return `None` in the handler.
  *
  * Models for events/results are provided in the `feral.lambda.events` package. There are many
  * more to implement! Please consider contributing to

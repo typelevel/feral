@@ -37,17 +37,17 @@ import org.http4s.syntax.all._
  * The `IOLambda` uses a slightly more complicated encoding by introducing an effect
  * `LambdaEnv[F]` which provides access to the event and context in `F`. This allows you to
  * compose your handler as a stack of "middlewares", making it easy to e.g. add tracing to your
- * lambda.
+ * Lambda.
  */
 object http4sHandler
     extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
 
   /**
-   * Actually, this is a `Resource` that builds your handler: it is acquired exactly once when
-   * your lambda starts and is permanently installed to process all incoming events.
+   * Actually, this is a `Resource` that builds your handler. The handler is acquired exactly
+   * once when your Lambda starts and is permanently installed to process all incoming events.
    *
    * The handler itself is a program expressed as `IO[Option[Result]]`, which is run every time
-   * that your lambda is triggered. This may seem counter-intuitive at first: where does the
+   * that your Lambda is triggered. This may seem counter-intuitive at first: where does the
    * event come from? Because accessing the event via `LambdaEnv` is now also an effect in `IO`,
    * it becomes a step in your program.
    */
@@ -69,7 +69,7 @@ object http4sHandler
   }
 
   /**
-   * Nothing special about this method (including its existence), just an example :)
+   * Nothing special about this method, including its existence, just an example :)
    */
   def myRoutes[F[_]: Concurrent: Trace](client: Client[F]): HttpRoutes[F] = {
     implicit val dsl = Http4sDsl[F]
