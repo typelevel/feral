@@ -25,6 +25,8 @@ private[netlify] sealed trait Context extends js.Object {
   def functionName: String = js.native
   def functionVersion: String = js.native
   def invokedFunctionArn: String = js.native
+  // Note: This should always be a string, but the Netlify CLI currently passes a number.
+  // ref: https://github.com/netlify/functions/pull/251
   def memoryLimitInMB: Int | String = js.native
   def awsRequestId: String = js.native
   def logGroupName: String = js.native
