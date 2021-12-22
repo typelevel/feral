@@ -27,7 +27,10 @@ private[lambda] trait ContextCompanionPlatform {
       context.functionName,
       context.functionVersion,
       context.invokedFunctionArn,
-      context.memoryLimitInMB.toInt,
+      (context.memoryLimitInMB: Any) match {
+        case s: String => s.toInt
+        case i: Int => i
+      },
       context.awsRequestId,
       context.logGroupName,
       context.logStreamName,

@@ -27,12 +27,13 @@ import org.http4s.Method
 import org.http4s.Request
 import org.http4s.Response
 import org.http4s.Uri
+import feral.lambda.LambdaEnv
 
 object NetlifyHttp4sHandler {
 
   def apply[F[_]: Concurrent](
       routes: HttpRoutes[F]
-  )(implicit env: FunctionEnv[F, HttpFunctionEvent]): F[Option[HttpFunctionResult]] =
+  )(implicit env: LambdaEnv[F, HttpFunctionEvent]): F[Option[HttpFunctionResult]] =
     for {
       event <- env.event
       method <- Method.fromString(event.httpMethod).liftTo[F]

@@ -17,59 +17,24 @@
 package feral.netlify
 
 import cats.effect.IO
-import cats.effect.IOLocal
 import cats.effect.kernel.Resource
-import feral.IOSetup
-import io.circe.Decoder
-import io.circe.Encoder
-import io.circe.scalajs._
+import feral.lambda
+import feral.lambda.IOLambda
 
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.|
 
-abstract class IOFunction[Event, Result](
-    implicit private[netlify] val decoder: Decoder[Event],
-    private[netlify] val encoder: Encoder[Result]
-) extends IOSetup {
+abstract class IOFunction extends IOLambda[HttpFunctionEvent, HttpFunctionResult] {
 
-  final type Setup = (Event, Context[IO]) => IO[Option[Result]]
-
-  final override protected def setup: Resource[IO, Setup] =
-    handler.map { handler => (event, context) =>
-      for {
-        event <- IOLocal(event)
-        context <- IOLocal(context)
-        env = FunctionEnv.ioLambdaEnv(event, context)
-        result <- handler(env)
-      } yield result
-    }
-
-  def main(args: Array[String]): Unit = {
+  override def main(args: Array[String]): Unit = {
     // Netlify functions require the entrypoint to be called `handler`
     js.Dynamic.global.exports.updateDynamic("handler")(handlerFn)
   }
-
-  private lazy val handlerFn
-      : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
-    (event: js.Any, context: facade.Context) =>
-      (for {
-        lambda <- setupMemo
-        event <- IO.fromEither(decodeJs[Event](event))
-        result <- lambda(event, Context.fromJS(context))
-      } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
-  }
-
-  def handler: Resource[IO, FunctionEnv[IO, Event] => IO[Option[Result]]]
 
 }
 
 object IOFunction {
 
-  abstract class Simple[Event, Result](
-      implicit decoder: Decoder[Event],
-      encoder: Encoder[Result])
-      extends IOFunction[Event, Result] {
+  abstract class Simple extends IOFunction {
 
     type Init
     def init: Resource[IO, Init] = Resource.pure(null.asInstanceOf[Init])
@@ -82,7 +47,10 @@ object IOFunction {
       } yield result
     }
 
-    def handle(event: Event, context: Context[IO], init: Init): IO[Option[Result]]
+    def handle(
+        event: HttpFunctionEvent,
+        context: lambda.Context[IO],
+        init: Init): IO[Option[HttpFunctionResult]]
   }
 
 }

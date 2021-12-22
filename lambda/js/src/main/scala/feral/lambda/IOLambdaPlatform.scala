@@ -31,7 +31,7 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
     js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
   }
 
-  private lazy val handlerFn
+  protected lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
     (event: js.Any, context: facade.Context) =>
       (for {

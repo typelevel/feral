@@ -17,6 +17,7 @@
 package feral.lambda.facade
 
 import scala.scalajs.js
+import scala.scalajs.js._
 
 @js.native
 private[lambda] sealed trait Context extends js.Object {
@@ -24,7 +25,9 @@ private[lambda] sealed trait Context extends js.Object {
   def functionName: String = js.native
   def functionVersion: String = js.native
   def invokedFunctionArn: String = js.native
-  def memoryLimitInMB: String = js.native
+  // Note: This should always be a string, but the Netlify CLI currently passes a number.
+  // ref: https://github.com/netlify/functions/pull/251
+  def memoryLimitInMB: String | Int = js.native
   def awsRequestId: String = js.native
   def logGroupName: String = js.native
   def logStreamName: String = js.native

@@ -245,7 +245,7 @@ lazy val netlifyFunctions =
   project
     .in(file("netlify-functions"))
     .enablePlugins(ScalaJSPlugin)
-    .dependsOn(core.js)
+    .dependsOn(lambda.js)
     .settings(
       name := "feral-netlify-functions",
       libraryDependencies ++= Seq(
