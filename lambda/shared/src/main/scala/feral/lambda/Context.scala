@@ -17,6 +17,7 @@
 package feral.lambda
 
 import cats.~>
+import io.circe.JsonObject
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -54,7 +55,8 @@ final class CognitoIdentity(
 
 final class ClientContext(
     val client: ClientContextClient,
-    val env: ClientContextEnv
+    val env: ClientContextEnv,
+    val custom: JsonObject
 )
 
 final class ClientContextClient(

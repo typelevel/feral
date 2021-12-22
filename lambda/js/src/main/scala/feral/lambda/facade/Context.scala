@@ -42,7 +42,7 @@ private[lambda] sealed trait CognitoIdentity extends js.Object {
 @js.native
 private[lambda] sealed trait ClientContext extends js.Object {
   def client: ClientContextClient = js.native
-  def Custom: js.Any = js.native
+  def custom: js.UndefOr[js.Any] = js.native
   def env: ClientContextEnv = js.native
 }
 
