@@ -55,7 +55,10 @@ object Context {
       context.functionName,
       context.functionVersion,
       context.invokedFunctionArn,
-      context.memoryLimitInMB,
+      (context.memoryLimitInMB: Any) match {
+        case s: String => s.toInt
+        case i: Int => i
+      },
       context.awsRequestId,
       context.logGroupName,
       context.logStreamName,

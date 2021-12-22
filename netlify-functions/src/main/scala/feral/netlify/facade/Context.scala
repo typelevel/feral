@@ -25,7 +25,7 @@ private[netlify] sealed trait Context extends js.Object {
   def functionName: String = js.native
   def functionVersion: String = js.native
   def invokedFunctionArn: String = js.native
-  def memoryLimitInMB: Int = js.native
+  def memoryLimitInMB: Int | String = js.native
   def awsRequestId: String = js.native
   def logGroupName: String = js.native
   def logStreamName: String = js.native
