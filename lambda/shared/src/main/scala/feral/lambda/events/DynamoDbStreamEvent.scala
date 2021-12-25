@@ -81,19 +81,19 @@ object StreamRecord {
   )(StreamRecord.apply)
 }
 
-final case class DynamoDBRecord(
+final case class DynamoDbRecord(
     awsRegion: Option[String],
     dynamodb: Option[StreamRecord],
     eventID: Option[String],
     eventName: Option[String],
     eventSource: Option[String],
-    eventSourceARN: Option[String],
+    eventSourceArn: Option[String],
     eventVersion: Option[String],
     userIdentity: Option[Json]
 )
 
-object DynamoDBRecord {
-  implicit val decoder: Decoder[DynamoDBRecord] = Decoder.forProduct8(
+object DynamoDbRecord {
+  implicit val decoder: Decoder[DynamoDbRecord] = Decoder.forProduct8(
     "awsRegion",
     "dynamodb",
     "eventID",
@@ -102,16 +102,16 @@ object DynamoDBRecord {
     "eventSourceARN",
     "eventVersion",
     "userIdentity"
-  )(DynamoDBRecord.apply)
+  )(DynamoDbRecord.apply)
 }
 
-final case class DynamoDBStreamEvent(
-    records: List[DynamoDBRecord]
+final case class DynamoDbStreamEvent(
+    records: List[DynamoDbRecord]
 )
 
-object DynamoDBStreamEvent {
-  implicit val decoder: Decoder[DynamoDBStreamEvent] =
-    Decoder.forProduct1("Records")(DynamoDBStreamEvent.apply)
+object DynamoDbStreamEvent {
+  implicit val decoder: Decoder[DynamoDbStreamEvent] =
+    Decoder.forProduct1("Records")(DynamoDbStreamEvent.apply)
 
-  implicit def kernelSource: KernelSource[DynamoDBStreamEvent] = KernelSource.emptyKernelSource
+  implicit def kernelSource: KernelSource[DynamoDbStreamEvent] = KernelSource.emptyKernelSource
 }

@@ -19,10 +19,10 @@ package feral.lambda.events
 import io.circe.literal._
 import munit.FunSuite
 
-class DynamoDBStreamEventSuite extends FunSuite {
+class DynamoDbStreamEventSuite extends FunSuite {
 
   test("decoder") {
-    event.as[DynamoDBStreamEvent].toTry.get
+    event.as[DynamoDbStreamEvent].toTry.get
   }
 
   def event = json"""

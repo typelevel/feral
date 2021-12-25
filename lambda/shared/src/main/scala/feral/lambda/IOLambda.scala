@@ -20,6 +20,7 @@ package lambda
 import cats.effect.IO
 import cats.effect.IOLocal
 import cats.effect.kernel.Resource
+import cats.effect.syntax.all._
 import io.circe.Decoder
 import io.circe.Encoder
 
@@ -30,15 +31,13 @@ abstract class IOLambda[Event, Result](
     with IOSetup {
 
   final type Setup = (Event, Context[IO]) => IO[Option[Result]]
-  final override protected def setup: Resource[IO, Setup] =
-    handler.map { handler => (event, context) =>
-      for {
-        event <- IOLocal(event)
-        context <- IOLocal(context)
-        env = LambdaEnv.ioLambdaEnv(event, context)
-        result <- handler(env)
-      } yield result
-    }
+  final override protected def setup: Resource[IO, Setup] = for {
+    handler <- handler
+    localEvent <- IOLocal[Event](null.asInstanceOf[Event]).toResource
+    localContext <- IOLocal[Context[IO]](null).toResource
+    env = LambdaEnv.ioLambdaEnv(localEvent, localContext)
+    result = handler(env)
+  } yield { localEvent.set(_) *> localContext.set(_) *> result }
 
   def handler: Resource[IO, LambdaEnv[IO, Event] => IO[Option[Result]]]
 
@@ -58,11 +57,11 @@ object IOLambda {
       for {
         event <- env.event
         ctx <- env.context
-        result <- handle(event, ctx, init)
+        result <- apply(event, ctx, init)
       } yield result
     }
 
-    def handle(event: Event, context: Context[IO], init: Init): IO[Option[Result]]
+    def apply(event: Event, context: Context[IO], init: Init): IO[Option[Result]]
   }
 
 }

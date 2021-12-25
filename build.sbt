@@ -21,8 +21,6 @@ ThisBuild / baseVersion := "0.1"
 ThisBuild / organization := "org.typelevel"
 ThisBuild / organizationName := "Typelevel"
 
-ThisBuild / crossScalaVersions := Seq("3.1.0", "2.13.7")
-
 ThisBuild / developers := List(
   Developer("armanbilge", "Arman Bilge", "@armanbilge", url("https://github.com/armanbilge")),
   Developer("bpholt", "Brian Holt", "@bpholt", url("https://github.com/bpholt")),
@@ -30,6 +28,7 @@ ThisBuild / developers := List(
 )
 
 enablePlugins(SonatypeCiReleasePlugin)
+sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / spiewakCiReleaseSnapshots := true
 ThisBuild / spiewakMainBranches := Seq("main")
 ThisBuild / homepage := Some(url("https://github.com/typelevel/feral"))
@@ -45,6 +44,38 @@ ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
   } yield MatrixExclude(Map("scala" -> scala, "java" -> java))
 }
 
+ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
+  val mkdirStep = steps.headOption match {
+    case Some(WorkflowStep.Run(command :: _, _, _, _, _)) =>
+      WorkflowStep.Run(
+        commands = List(command.replace("tar cf targets.tar", "mkdir -p")),
+        name = Some("Make target directories")
+      )
+    case _ => sys.error("Can't generate make target dirs workflow step")
+  }
+  mkdirStep +: steps
+}
+
+ThisBuild / githubWorkflowBuildPreamble += WorkflowStep.Sbt(
+  List(s"++$Scala213", "publishLocal"),
+  name = Some("Publish local"),
+  cond = Some(s"matrix.scala == '$Scala212'")
+)
+
+ThisBuild / githubWorkflowBuild ~= { steps =>
+  val ciStep = steps.headOption match {
+    case Some(step @ WorkflowStep.Sbt(_, _, _, _, _)) =>
+      step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
+    case _ => sys.error("Can't generate ci step")
+  }
+  val scriptedStep = WorkflowStep.Sbt(
+    List(s"scripted"),
+    name = Some("Run sbt scripted tests"),
+    cond = Some(s"matrix.scala == '$Scala212'")
+  )
+  List(ciStep, scriptedStep)
+}
+
 replaceCommandAlias(
   "ci",
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
@@ -57,12 +88,29 @@ ThisBuild / githubWorkflowBuildPreamble +=
     params = Map("node-version" -> "14")
   )
 
-val catsEffectVersion = "3.3.0"
+val Scala212 = "2.12.15"
+val Scala213 = "2.13.7"
+val Scala3 = "3.1.0"
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
+
+val catsEffectVersion = "3.3.1"
 val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
-val natchezVersion = "0.1.5"
+val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
+val munitCEVersion = "1.0.7"
+
+lazy val commonSettings = Seq(
+  crossScalaVersions := Seq(Scala3, Scala213),
+  scalacOptions ++= {
+    if (isDotty.value && githubIsWorkflowBuild.value)
+      Seq("-Xfatal-warnings")
+    else
+      Seq.empty
+  },
+  sonatypeCredentialHost := "s01.oss.sonatype.org"
+)
 
 lazy val root =
   project
@@ -72,6 +120,7 @@ lazy val root =
       core.jvm,
       lambda.js,
       lambda.jvm,
+      sbtLambda,
       lambdaHttp4s.js,
       lambdaHttp4s.jvm,
       lambdaCloudFormationCustomResource.js,
@@ -90,6 +139,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-effect" % catsEffectVersion
     )
   )
+  .settings(commonSettings)
 
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .in(file("lambda"))
@@ -99,7 +149,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     ),
     libraryDependencies ++= {
       if (isDotty.value) Nil
@@ -110,6 +161,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
         )
     }
   )
+  .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
@@ -126,6 +178,22 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(core)
 
+lazy val sbtLambda = project
+  .in(file("sbt-lambda"))
+  .enablePlugins(SbtPlugin, BuildInfoPlugin)
+  .settings(
+    name := "sbt-feral-lambda",
+    crossScalaVersions := Seq(Scala212),
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
+    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.0"),
+    buildInfoPackage := "feral.lambda.sbt",
+    buildInfoKeys += organization,
+    scriptedLaunchOpts := {
+      scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+    },
+    sonatypeCredentialHost := "s01.oss.sonatype.org"
+  )
+
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lambda-http4s"))
@@ -135,7 +203,8 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-server" % http4sVersion
     )
   )
-  .dependsOn(lambda)
+  .settings(commonSettings)
+  .dependsOn(lambda % "compile->compile;test->test")
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -152,10 +221,21 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.http4s" %%% "http4s-circe" % http4sVersion
     )
   )
+  .settings(commonSettings)
   .dependsOn(lambda)
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("examples"))
-  .dependsOn(lambda)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-dsl" % http4sVersion,
+      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.tpolecat" %%% "natchez-xray" % natchezVersion,
+      "org.tpolecat" %%% "natchez-http4s" % "0.2.1",
+      "org.tpolecat" %%% "skunk-core" % "0.2.3"
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)

@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
 
-import io.circe.Encoder
+import events._
 
-final case class ApiGatewayProxyStructuredResultV2(
-    statusCode: Int,
-    headers: Map[String, String],
-    body: String,
-    isBase64Encoded: Boolean,
-    cookies: List[String]
-)
-
-object ApiGatewayProxyStructuredResultV2 {
-  implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct5(
-    "statusCode",
-    "headers",
-    "body",
-    "isBase64Encoded",
-    "cookies"
-  )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded, r.cookies))
-}
+type ApiGatewayProxyLambdaEnv[F[_]] = LambdaEnv[F, ApiGatewayProxyEventV2]
+type DynamoDbStreamLambdaEnv[F[_]] = LambdaEnv[F, DynamoDbStreamEvent]
+type KinesisStreamLambdaEnv[F[_]] = LambdaEnv[F, KinesisStreamEvent]
+type SqsLambdaEnv[F[_]] = LambdaEnv[F, SqsEvent]

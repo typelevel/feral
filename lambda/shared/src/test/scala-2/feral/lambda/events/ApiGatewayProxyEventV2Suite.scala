@@ -21,9 +21,15 @@ import munit.FunSuite
 
 class ApiGatewayProxyEventV2Suite extends FunSuite {
 
+  import ApiGatewayProxyEventV2Suite._
+
   test("decoder") {
     event.as[ApiGatewayProxyEventV2].toTry.get
   }
+
+}
+
+object ApiGatewayProxyEventV2Suite {
 
   def event = json"""
   {
