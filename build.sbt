@@ -35,18 +35,17 @@ ThisBuild / homepage := Some(url("https://github.com/typelevel/feral"))
 ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/typelevel/feral"), "git@github.com:typelevel/feral.git"))
 
-ThisBuild / githubWorkflowJavaVersions := List("corretto@8", "corretto@11")
-ThisBuild / githubWorkflowEnv += ("JABBA_INDEX" -> "https://github.com/typelevel/jdk-index/raw/main/index.json")
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.temurin("11"))
 ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
   for {
     scala <- (ThisBuild / crossScalaVersions).value.init
     java <- (ThisBuild / githubWorkflowJavaVersions).value.tail
-  } yield MatrixExclude(Map("scala" -> scala, "java" -> java))
+  } yield MatrixExclude(Map("scala" -> scala, "java" -> java.render))
 }
 
 ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
   val mkdirStep = steps.headOption match {
-    case Some(WorkflowStep.Run(command :: _, _, _, _, _)) =>
+    case Some(WorkflowStep.Run(command :: _, _, _, _, _, _)) =>
       WorkflowStep.Run(
         commands = List(command.replace("tar cf targets.tar", "mkdir -p")),
         name = Some("Make target directories")
@@ -64,7 +63,7 @@ ThisBuild / githubWorkflowBuildPreamble += WorkflowStep.Sbt(
 
 ThisBuild / githubWorkflowBuild ~= { steps =>
   val ciStep = steps.headOption match {
-    case Some(step @ WorkflowStep.Sbt(_, _, _, _, _)) =>
+    case Some(step @ WorkflowStep.Sbt(_, _, _, _, _, _)) =>
       step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
     case _ => sys.error("Can't generate ci step")
   }
