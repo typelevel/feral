@@ -98,6 +98,7 @@ val circeVersion = "0.14.1"
 val fs2Version = "3.2.3"
 val http4sVersion = "0.23.7"
 val natchezVersion = "0.1.6"
+val awsLambdaJavaVersion = "1.2.1"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 
@@ -170,7 +171,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.1" % Provided,
+      "com.amazonaws" % "aws-lambda-java-core" % awsLambdaJavaVersion % Provided,
       "co.fs2" %%% "fs2-io" % fs2Version,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "io.circe" %%% "circe-fs2" % "0.14.0"
@@ -234,6 +235,11 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.2.1",
       "org.tpolecat" %%% "skunk-core" % "0.2.3"
+    )
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.amazonaws" % "aws-lambda-java-core" % awsLambdaJavaVersion
     )
   )
   .settings(commonSettings)
