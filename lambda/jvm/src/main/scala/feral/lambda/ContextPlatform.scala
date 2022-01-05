@@ -18,8 +18,11 @@ package feral.lambda
 
 import cats.effect.Sync
 import com.amazonaws.services.lambda.runtime
+import io.circe.JsonObject
+import io.circe.jawn
 
 import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
 
 private[lambda] trait ContextCompanionPlatform {
 
@@ -50,7 +53,11 @@ private[lambda] trait ContextCompanionPlatform {
             clientContext.getEnvironment().get("make"),
             clientContext.getEnvironment().get("model"),
             clientContext.getEnvironment().get("locale")
-          )
+          ),
+          JsonObject.fromIterable(clientContext.getCustom().asScala.view.flatMap {
+            case (k, v) =>
+              jawn.parse(v).toOption.map(k -> _)
+          })
         )
       },
       Sync[F].delay(context.getRemainingTimeInMillis().millis)

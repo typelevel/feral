@@ -17,6 +17,8 @@
 package feral.lambda
 
 import cats.effect.Sync
+import io.circe.JsonObject
+import io.circe.scalajs._
 
 import scala.concurrent.duration._
 
@@ -52,7 +54,12 @@ private[lambda] trait ContextCompanionPlatform {
               clientContext.env.make,
               clientContext.env.model,
               clientContext.env.locale
-            )
+            ),
+            clientContext
+              .custom
+              .toOption
+              .flatMap(decodeJs[JsonObject](_).toOption)
+              .getOrElse(JsonObject.empty)
           )
         },
       Sync[F].delay(context.getRemainingTimeInMillis().millis)
