@@ -54,12 +54,6 @@ ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
   mkdirStep +: steps
 }
 
-ThisBuild / githubWorkflowBuildPreamble += WorkflowStep.Sbt(
-  List(s"++$Scala213", "publishLocal"),
-  name = Some("Publish local"),
-  cond = Some(s"matrix.scala == '$Scala212'")
-)
-
 ThisBuild / githubWorkflowBuild ~= { steps =>
   val ciStep = steps.headOption match {
     case Some(step @ WorkflowStep.Sbt(_, _, _, _, _, _)) =>
@@ -187,7 +181,8 @@ lazy val sbtLambda = project
     buildInfoKeys += organization,
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
-    }
+    },
+    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
