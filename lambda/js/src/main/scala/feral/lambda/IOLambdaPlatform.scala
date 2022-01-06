@@ -31,7 +31,7 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
 
   protected def handlerName: String = getClass.getSimpleName.init
 
-  private lazy val handlerFn
+  protected lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
     (event: js.Any, context: facade.Context) =>
       (for {

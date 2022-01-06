@@ -82,10 +82,10 @@ jobs:
         run: sbt ++${{ matrix.scala }} scripted
 
       - name: Make target directories
-        run: mkdir -p target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target lambda/js/target examples/.jvm/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: mkdir -p target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target lambda/js/target examples/.jvm/target lambda/jvm/target sbt-lambda/target netlify-functions/target lambda-cloudformation-custom-resource/.jvm/target project/target
 
       - name: Compress target directories
-        run: tar cf targets.tar target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target lambda/js/target examples/.jvm/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: tar cf targets.tar target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target lambda/js/target examples/.jvm/target lambda/jvm/target sbt-lambda/target netlify-functions/target lambda-cloudformation-custom-resource/.jvm/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v2

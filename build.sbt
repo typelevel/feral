@@ -116,6 +116,7 @@ lazy val root =
       lambdaHttp4s.jvm,
       lambdaCloudFormationCustomResource.js,
       lambdaCloudFormationCustomResource.jvm,
+      netlifyFunctions,
       examples.js,
       examples.jvm
     )
@@ -230,3 +231,16 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .dependsOn(lambda, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)
+
+lazy val netlifyFunctions =
+  project
+    .in(file("netlify-functions"))
+    .enablePlugins(ScalaJSPlugin)
+    .dependsOn(lambda.js)
+    .settings(
+      name := "feral-netlify-functions",
+      libraryDependencies ++= Seq(
+        "org.http4s" %%% "http4s-server" % http4sVersion,
+        "io.circe" %%% "circe-scalajs" % circeVersion
+      )
+    )
