@@ -16,43 +16,21 @@
 
 name := "feral"
 
-ThisBuild / baseVersion := "0.1"
-
-ThisBuild / organization := "org.typelevel"
-ThisBuild / organizationName := "Typelevel"
+ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / startYear := Some(2021)
 
 ThisBuild / developers := List(
-  Developer("armanbilge", "Arman Bilge", "@armanbilge", url("https://github.com/armanbilge")),
-  Developer("bpholt", "Brian Holt", "@bpholt", url("https://github.com/bpholt")),
-  Developer("djspiewak", "Daniel Spiewak", "@djspiewak", url("https://github.com/djspiewak"))
+  tlGitHubDev("armanbilge", "Arman Bilge"),
+  tlGitHubDev("bpholt", "Brian Holt"),
+  tlGitHubDev("djspiewak", "Daniel Spiewak")
 )
 
-enablePlugins(SonatypeCiReleasePlugin)
-ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / spiewakMainBranches := Seq("main")
-ThisBuild / homepage := Some(url("https://github.com/typelevel/feral"))
-ThisBuild / scmInfo := Some(
-  ScmInfo(url("https://github.com/typelevel/feral"), "git@github.com:typelevel/feral.git"))
+enablePlugins(TypelevelCiReleasePlugin)
+ThisBuild / tlCiReleaseBranches := Seq("main")
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.temurin("11"))
-ThisBuild / githubWorkflowBuildMatrixExclusions ++= {
-  for {
-    scala <- (ThisBuild / crossScalaVersions).value.init
-    java <- (ThisBuild / githubWorkflowJavaVersions).value.tail
-  } yield MatrixExclude(Map("scala" -> scala, "java" -> java.render))
-}
-
-ThisBuild / githubWorkflowGeneratedUploadSteps ~= { steps =>
-  val mkdirStep = steps.headOption match {
-    case Some(WorkflowStep.Run(command :: _, _, _, _, _, _)) =>
-      WorkflowStep.Run(
-        commands = List(command.replace("tar cf targets.tar", "mkdir -p")),
-        name = Some("Make target directories")
-      )
-    case _ => sys.error("Can't generate make target dirs workflow step")
-  }
-  mkdirStep +: steps
-}
+ThisBuild / githubWorkflowBuildMatrixExclusions +=
+  MatrixExclude(Map("ci" -> "ciJS", "scala" -> Scala212))
 
 ThisBuild / githubWorkflowBuild ~= { steps =>
   val ciStep = steps.headOption match {
@@ -68,16 +46,12 @@ ThisBuild / githubWorkflowBuild ~= { steps =>
   List(ciStep, scriptedStep)
 }
 
-replaceCommandAlias(
-  "ci",
-  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
-)
-
 ThisBuild / githubWorkflowBuildPreamble +=
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2"),
     name = Some("Setup NodeJS v14 LTS"),
-    params = Map("node-version" -> "14")
+    params = Map("node-version" -> "14"),
+    cond = Some("matrix.ci == 'ciJS'")
   )
 
 val Scala212 = "2.12.15"
@@ -94,32 +68,18 @@ val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 
 lazy val commonSettings = Seq(
-  crossScalaVersions := Seq(Scala3, Scala213),
-  scalacOptions ++= {
-    if (isDotty.value && githubIsWorkflowBuild.value)
-      Seq("-Xfatal-warnings")
-    else
-      Seq.empty
-  }
+  crossScalaVersions := Seq(Scala3, Scala213)
 )
 
 lazy val root =
-  project
-    .in(file("."))
-    .aggregate(
-      core.js,
-      core.jvm,
-      lambda.js,
-      lambda.jvm,
-      sbtLambda,
-      lambdaHttp4s.js,
-      lambdaHttp4s.jvm,
-      lambdaCloudFormationCustomResource.js,
-      lambdaCloudFormationCustomResource.jvm,
-      examples.js,
-      examples.jvm
-    )
-    .enablePlugins(NoPublishPlugin)
+  tlCrossRootProject.aggregate(
+    core,
+    lambda,
+    sbtLambda,
+    lambdaHttp4s,
+    lambdaCloudFormationCustomResource,
+    examples
+  )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -144,7 +104,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
     ),
     libraryDependencies ++= {
-      if (isDotty.value) Nil
+      if (tlIsScala3.value) Nil
       else
         Seq(
           "io.circe" %%% "circe-literal" % circeVersion % Test,
