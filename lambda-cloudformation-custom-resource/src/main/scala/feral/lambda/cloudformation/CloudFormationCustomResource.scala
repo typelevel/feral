@@ -23,7 +23,7 @@ import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import io.circe._
 import io.circe.syntax._
-import org.http4s.Method.POST
+import org.http4s.Method.PUT
 import org.http4s.circe._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
@@ -55,7 +55,7 @@ object CloudFormationCustomResource {
         case OtherRequestType(other) => illegalRequestType(other)
       }).attempt
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
-        .flatMap { resp => client.successful(POST(resp.asJson, event.ResponseURL)) }
+        .flatMap { resp => client.successful(PUT(resp.asJson, event.ResponseURL)) }
         .as(None)
     }
   }
