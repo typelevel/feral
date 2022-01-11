@@ -22,11 +22,14 @@ import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import io.circe.JsonObject
 import io.circe.testing.instances.arbitraryJsonObject
-import org.http4s._
+import org.http4s.{Charset => _, _}
 import org.http4s.syntax.all._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen}
 
+import java.nio.charset.Charset
+import java.util.UUID
+import scala.annotation.tailrec
 import scala.concurrent.duration._
 
 trait CloudFormationCustomResourceArbitraries {
@@ -103,7 +106,8 @@ trait CloudFormationCustomResourceArbitraries {
       Gen.const(CreateRequest),
       Gen.const(UpdateRequest),
       Gen.const(DeleteRequest),
-      arbitrary[String].map(OtherRequestType))
+      Gen.chooseNum(1, 100).flatMap(Gen.stringOfN(_, arbitrary[Char])).map(OtherRequestType)
+    )
   implicit val arbCloudFormationRequestType: Arbitrary[CloudFormationRequestType] = Arbitrary(
     genCloudFormationRequestType)
 
@@ -112,13 +116,25 @@ trait CloudFormationCustomResourceArbitraries {
     uri"https://cloudformation-custom-resource-response-useast2.s3-us-east-2.amazonaws.com/arn%3Aaws%3Acloudformation%3Aus-east-2%3A123456789012%3Astack/lambda-error-processor/1134083a-2608-1e91-9897-022501a2c456%7Cprimerinvoke%7C5d478078-13e9-baf0-464a-7ef285ecc786?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1555451971&Signature=28UijZePE5I4dvukKQqM%2F9Rf1o4%3D"
   implicit val arbUri: Arbitrary[Uri] = Arbitrary(genUri)
 
-  val genStackId: Gen[StackId] = arbitrary[String].map(StackId(_))
+  val genStackId: Gen[StackId] =
+    for {
+      // max of 217 (89 for the ARN format/UUID and up to 128 for the stack name)
+      length <- Gen.chooseNum(1, 217)
+      str <- Gen.stringOfN(length, arbitrary[Char])
+    } yield StackId(str)
   implicit val arbStackId: Arbitrary[StackId] = Arbitrary(genStackId)
 
-  val genRequestId: Gen[RequestId] = arbitrary[String].map(RequestId(_))
+  val genRequestId: Gen[RequestId] = arbitrary[UUID].map(_.toString).map(RequestId(_))
   implicit val arbRequestId: Arbitrary[RequestId] = Arbitrary(genRequestId)
 
-  val genResourceType: Gen[ResourceType] = arbitrary[String].map(ResourceType(_))
+  val genResourceType: Gen[ResourceType] =
+    for {
+      // max of 60 alphanumeric and _@- characters, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/crpg-ref-requests.html
+      length <- Gen.chooseNum(1, 60)
+      str <- Gen.stringOfN(
+        length,
+        Gen.oneOf(Gen.alphaNumChar, Gen.const('_'), Gen.const('@'), Gen.const('-')))
+    } yield ResourceType(str)
   implicit val arbResourceType: Arbitrary[ResourceType] = Arbitrary(genResourceType)
 
   val genLogicalResourceId: Gen[LogicalResourceId] = arbitrary[String].map(LogicalResourceId(_))
@@ -126,9 +142,19 @@ trait CloudFormationCustomResourceArbitraries {
     genLogicalResourceId)
 
   val genPhysicalResourceId: Gen[PhysicalResourceId] =
-    arbitrary[String].map(PhysicalResourceId(_))
+    for {
+      length <- Gen.chooseNum(1, 1024)
+      str <- Gen.stringOfN(length, Gen.asciiPrintableChar).map(trimStringToByteLength(1024)(_))
+    } yield PhysicalResourceId.unsafeApply(str)
   implicit val arbPhysicalResourceId: Arbitrary[PhysicalResourceId] = Arbitrary(
     genPhysicalResourceId)
+
+  @tailrec
+  private def trimStringToByteLength(
+      length: Int)(s: String, encoding: Charset = Charset.forName("UTF-8")): String =
+    if (s.getBytes(encoding).length > length)
+      trimStringToByteLength(length - 1)(s.drop(1), encoding)
+    else s
 
   def genCloudFormationCustomResourceRequest[A: Arbitrary]
       : Gen[CloudFormationCustomResourceRequest[A]] =

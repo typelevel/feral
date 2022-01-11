@@ -175,7 +175,6 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.typelevel" %%% "scalacheck-effect" % "1.0.3" % Test,
       "org.typelevel" %%% "scalacheck-effect-munit" % "1.0.3" % Test,
       "com.eed3si9n.expecty" %%% "expecty" % "0.15.4" % Test,
-      "io.circe" %%% "circe-optics" % "0.14.1" % Test,
       "io.circe" %%% "circe-literal" % "0.14.1" % Test,
       "io.circe" %%% "circe-testing" % "0.14.1" % Test
     )

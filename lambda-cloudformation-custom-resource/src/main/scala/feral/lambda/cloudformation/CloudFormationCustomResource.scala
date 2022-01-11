@@ -100,7 +100,9 @@ object CloudFormationCustomResource {
   private def stackTraceLines(throwable: Throwable): List[String] = {
     val writer = new StringWriter()
     throwable.printStackTrace(new PrintWriter(writer))
-    writer.toString.linesIterator.toList
+
+    // TODO figure out how to include more of the stack trace, up to a total response size of 4096 bytes
+    writer.toString.linesIterator.toList.take(1)
   }
 
 }
