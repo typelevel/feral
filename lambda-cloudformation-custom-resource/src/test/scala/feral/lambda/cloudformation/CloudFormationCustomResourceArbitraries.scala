@@ -189,10 +189,7 @@ trait CloudFormationCustomResourceArbitraries {
     for {
       e <- arbitrary[CloudFormationCustomResourceRequest[A]]
       c <- arbitrary[Context[F]]
-    } yield new LambdaEnv[F, CloudFormationCustomResourceRequest[A]] {
-      override def event: F[CloudFormationCustomResourceRequest[A]] = e.pure[F]
-      override def context: F[Context[F]] = c.pure[F]
-    }
+    } yield LambdaEnv.pure(e, c)
 
   implicit def arbLambdaEnv[F[_]: Applicative, A: Arbitrary]
       : Arbitrary[LambdaEnv[F, CloudFormationCustomResourceRequest[A]]] =
