@@ -168,7 +168,16 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     libraryDependencies ++= Seq(
       "io.monix" %%% "newtypes-core" % "0.0.1",
       "org.http4s" %%% "http4s-client" % http4sVersion,
-      "org.http4s" %%% "http4s-circe" % http4sVersion
+      "org.http4s" %%% "http4s-circe" % http4sVersion,
+      "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
+      "org.typelevel" %%% "scalacheck-effect" % "1.0.3" % Test,
+      "org.typelevel" %%% "scalacheck-effect-munit" % "1.0.3" % Test,
+      "com.eed3si9n.expecty" %%% "expecty" % "0.15.4" % Test,
+      "io.circe" %%% "circe-optics" % "0.14.1" % Test,
+      "io.circe" %%% "circe-literal" % "0.14.1" % Test,
+      "io.circe" %%% "circe-testing" % "0.14.1" % Test
     )
   )
   .settings(commonSettings)

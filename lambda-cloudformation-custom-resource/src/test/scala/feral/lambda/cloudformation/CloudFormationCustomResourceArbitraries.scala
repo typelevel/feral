@@ -1,0 +1,175 @@
+/*
+ * Copyright 2021 Typelevel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package feral.lambda
+package cloudformation
+
+import cats._
+import cats.syntax.all._
+import feral.lambda.cloudformation.CloudFormationRequestType._
+import io.circe.JsonObject
+import io.circe.testing.instances.arbitraryJsonObject
+import org.http4s._
+import org.http4s.syntax.all._
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.{Arbitrary, Gen}
+
+import scala.concurrent.duration._
+
+trait CloudFormationCustomResourceArbitraries {
+  val genClientContextClient: Gen[ClientContextClient] =
+    for {
+      installationId <- arbitrary[String]
+      appTitle <- arbitrary[String]
+      appVersionName <- arbitrary[String]
+      appVersionCode <- arbitrary[String]
+      appPackageName <- arbitrary[String]
+    } yield new ClientContextClient(
+      installationId,
+      appTitle,
+      appVersionName,
+      appVersionCode,
+      appPackageName)
+  implicit val arbClientContextClient: Arbitrary[ClientContextClient] = Arbitrary(
+    genClientContextClient)
+
+  val genClientContextEnv: Gen[ClientContextEnv] =
+    for {
+      platformVersion <- arbitrary[String]
+      platform <- arbitrary[String]
+      make <- arbitrary[String]
+      model <- arbitrary[String]
+      locale <- arbitrary[String]
+    } yield new ClientContextEnv(platformVersion, platform, make, model, locale)
+  implicit val arbClientContextEnv: Arbitrary[ClientContextEnv] = Arbitrary(genClientContextEnv)
+
+  val genCognitoIdentity: Gen[CognitoIdentity] =
+    for {
+      identityId <- arbitrary[String]
+      identityPoolId <- arbitrary[String]
+    } yield new CognitoIdentity(identityId, identityPoolId)
+  implicit val arbCognitoIdentity: Arbitrary[CognitoIdentity] = Arbitrary(genCognitoIdentity)
+
+  val genClientContext: Gen[ClientContext] =
+    for {
+      client <- arbitrary[ClientContextClient]
+      env <- arbitrary[ClientContextEnv]
+      custom <- arbitrary[JsonObject]
+    } yield new ClientContext(client, env, custom)
+  implicit val arbClientContext: Arbitrary[ClientContext] = Arbitrary(genClientContext)
+
+  def genContext[F[_]: Applicative]: Gen[Context[F]] =
+    for {
+      functionName <- arbitrary[String]
+      functionVersion <- arbitrary[String]
+      invokedFunctionArn <- arbitrary[String]
+      memoryLimitInMB <- arbitrary[Int]
+      awsRequestId <- arbitrary[String]
+      logGroupName <- arbitrary[String]
+      logStreamName <- arbitrary[String]
+      identity <- arbitrary[Option[CognitoIdentity]]
+      clientContext <- arbitrary[Option[ClientContext]]
+      remainingTime <- arbitrary[FiniteDuration]
+    } yield new Context(
+      functionName,
+      functionVersion,
+      invokedFunctionArn,
+      memoryLimitInMB,
+      awsRequestId,
+      logGroupName,
+      logStreamName,
+      identity,
+      clientContext,
+      remainingTime.pure[F]
+    )
+
+  implicit def arbContext[F[_]: Applicative]: Arbitrary[Context[F]] = Arbitrary(genContext[F])
+
+  val genCloudFormationRequestType: Gen[CloudFormationRequestType] =
+    Gen.oneOf(
+      Gen.const(CreateRequest),
+      Gen.const(UpdateRequest),
+      Gen.const(DeleteRequest),
+      arbitrary[String].map(OtherRequestType))
+  implicit val arbCloudFormationRequestType: Arbitrary[CloudFormationRequestType] = Arbitrary(
+    genCloudFormationRequestType)
+
+  // TODO is there a more complete generator we want to use?
+  val genUri: Gen[Uri] =
+    uri"https://cloudformation-custom-resource-response-useast2.s3-us-east-2.amazonaws.com/arn%3Aaws%3Acloudformation%3Aus-east-2%3A123456789012%3Astack/lambda-error-processor/1134083a-2608-1e91-9897-022501a2c456%7Cprimerinvoke%7C5d478078-13e9-baf0-464a-7ef285ecc786?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1555451971&Signature=28UijZePE5I4dvukKQqM%2F9Rf1o4%3D"
+  implicit val arbUri: Arbitrary[Uri] = Arbitrary(genUri)
+
+  val genStackId: Gen[StackId] = arbitrary[String].map(StackId(_))
+  implicit val arbStackId: Arbitrary[StackId] = Arbitrary(genStackId)
+
+  val genRequestId: Gen[RequestId] = arbitrary[String].map(RequestId(_))
+  implicit val arbRequestId: Arbitrary[RequestId] = Arbitrary(genRequestId)
+
+  val genResourceType: Gen[ResourceType] = arbitrary[String].map(ResourceType(_))
+  implicit val arbResourceType: Arbitrary[ResourceType] = Arbitrary(genResourceType)
+
+  val genLogicalResourceId: Gen[LogicalResourceId] = arbitrary[String].map(LogicalResourceId(_))
+  implicit val arbLogicalResourceId: Arbitrary[LogicalResourceId] = Arbitrary(
+    genLogicalResourceId)
+
+  val genPhysicalResourceId: Gen[PhysicalResourceId] =
+    arbitrary[String].map(PhysicalResourceId(_))
+  implicit val arbPhysicalResourceId: Arbitrary[PhysicalResourceId] = Arbitrary(
+    genPhysicalResourceId)
+
+  def genCloudFormationCustomResourceRequest[A: Arbitrary]
+      : Gen[CloudFormationCustomResourceRequest[A]] =
+    for {
+      requestType <- arbitrary[CloudFormationRequestType]
+      responseURL <- arbitrary[Uri]
+      stackId <- arbitrary[StackId]
+      requestId <- arbitrary[RequestId]
+      resourceType <- arbitrary[ResourceType]
+      logicalResourceId <- arbitrary[LogicalResourceId]
+      physicalResourceId <- arbitrary[Option[PhysicalResourceId]]
+      resourceProperties <- arbitrary[A]
+      oldResourceProperties <- arbitrary[Option[JsonObject]]
+    } yield CloudFormationCustomResourceRequest(
+      requestType,
+      responseURL,
+      stackId,
+      requestId,
+      resourceType,
+      logicalResourceId,
+      physicalResourceId,
+      resourceProperties,
+      oldResourceProperties
+    )
+
+  implicit def arbCloudFormationCustomResourceRequest[A: Arbitrary]
+      : Arbitrary[CloudFormationCustomResourceRequest[A]] = Arbitrary(
+    genCloudFormationCustomResourceRequest[A])
+
+  def genLambdaEnv[F[_]: Applicative, A: Arbitrary]
+      : Gen[LambdaEnv[F, CloudFormationCustomResourceRequest[A]]] =
+    for {
+      e <- arbitrary[CloudFormationCustomResourceRequest[A]]
+      c <- arbitrary[Context[F]]
+    } yield new LambdaEnv[F, CloudFormationCustomResourceRequest[A]] {
+      override def event: F[CloudFormationCustomResourceRequest[A]] = e.pure[F]
+      override def context: F[Context[F]] = c.pure[F]
+    }
+
+  implicit def arbLambdaEnv[F[_]: Applicative, A: Arbitrary]
+      : Arbitrary[LambdaEnv[F, CloudFormationCustomResourceRequest[A]]] =
+    Arbitrary(genLambdaEnv[F, A])
+
+}
