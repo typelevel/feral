@@ -106,7 +106,7 @@ trait CloudFormationCustomResourceArbitraries {
       Gen.const(CreateRequest),
       Gen.const(UpdateRequest),
       Gen.const(DeleteRequest),
-      Gen.chooseNum(1, 100).flatMap(Gen.stringOfN(_, arbitrary[Char])).map(OtherRequestType)
+      Gen.chooseNum(1, 100).flatMap(Gen.stringOfN(_, arbitrary[Char])).map(OtherRequestType(_))
     )
   implicit val arbCloudFormationRequestType: Arbitrary[CloudFormationRequestType] = Arbitrary(
     genCloudFormationRequestType)

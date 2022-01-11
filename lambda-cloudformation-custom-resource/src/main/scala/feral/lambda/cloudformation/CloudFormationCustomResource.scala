@@ -40,11 +40,7 @@ trait CloudFormationCustomResource[F[_], Input, Output] {
 
 object CloudFormationCustomResource {
   private implicit def jsonEncoder[F[_]]: EntityEncoder[F, Json] =
-    jsonEncoderWithPrinter(
-      Printer(
-        dropNullValues = true,
-        indent = ""
-      ))
+    jsonEncoderWithPrinter(Printer.noSpaces.copy(dropNullValues = true))
 
   def apply[F[_]: MonadThrow, Input, Output: Encoder](
       client: Client[F],

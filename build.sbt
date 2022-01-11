@@ -65,6 +65,7 @@ val http4sVersion = "0.23.7"
 val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
+val scalacheckEffectVersion = "1.0.3"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -100,7 +101,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-scodec" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Nil
@@ -171,12 +172,11 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %%% "scalacheck-effect" % "1.0.3" % Test,
-      "org.typelevel" %%% "scalacheck-effect-munit" % "1.0.3" % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
       "com.eed3si9n.expecty" %%% "expecty" % "0.15.4" % Test,
-      "io.circe" %%% "circe-literal" % "0.14.1" % Test,
-      "io.circe" %%% "circe-testing" % "0.14.1" % Test
+      "io.circe" %%% "circe-testing" % circeVersion % Test
     )
   )
   .settings(commonSettings)

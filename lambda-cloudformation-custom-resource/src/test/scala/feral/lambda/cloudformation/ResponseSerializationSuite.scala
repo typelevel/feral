@@ -24,8 +24,8 @@ import com.eed3si9n.expecty.Expecty.expect
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import feral.lambda.cloudformation.ResponseSerializationSuite._
 import io.circe.Json
+import io.circe.syntax._
 import io.circe.jawn.CirceSupportParser.facade
-import io.circe.literal._
 import munit._
 import org.http4s._
 import org.http4s.client.Client
@@ -58,37 +58,39 @@ class ResponseSerializationSuite
           eventualRequest <- Deferred[IO, (Request[IO], Json)]
           client = Client.fromHttpApp(captureRequestsAndRespondWithOk(eventualRequest))
           _ <- CloudFormationCustomResource(client, new DoNothingCustomResource[IO])
-          (req, body) <- eventualRequest.get.timeout(2.seconds)
+          captured <- eventualRequest.get.timeout(2.seconds)
           event <- lambdaEnv.event
         } yield {
+          val (req, body) = captured
           val expectedJson = event.RequestType match {
             case OtherRequestType(requestType) =>
               val expectedReason = s"unexpected CloudFormation request type `$requestType`"
               val expectedStackTraceHead =
                 s"java.lang.IllegalArgumentException: $expectedReason"
-              json"""{
-                       "Status": "FAILED",
-                       "Reason": $expectedReason,
-                       "PhysicalResourceId": ${event.PhysicalResourceId},
-                       "StackId": ${event.StackId},
-                       "RequestId": ${event.RequestId},
-                       "LogicalResourceId": ${event.LogicalResourceId},
-                       "Data": {
-                         "StackTrace": [
-                           $expectedStackTraceHead
-                         ]
-                       }
-                     }""".deepDropNullValues
+
+              Json
+                .obj(
+                  "Status" -> "FAILED".asJson,
+                  "Reason" -> expectedReason.asJson,
+                  "PhysicalResourceId" -> event.PhysicalResourceId.asJson,
+                  "StackId" -> event.StackId.asJson,
+                  "RequestId" -> event.RequestId.asJson,
+                  "LogicalResourceId" -> event.LogicalResourceId.asJson,
+                  "Data" -> Json.obj {
+                    "StackTrace" -> Json.arr(expectedStackTraceHead.asJson)
+                  }
+                )
+                .deepDropNullValues
             case _ =>
-              json"""{
-                       "Status": "SUCCESS",
-                       "PhysicalResourceId": ${convertInputToFakePhysicalResourceId(
-                event.ResourceProperties)},
-                       "StackId": ${event.StackId},
-                       "RequestId": ${event.RequestId},
-                       "LogicalResourceId": ${event.LogicalResourceId},
-                       "Data": ${event.RequestType}
-                     }"""
+              Json.obj(
+                "Status" -> "SUCCESS".asJson,
+                "PhysicalResourceId" -> convertInputToFakePhysicalResourceId(
+                  event.ResourceProperties).asJson,
+                "StackId" -> event.StackId.asJson,
+                "RequestId" -> event.RequestId.asJson,
+                "LogicalResourceId" -> event.LogicalResourceId.asJson,
+                "Data" -> event.RequestType.asJson
+              )
           }
 
           expect(body eqv expectedJson)
