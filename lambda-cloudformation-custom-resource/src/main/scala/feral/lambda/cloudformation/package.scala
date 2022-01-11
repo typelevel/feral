@@ -33,7 +33,20 @@ package object cloudformation {
 
 package cloudformation {
 
-  object PhysicalResourceId extends NewtypeWrapped[String] {
+  object PhysicalResourceId extends Newtype[String] {
+
+    /**
+     * Applies validation rules from
+     * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/crpg-ref-responses.html
+     */
+    def apply(s: String): Option[Type] =
+      Option.when(s.length <= 1024 && s.nonEmpty)(unsafeCoerce(s))
+
+    def unsafeApply(s: String): PhysicalResourceId = unsafeCoerce(s)
+
+    def unapply[A](a: A)(implicit ev: A =:= Type): Some[String] =
+      Some(value(ev(a)))
+
     implicit val PhysicalResourceIdDecoder: Decoder[PhysicalResourceId] = derive[Decoder]
     implicit val PhysicalResourceIdEncoder: Encoder[PhysicalResourceId] = derive[Encoder]
   }

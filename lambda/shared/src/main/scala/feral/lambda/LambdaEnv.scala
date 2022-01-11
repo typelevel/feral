@@ -46,6 +46,12 @@ object LambdaEnv {
   def event[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Event] = env.event
   def context[F[_], Event](implicit env: LambdaEnv[F, Event]): F[Context[F]] = env.context
 
+  def pure[F[_]: Applicative, Event](e: Event, c: Context[F]): LambdaEnv[F, Event] =
+    new LambdaEnv[F, Event] {
+      override def event: F[Event] = e.pure[F]
+      override def context: F[Context[F]] = c.pure[F]
+    }
+
   implicit def kleisliLambdaEnv[F[_]: Functor, A, B](
       implicit env: LambdaEnv[F, A]): LambdaEnv[Kleisli[F, B, *], A] =
     env.mapK(Kleisli.liftK)
