@@ -26,24 +26,23 @@ ThisBuild / developers := List(
 )
 
 enablePlugins(TypelevelCiReleasePlugin)
-ThisBuild / tlCiReleaseBranches := Seq("main")
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.temurin("11"))
 ThisBuild / githubWorkflowBuildMatrixExclusions +=
-  MatrixExclude(Map("ci" -> "ciJS", "scala" -> Scala212))
+  MatrixExclude(Map("project" -> "rootJS", "scala" -> Scala212))
 
 ThisBuild / githubWorkflowBuild ~= { steps =>
-  val ciStep = steps.headOption match {
-    case Some(step @ WorkflowStep.Sbt(_, _, _, _, _, _)) =>
-      step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
-    case _ => sys.error("Can't generate ci step")
-  }
   val scriptedStep = WorkflowStep.Sbt(
     List(s"scripted"),
-    name = Some("Run sbt scripted tests"),
+    name = Some("Scripted"),
     cond = Some(s"matrix.scala == '$Scala212'")
   )
-  List(ciStep, scriptedStep)
+  steps.flatMap {
+    case step @ WorkflowStep.Sbt(List("test"), _, _, _, _, _) =>
+      val ciStep = step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
+      List(ciStep, scriptedStep)
+    case step => List(step)
+  }
 }
 
 ThisBuild / githubWorkflowBuildPreamble +=
@@ -51,7 +50,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
     UseRef.Public("actions", "setup-node", "v2"),
     name = Some("Setup NodeJS v14 LTS"),
     params = Map("node-version" -> "14"),
-    cond = Some("matrix.ci == 'ciJS'")
+    cond = Some("matrix.project == 'rootJS'")
   )
 
 val Scala212 = "2.12.15"
