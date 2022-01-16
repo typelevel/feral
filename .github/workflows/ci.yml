@@ -99,6 +99,9 @@ jobs:
       - name: Check binary compatibility
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' mimaReportBinaryIssues
 
+      - name: Generate API documentation
+        run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' doc
+
       - name: Make target directories
         run: mkdir -p target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target .js/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target .jvm/target lambda/js/target .native/target examples/.jvm/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
 
