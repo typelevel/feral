@@ -17,8 +17,7 @@
 package feral.lambda
 package cloudformation
 
-import cats.ApplicativeThrow
-import cats.MonadThrow
+import cats._
 import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import io.circe._
@@ -28,9 +27,6 @@ import org.http4s.Method.PUT
 import org.http4s.circe._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
-
-import java.io.PrintWriter
-import java.io.StringWriter
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
   def createResource(input: Input): F[HandlerResponse[Output]]
@@ -93,12 +89,8 @@ object CloudFormationCustomResource {
       Data = res.data.asJson
     )
 
-  private def stackTraceLines(throwable: Throwable): List[String] = {
-    val writer = new StringWriter()
-    throwable.printStackTrace(new PrintWriter(writer))
-
-    // TODO figure out how to include more of the stack trace, up to a total response size of 4096 bytes
-    writer.toString.linesIterator.toList.take(1)
-  }
+  // TODO figure out how to include more of the stack trace, up to a total response size of 4096 bytes
+  private def stackTraceLines(throwable: Throwable): List[String] =
+    List(throwable.toString)
 
 }
