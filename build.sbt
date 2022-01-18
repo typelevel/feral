@@ -52,7 +52,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
   )
 
 val Scala212 = "2.12.15"
-val Scala213 = "2.13.7"
+val Scala213 = "2.13.8"
 val Scala3 = "3.1.0"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
