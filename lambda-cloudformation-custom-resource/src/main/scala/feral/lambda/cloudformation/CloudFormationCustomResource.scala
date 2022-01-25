@@ -35,7 +35,7 @@ trait CloudFormationCustomResource[F[_], Input, Output] {
 }
 
 object CloudFormationCustomResource {
-  private implicit def jsonEncoder[F[_]]: EntityEncoder[F, Json] =
+  private[cloudformation] implicit def jsonEncoder[F[_]]: EntityEncoder[F, Json] =
     jsonEncoderWithPrinter(Printer.noSpaces.copy(dropNullValues = true))
 
   def apply[F[_]: MonadThrow, Input, Output: Encoder](
@@ -63,7 +63,7 @@ object CloudFormationCustomResource {
     (new IllegalArgumentException(
       s"unexpected CloudFormation request type `$other`"): Throwable).raiseError[F, A]
 
-  private def exceptionResponse[Input](req: CloudFormationCustomResourceRequest[Input])(
+  private[cloudformation] def exceptionResponse(req: CloudFormationCustomResourceRequest[_])(
       ex: Throwable): CloudFormationCustomResourceResponse =
     CloudFormationCustomResourceResponse(
       Status = RequestResponseStatus.Failed,
@@ -76,8 +76,8 @@ object CloudFormationCustomResource {
         "StackTrace" -> Json.arr(stackTraceLines(ex).map(Json.fromString): _*)).asJson
     )
 
-  private def successResponse[Input, Output: Encoder](
-      req: CloudFormationCustomResourceRequest[Input])(
+  private[cloudformation] def successResponse[Output: Encoder](
+      req: CloudFormationCustomResourceRequest[_])(
       res: HandlerResponse[Output]): CloudFormationCustomResourceResponse =
     CloudFormationCustomResourceResponse(
       Status = RequestResponseStatus.Success,

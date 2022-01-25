@@ -171,15 +171,24 @@ package cloudformation {
   object CloudFormationCustomResourceResponse {
     implicit val CloudFormationCustomResourceResponseDecoder
         : Decoder[CloudFormationCustomResourceResponse] =
-      Decoder.forProduct7(
-        "Status",
-        "Reason",
-        "PhysicalResourceId",
-        "StackId",
-        "RequestId",
-        "LogicalResourceId",
-        "Data"
-      )(CloudFormationCustomResourceResponse.apply)
+      Decoder
+        .forProduct7(
+          "Status",
+          "Reason",
+          "PhysicalResourceId",
+          "StackId",
+          "RequestId",
+          "LogicalResourceId",
+          "Data"
+        )(CloudFormationCustomResourceResponse.apply)
+        .prepare {
+          _.withFocus {
+            _.mapObject { obj =>
+              if (obj.contains("Data")) obj
+              else obj.add("Data", Json.Null)
+            }
+          }
+        }
 
     implicit val CloudFormationCustomResourceResponseEncoder
         : Encoder[CloudFormationCustomResourceResponse] =
