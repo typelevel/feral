@@ -24,13 +24,15 @@ import com.eed3si9n.expecty.Expecty.expect
 import feral.lambda.cloudformation.CloudFormationRequestType._
 import feral.lambda.cloudformation.ResponseSerializationSuite._
 import io.circe.Json
-import io.circe.syntax._
 import io.circe.jawn.CirceSupportParser.facade
+import io.circe.jawn.parse
+import io.circe.syntax._
 import munit._
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Length`
+import org.scalacheck.Arbitrary.arbThrowable
 import org.scalacheck.effect.PropF
 import org.typelevel.jawn.Parser
 
@@ -98,6 +100,32 @@ class ResponseSerializationSuite
           expect(req.uri == event.ResponseURL)
           expect(req.headers.get[`Content-Length`].exists(_.length <= 4096))
         }
+    }
+  }
+
+  test("Round-trip CloudFormationCustomResourceResponse JSON as emitted by our middleware") {
+    PropF.forAllF {
+      (
+          res: Either[Throwable, HandlerResponse[Unit]],
+          req: CloudFormationCustomResourceRequest[Unit]) =>
+        val generatedResponse = res match {
+          case Left(ex) => CloudFormationCustomResource.exceptionResponse(req)(ex)
+          case Right(a) => CloudFormationCustomResource.successResponse(req)(a)
+        }
+
+        CloudFormationCustomResource
+          .jsonEncoder[IO]
+          .toEntity(generatedResponse.asJson)
+          .body
+          .through(fs2.text.utf8.decode)
+          .compile
+          .string
+          .map(parse(_))
+          .map { parseResult =>
+            expect(
+              parseResult.flatMap(_.as[CloudFormationCustomResourceResponse]) == Right(
+                generatedResponse))
+          }
     }
   }
 }

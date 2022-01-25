@@ -20,8 +20,8 @@ package cloudformation
 import cats._
 import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
-import io.circe.JsonObject
-import io.circe.testing.instances.arbitraryJsonObject
+import io.circe.{Json, JsonObject}
+import io.circe.testing.instances.{arbitraryJson, arbitraryJsonObject}
 import org.http4s.{Charset => _, _}
 import org.http4s.syntax.all._
 import org.scalacheck.Arbitrary.arbitrary
@@ -195,4 +195,37 @@ trait CloudFormationCustomResourceArbitraries {
       : Arbitrary[LambdaEnv[F, CloudFormationCustomResourceRequest[A]]] =
     Arbitrary(genLambdaEnv[F, A])
 
+  def genHandlerResponse[A: Arbitrary]: Gen[HandlerResponse[A]] =
+    for {
+      physicalId <- arbitrary[PhysicalResourceId]
+      a <- arbitrary[Option[A]]
+    } yield HandlerResponse(physicalId, a)
+  implicit def arbHandlerResponse[A: Arbitrary]: Arbitrary[HandlerResponse[A]] = Arbitrary(
+    genHandlerResponse[A])
+
+  val genRequestResponseStatus: Gen[RequestResponseStatus] =
+    Gen.oneOf(RequestResponseStatus.Success, RequestResponseStatus.Failed)
+  implicit val arbRequestResponseStatus: Arbitrary[RequestResponseStatus] = Arbitrary(
+    genRequestResponseStatus)
+
+  val genCloudFormationCustomResourceResponse: Gen[CloudFormationCustomResourceResponse] =
+    for {
+      status <- arbitrary[RequestResponseStatus]
+      reason <- arbitrary[Option[String]]
+      physicalResourceId <- arbitrary[Option[PhysicalResourceId]]
+      stackId <- arbitrary[StackId]
+      requestId <- arbitrary[RequestId]
+      logicalResourceId <- arbitrary[LogicalResourceId]
+      data <- arbitrary[Json]
+    } yield CloudFormationCustomResourceResponse(
+      status,
+      reason,
+      physicalResourceId,
+      stackId,
+      requestId,
+      logicalResourceId,
+      data)
+  implicit val arbCloudFormationCustomResourceResponse
+      : Arbitrary[CloudFormationCustomResourceResponse] = Arbitrary(
+    genCloudFormationCustomResourceResponse)
 }
