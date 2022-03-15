@@ -35,7 +35,17 @@ class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
       request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
       _ <- IO(assertEquals(request.method, Method.GET))
       _ <- IO(assertEquals(request.uri, uri"/default/nodejs-apig-function-1G3XMPLZXVXYI?"))
+      _ <- IO(assert(request.cookies.nonEmpty))
       _ <- IO(assertEquals(request.headers, expectedHeaders))
+      _ <- request.body.compile.count.assertEquals(0L)
+    } yield ()
+  }
+
+  test("decode event with no cookies") {
+    for {
+      event <- eventNoCookies.as[ApiGatewayProxyEventV2].liftTo[IO]
+      request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
+      _ <- IO(assert(request.cookies.isEmpty))
       _ <- request.body.compile.count.assertEquals(0L)
     } yield ()
   }
