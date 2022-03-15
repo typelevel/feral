@@ -38,20 +38,7 @@ object ApiGatewayProxyHandler {
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
       event <- LambdaEnv.event
-      method <- Method.fromString(event.requestContext.http.method).liftTo[F]
-      uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
-      cookies = event.cookies.filter(_.nonEmpty).map(Cookie.name.toString -> _.mkString("; "))
-      headers = Headers(cookies.toList ::: event.headers.toList)
-      readBody =
-        if (event.isBase64Encoded)
-          fs2.text.base64.decode[F]
-        else
-          fs2.text.utf8.encode[F]
-      request = Request(
-        method,
-        uri,
-        headers = headers,
-        body = Stream.fromOption[F](event.body).through(readBody))
+      request <- decodeEvent(event)
       response <- routes(request).getOrElse(Response.notFound[F])
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- (if (isBase64Encoded)
