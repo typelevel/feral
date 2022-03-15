@@ -34,7 +34,7 @@ object RequestContext {
 final case class ApiGatewayProxyEventV2(
     rawPath: String,
     rawQueryString: String,
-    cookies: List[String],
+    cookies: Option[List[String]],
     headers: Map[String, String],
     requestContext: RequestContext,
     body: Option[String],

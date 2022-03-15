@@ -25,6 +25,7 @@ class ApiGatewayProxyEventV2Suite extends FunSuite {
 
   test("decoder") {
     event.as[ApiGatewayProxyEventV2].toTry.get
+    eventNoCookies.as[ApiGatewayProxyEventV2].toTry.get
   }
 
 }
@@ -77,6 +78,44 @@ object ApiGatewayProxyEventV2Suite {
       "timeEpoch": 1583817383220
     },
     "isBase64Encoded": true
+  }
+  """
+
+  def eventNoCookies = json"""
+  {
+    "version": "2.0",
+    "routeKey": "ANY /nodejs-apig-function",
+    "rawPath": "/default/nodejs-apig-function",
+    "rawQueryString": "",
+    "headers": {
+      "accept": "*/*",
+      "content-length": "0",
+      "host": "r3pmxmplak.execute-api.us-east-2.amazonaws.com",
+      "user-agent": "curl/7.64.1",
+      "x-amzn-trace-id": "Root=1-5e6722a7-cc56xmpl46db7ae02d4da47e",
+      "x-forwarded-for": "205.255.255.176",
+      "x-forwarded-port": "443",
+      "x-forwarded-proto": "https"
+    },
+    "requestContext": {
+      "accountId": "123456789012",
+      "apiId": "r3pmxmplak",
+      "domainName": "r3pmxmplak.execute-api.us-east-2.amazonaws.com",
+      "domainPrefix": "r3pmxmplak",
+      "http": {
+        "method": "GET",
+        "path": "/default/nodejs-apig-function",
+        "protocol": "HTTP/1.1",
+        "sourceIp": "205.255.255.176",
+        "userAgent": "curl/7.64.1"
+      },
+      "requestId": "JKJaXmPLvHcESHA",
+      "routeKey": "ANY /nodejs-apig-function",
+      "stage": "default",
+      "time": "15/Mar/2022:15:07:35 +0000",
+      "timeEpoch": 1647356855012
+    },
+    "isBase64Encoded": false
   }
   """
 
