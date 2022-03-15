@@ -40,9 +40,7 @@ object ApiGatewayProxyHandler {
       event <- LambdaEnv.event
       method <- Method.fromString(event.requestContext.http.method).liftTo[F]
       uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
-      cookies = Some(event.cookies)
-        .filter(_.nonEmpty)
-        .map(Cookie.name.toString -> _.mkString("; "))
+      cookies = event.cookies.filter(_.nonEmpty).map(Cookie.name.toString -> _.mkString("; "))
       headers = Headers(cookies.toList ::: event.headers.toList)
       readBody =
         if (event.isBase64Encoded)
@@ -80,9 +78,7 @@ object ApiGatewayProxyHandler {
       event: ApiGatewayProxyEventV2): F[Request[F]] = for {
     method <- Method.fromString(event.requestContext.http.method).liftTo[F]
     uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
-    cookies = Some(event.cookies)
-      .filter(_.nonEmpty)
-      .map(Cookie.name.toString -> _.mkString("; "))
+    cookies = event.cookies.filter(_.nonEmpty).map(Cookie.name.toString -> _.mkString("; "))
     headers = Headers(cookies.toList ::: event.headers.toList)
     readBody =
       if (event.isBase64Encoded)
