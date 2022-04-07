@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 Typelevel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package feral.lambda
 package events
 
@@ -9,89 +25,6 @@ import scodec.bits.ByteVector
 
 import java.time.Instant
 import java.util.UUID
-import scala.util.Try
-
-/*
-{
-  "Records": [
-    {
-      "EventVersion": "1.0",
-      "EventSubscriptionArn": "arn:aws:sns:TEST",
-      "EventSource": "aws:sns",
-      "Sns": {
-        "Signature": "TEST",
-        "MessageId": "9f0cfa95-e344-4f93-89ab-5e979503ed1f",
-        "Type": "Notification",
-        "TopicArn": "arn:aws:sns:TEST",
-        "MessageAttributes": {
-          "string": {
-            "Type": "String",
-            "Value": "Testing"
-          },
-          "binary": {
-            "Type": "Binary",
-            "Value": "Testing"
-          },
-          "number": {
-            "Type": "Number",
-            "Value": 1e6
-          },
-          "numberString": {
-            "Type": "Number",
-            "Value": "5"
-          },
-          "array": {
-            "Type": "String.Array",
-            "Value": "[1, \"two\", true, false]"
-          },
-          "unsupported": {
-            "Type": "FancyNewType",
-            "Value": "SpecialValueHere"
-          }
-        },
-        "SignatureVersion": "1",
-        "Timestamp": "2022-04-06T01:02:03.456Z",
-        "SigningCertUrl": "TEST",
-        "Message": "Testing Message",
-        "UnsubscribeUrl": "TEST",
-        "Subject": "Test Message"
-      }
-    }
-  ]
-}
-
-==>
-
-SnsEvent(
-  List(
-    SnsRecord(
-      "1.0",
-      "arn:aws:sns:TEST",
-      "aws:sns",
-      SnsMessage(
-        "TEST",
-        9f0cfa95-e344-4f93-89ab-5e979503ed1f,
-        "Notification",
-        "arn:aws:sns:TEST",
-        Map(
-          "number" -> Number(1E+6),
-          "binary" -> Binary(ByteVector(5 bytes, 0x4deb2d8a78)),
-          "string" -> String("Testing"),
-          "numberString" -> Number(5),
-          "array" -> StringArray(List(Number(1), String("two"), Boolean(true), Boolean(false))),
-          "unsupported" -> Unknown("FancyNewType", Some("SpecialValueHere"))
-        ),
-        "1",
-        2022-04-06T01:02:03.456Z,
-        "TEST",
-        "Testing Message",
-        "TEST",
-        "Test Message"
-      )
-    )
-  )
-)
- */
 
 final case class SnsEvent(
     records: List[SnsEventRecord]
@@ -133,11 +66,8 @@ final case class SnsMessage(
 )
 
 object SnsMessage {
-  implicit val instantDecoder: Decoder[Instant] = Decoder.decodeString.emapTry { str =>
-    Try {
-      Instant.parse(str)
-    }
-  }
+  implicit val instantDecoder: Decoder[Instant] = Decoder.decodeInstant
+
   implicit val decoder: Decoder[SnsMessage] = Decoder.forProduct11(
     "Signature",
     "MessageId",
