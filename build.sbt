@@ -97,6 +97,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
@@ -121,7 +122,6 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
       "co.fs2" %%% "fs2-io" % fs2Version,
-      "io.circe" %%% "circe-jawn" % circeVersion,
       "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
