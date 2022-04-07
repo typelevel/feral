@@ -66,7 +66,7 @@ final case class SnsMessage(
 )
 
 object SnsMessage {
-  implicit val instantDecoder: Decoder[Instant] = Decoder.decodeInstant
+  private[this] implicit val instantDecoder: Decoder[Instant] = Decoder.decodeInstant
 
   implicit val decoder: Decoder[SnsMessage] = Decoder.forProduct11(
     "Signature",

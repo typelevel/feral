@@ -28,7 +28,7 @@ class SnsEventSuite extends FunSuite {
   import SnsEventSuite._
 
   test("decoder") {
-    assert(clue(event.as[SnsEvent].toTry.get) == clue(decoded))
+    assertEquals(event.as[SnsEvent].toTry.get, decoded)
   }
 }
 
