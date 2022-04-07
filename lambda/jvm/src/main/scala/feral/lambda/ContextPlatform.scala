@@ -19,7 +19,7 @@ package feral.lambda
 import cats.effect.Sync
 import com.amazonaws.services.lambda.runtime
 import io.circe.JsonObject
-import io.circe.jawn
+import io.circe.jawn.parse
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -56,7 +56,7 @@ private[lambda] trait ContextCompanionPlatform {
           ),
           JsonObject.fromIterable(clientContext.getCustom().asScala.view.flatMap {
             case (k, v) =>
-              jawn.parse(v).toOption.map(k -> _)
+              parse(v).toOption.map(k -> _)
           })
         )
       },

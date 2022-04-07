@@ -57,7 +57,7 @@ val Scala3 = "3.1.1"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.3.11"
-val circeVersion = "0.14.1"
+val circeVersion = "0.15.0-M1"
 val fs2Version = "3.2.7"
 val http4sVersion = "0.23.11"
 val natchezVersion = "0.1.6"
@@ -97,6 +97,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
+      "io.circe" %%% "circe-jawn" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.30",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
@@ -105,8 +106,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       if (tlIsScala3.value) Nil
       else
         Seq(
-          "io.circe" %%% "circe-literal" % circeVersion % Test,
-          "io.circe" %% "circe-jawn" % circeVersion % Test // %% b/c used for literal macro at compile-time only
+          "io.circe" %%% "circe-literal" % circeVersion % Test
         )
     }
   )
@@ -121,7 +121,6 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
       "co.fs2" %%% "fs2-io" % fs2Version,
-      "io.circe" %%% "circe-jawn" % circeVersion,
       "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
