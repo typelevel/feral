@@ -19,7 +19,7 @@ package events
 
 import cats.syntax.all._
 import io.circe.Decoder
-import io.circe.parser.decode
+import io.circe.jawn.decode
 import io.circe.scodec._
 import scodec.bits.ByteVector
 

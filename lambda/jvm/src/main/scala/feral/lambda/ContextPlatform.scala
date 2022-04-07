@@ -19,7 +19,7 @@ package feral.lambda
 import cats.effect.Sync
 import com.amazonaws.services.lambda.runtime
 import io.circe.JsonObject
-import io.circe.parser.parse
+import io.circe.jawn.parse
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
