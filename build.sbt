@@ -53,7 +53,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
 
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.8"
-val Scala3 = "3.1.1"
+val Scala3 = "3.1.2"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.3.11"
