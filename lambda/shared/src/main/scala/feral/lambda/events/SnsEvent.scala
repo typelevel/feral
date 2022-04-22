@@ -62,7 +62,7 @@ final case class SnsMessage(
     signingCertUrl: String,
     message: String,
     unsubscribeUrl: String,
-    subject: String
+    subject: Option[String]
 )
 
 object SnsMessage {
