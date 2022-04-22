@@ -29,6 +29,7 @@ class SnsEventSuite extends FunSuite {
 
   test("decoder") {
     assertEquals(event.as[SnsEvent].toTry.get, decoded)
+    assertEquals(noSubject.as[SnsEvent].toTry.get, decodedNoSubject)
   }
 }
 
@@ -64,7 +65,44 @@ object SnsEventSuite {
             "TEST",
             "Testing Message",
             "TEST",
-            "Test Message"
+            Some("Test Message")
+          )
+        )
+      )
+    )
+
+  val decodedNoSubject: SnsEvent =
+    SnsEvent(
+      List(
+        SnsEventRecord(
+          "1.0",
+          "arn:aws:sns:TEST",
+          "aws:sns",
+          SnsMessage(
+            "TEST",
+            UUID.fromString("9f0cfa95-e344-4f93-89ab-5e979503ed1f"),
+            "Notification",
+            "arn:aws:sns:TEST",
+            Map(
+              "number" -> SnsMessageAttribute.Number(1e+6),
+              "binary" -> SnsMessageAttribute.Binary(ByteVector.fromBase64("VGVzdGluZwo=").get),
+              "string" -> SnsMessageAttribute.String("Testing"),
+              "numberString" -> SnsMessageAttribute.Number(5),
+              "array" -> SnsMessageAttribute.StringArray(List(
+                SnsMessageAttributeArrayMember.Number(1),
+                SnsMessageAttributeArrayMember.String("two"),
+                SnsMessageAttributeArrayMember.Boolean(true),
+                SnsMessageAttributeArrayMember.Boolean(false)
+              )),
+              "unsupported" -> SnsMessageAttribute
+                .Unknown("FancyNewType", Some("SpecialValueHere"))
+            ),
+            "1",
+            Instant.parse("2022-04-06T01:02:03.456Z"),
+            "TEST",
+            "Testing Message",
+            "TEST",
+            None
           )
         )
       )
@@ -114,6 +152,55 @@ object SnsEventSuite {
             "Message": "Testing Message",
             "UnsubscribeUrl": "TEST",
             "Subject": "Test Message"
+          }
+        }
+      ]
+    }
+  """
+
+  val noSubject: Json = json"""
+    {
+      "Records": [
+        {
+          "EventVersion": "1.0",
+          "EventSubscriptionArn": "arn:aws:sns:TEST",
+          "EventSource": "aws:sns",
+          "Sns": {
+            "Signature": "TEST",
+            "MessageId": "9f0cfa95-e344-4f93-89ab-5e979503ed1f",
+            "Type": "Notification",
+            "TopicArn": "arn:aws:sns:TEST",
+            "MessageAttributes": {
+              "string": {
+                "Type": "String",
+                "Value": "Testing"
+              },
+              "binary": {
+                "Type": "Binary",
+                "Value": "VGVzdGluZwo="
+              },
+              "number": {
+                "Type": "Number",
+                "Value": 1e6
+              },
+              "numberString": {
+                "Type": "Number",
+                "Value": "5"
+              },
+              "array": {
+                "Type": "String.Array",
+                "Value": "[1, \"two\", true, false]"
+              },
+              "unsupported": {
+                "Type": "FancyNewType",
+                "Value": "SpecialValueHere"
+              }
+            },
+            "SignatureVersion": "1",
+            "Timestamp": "2022-04-06T01:02:03.456Z",
+            "SigningCertUrl": "TEST",
+            "Message": "Testing Message",
+            "UnsubscribeUrl": "TEST"
           }
         }
       ]
