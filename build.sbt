@@ -63,7 +63,7 @@ val http4sVersion = "0.23.11"
 val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
-val scalacheckEffectVersion = "1.0.3"
+val scalacheckEffectVersion = "1.0.4"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
