@@ -164,7 +164,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       case _ => Nil
     }),
     libraryDependencies ++= Seq(
-      "io.monix" %%% "newtypes-core" % "0.2.1",
+      "io.monix" %%% "newtypes-core" % "0.2.3",
       "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
