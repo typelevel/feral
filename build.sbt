@@ -160,7 +160,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .settings(
     name := "feral-lambda-cloudformation-custom-resource",
     scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq("-Ywarn-macros:after")
+      case Some(2, 13) => Seq("-Ywarn-macros:after")
       case _ => Nil
     }),
     libraryDependencies ++= Seq(

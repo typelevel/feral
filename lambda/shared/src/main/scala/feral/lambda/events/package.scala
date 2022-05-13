@@ -28,7 +28,7 @@ package object events {
       def round(x: BigDecimal) = x.setScale(0, BigDecimal.RoundingMode.DOWN)
       Try {
         val seconds = round(millis / 1000).toLongExact
-        val nanos = round((millis % 1000) * 1e6).toLongExact
+        val nanos = round(millis % 1000 * 1e6).toLongExact
         Instant.ofEpochSecond(seconds, nanos)
       }
     }
