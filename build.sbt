@@ -100,15 +100,9 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-jawn" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.31",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
-    ),
-    libraryDependencies ++= {
-      if (tlIsScala3.value) Nil
-      else
-        Seq(
-          "io.circe" %%% "circe-literal" % circeVersion % Test
-        )
-    }
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    )
   )
   .settings(commonSettings)
   .jsSettings(
