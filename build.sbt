@@ -57,7 +57,7 @@ val Scala3 = "3.1.2"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.3.11"
-val circeVersion = "0.15.0-M1"
+val circeVersion = "0.14.2"
 val fs2Version = "3.2.7"
 val http4sVersion = "0.23.11"
 val natchezVersion = "0.1.6"
@@ -96,19 +96,13 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda",
     libraryDependencies ++= Seq(
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
-      "io.circe" %%% "circe-scodec" % circeVersion,
+      "io.circe" %%% "circe-scodec" % "0.14.1",
       "io.circe" %%% "circe-jawn" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.31",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
-    ),
-    libraryDependencies ++= {
-      if (tlIsScala3.value) Nil
-      else
-        Seq(
-          "io.circe" %%% "circe-literal" % circeVersion % Test
-        )
-    }
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    )
   )
   .settings(commonSettings)
   .jsSettings(
