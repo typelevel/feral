@@ -26,7 +26,7 @@ import io.circe.syntax._
 
 import java.io.InputStream
 import java.io.OutputStream
-import java.nio.channels.Channels
+import java.io.OutputStreamWriter
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
@@ -48,13 +48,11 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .compile
             .lastOrError
           context <- IO(Context.fromJava[IO](context))
-          _ <- OptionT(lambda(event, context)).foldF(IO.unit) { result =>
+          _ <- OptionT(lambda(event, context)).foreachF { result =>
             IO {
               val json = result.asJson
-              val bb = Printer.noSpaces.printToByteBuffer(json)
-              val ch = Channels.newChannel(output)
-              ch.write(bb)
-              ()
+              val writer = new OutputStreamWriter(output)
+              Printer.noSpaces.unsafePrintToAppendable(json, writer)
             }
           }
         } yield ()
