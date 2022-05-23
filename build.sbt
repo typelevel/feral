@@ -96,7 +96,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda",
     libraryDependencies ++= Seq(
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
-      "io.circe" %%% "circe-scodec" % "0.14.1",
+      "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.31",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
