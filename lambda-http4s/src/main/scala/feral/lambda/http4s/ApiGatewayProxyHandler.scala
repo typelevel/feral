@@ -45,10 +45,19 @@ object ApiGatewayProxyHandler {
       request <- decodeEvent(event)
       response <- routes(request).getOrElse(Response.notFound)
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
-      responseBody <- (if (isBase64Encoded)
-                         response.body.through(fs2.text.base64.encode)
-                       else
-                         response.body.through(fs2.text.utf8.decode)).compile.foldMonoid
+      responseBody <- response.entity match {
+        case Entity.Empty => "".pure
+        case Entity.Strict(chunk) => // TODO
+          if (isBase64Encoded) chunk.toByteVector.toBase64.pure
+          else chunk.toByteVector.decodeUtf8.liftTo
+        case Entity.Default(body, _) =>
+          body
+            .through(
+              if (isBase64Encoded) fs2.text.base64.encode else fs2.text.utf8.decode
+            )
+            .compile
+            .string
+      }
     } yield {
       val headers = response.headers.headers.groupMap(_.name)(_.value)
       Some(
