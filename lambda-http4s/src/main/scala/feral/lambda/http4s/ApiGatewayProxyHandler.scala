@@ -27,6 +27,7 @@ import org.http4s.Charset
 import org.http4s.Entity
 import org.http4s.Headers
 import org.http4s.HttpRoutes
+import org.http4s.MalformedMessageBodyFailure
 import org.http4s.Method
 import org.http4s.Request
 import org.http4s.Response
@@ -34,7 +35,6 @@ import org.http4s.Uri
 import org.http4s.headers.Cookie
 import org.http4s.headers.`Set-Cookie`
 import scodec.bits.ByteVector
-import org.http4s.MalformedMessageBodyFailure
 
 object ApiGatewayProxyHandler {
 
