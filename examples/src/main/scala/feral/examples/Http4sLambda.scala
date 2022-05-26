@@ -21,8 +21,6 @@ import cats.effect.std.Random
 import feral.lambda._
 import feral.lambda.events._
 import feral.lambda.http4s._
-import natchez.Trace
-import natchez.http4s.NatchezMiddleware
 import natchez.xray.XRay
 import org.http4s.HttpRoutes
 import org.http4s.client.Client
@@ -60,18 +58,16 @@ object http4sHandler
 
     // a middleware to add tracing to any handler
     // it extracts the kernel from the event and adds tags derived from the context
-    TracedHandler(entrypoint) { implicit trace =>
-      val tracedClient = NatchezMiddleware.client(client)
-
+    TracedHandler(entrypoint) { _ =>
       // a "middleware" that converts an HttpRoutes into a ApiGatewayProxyHandler
-      ApiGatewayProxyHandler(myRoutes[IO](tracedClient))
+      ApiGatewayProxyHandler(myRoutes[IO](client))
     }
   }
 
   /**
    * Nothing special about this method, including its existence, just an example :)
    */
-  def myRoutes[F[_]: Concurrent: Trace](client: Client[F]): HttpRoutes[F] = {
+  def myRoutes[F[_]: Concurrent](client: Client[F]): HttpRoutes[F] = {
     implicit val dsl = Http4sDsl[F]
     import dsl._
 
@@ -80,7 +76,7 @@ object http4sHandler
       case GET -> Root / "joke" => Ok(client.expect[String](uri"icanhazdadjoke.com"))
     }
 
-    NatchezMiddleware.server(routes)
+    routes
   }
 
 }

@@ -17,12 +17,14 @@
 package feral.lambda
 package http4s
 
+import cats.data.OptionT
 import cats.effect.kernel.Concurrent
 import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
-import fs2.Stream
+import fs2.Chunk
 import org.http4s.Charset
+import org.http4s.Entity
 import org.http4s.Headers
 import org.http4s.HttpRoutes
 import org.http4s.Method
@@ -31,6 +33,8 @@ import org.http4s.Response
 import org.http4s.Uri
 import org.http4s.headers.Cookie
 import org.http4s.headers.`Set-Cookie`
+import scodec.bits.ByteVector
+import org.http4s.MalformedMessageBodyFailure
 
 object ApiGatewayProxyHandler {
 
@@ -39,7 +43,7 @@ object ApiGatewayProxyHandler {
     for {
       event <- LambdaEnv.event
       request <- decodeEvent(event)
-      response <- routes(request).getOrElse(Response.notFound[F])
+      response <- routes(request).getOrElse(Response.notFound)
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- (if (isBase64Encoded)
                          response.body.through(fs2.text.base64.encode)
@@ -67,15 +71,22 @@ object ApiGatewayProxyHandler {
     uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
     cookies = event.cookies.filter(_.nonEmpty).map(Cookie.name.toString -> _.mkString("; "))
     headers = Headers(cookies.toList ::: event.headers.toList)
-    readBody =
-      if (event.isBase64Encoded)
-        fs2.text.base64.decode[F]
-      else
-        fs2.text.utf8.encode[F]
+    body <- OptionT
+      .fromOption(event.body)
+      .semiflatMap { eventBody =>
+        if (event.isBase64Encoded)
+          ByteVector
+            .fromBase64Descriptive(eventBody)
+            .leftMap(MalformedMessageBodyFailure(_))
+            .liftTo
+        else
+          ByteVector.encodeUtf8(eventBody).liftTo
+      }
+      .value
   } yield Request(
     method,
     uri,
     headers = headers,
-    body = Stream.fromOption[F](event.body).through(readBody)
+    entity = body.foldMap(b => Entity.strict(Chunk.byteVector(b)))
   )
 }
