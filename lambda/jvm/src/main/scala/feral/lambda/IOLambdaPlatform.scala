@@ -53,6 +53,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
               val json = result.asJson
               val writer = new OutputStreamWriter(output)
               Printer.noSpaces.unsafePrintToAppendable(json, writer)
+              writer.close()
             }
           }
         } yield ()
