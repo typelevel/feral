@@ -49,17 +49,13 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .lastOrError
           context <- IO(Context.fromJava[IO](context))
           _ <- OptionT(lambda(event, context)).foreachF { result =>
-            IO {
-              val json = result.asJson
-              val writer = new OutputStreamWriter(output)
-              Printer.noSpaces.unsafePrintToAppendable(json, writer)
-              writer.close()
+            Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
+              IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
             }
           }
         } yield ()
       }
-      .onFinalize(IO(input.close()))
-      .onFinalize(IO(output.close()))
+      .onFinalize(IO.blocking(input.close()) &> IO.blocking(output.close()))
       .use_
       .unsafeRunSync()(runtime)
 
