@@ -51,14 +51,14 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
-val Scala212 = "2.12.15"
+val Scala212 = "2.12.16"
 val Scala213 = "2.13.8"
-val Scala3 = "3.1.2"
+val Scala3 = "3.1.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.3.12"
 val circeVersion = "0.14.2"
-val fs2Version = "3.2.7"
+val fs2Version = "3.2.8"
 val http4sVersion = "1.0.0-M33"
 val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
@@ -98,7 +98,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "org.scodec" %%% "scodec-bits" % "1.1.31",
+      "org.scodec" %%% "scodec-bits" % "1.1.34",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
@@ -108,7 +108,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.3.0"
+      "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
     )
   )
   .jvmSettings(

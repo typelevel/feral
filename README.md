@@ -24,7 +24,7 @@ Next, implement your Lambda. Please refer to the [examples](examples/src/main/sc
 There are several options to deploy your Lambda. For example you can use the [Lambda console](https://docs.aws.amazon.com/lambda/latest/dg/foundation-console.html), the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
 
 To deploy a Scala.js Lambda, you will need to know the following:
-1. The runtime for your Lambda is Node.js 14.
+1. The runtime for your Lambda is Node.js 16.
 2. The handler for your Lambda is `index.yourLambdaName`.
     - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
     - `yourLambdaName` is the name of the Scala `object` you created that extends from `IOLambda`.
@@ -39,7 +39,7 @@ The premise that you can (and should!) write production-ready serverless functio
 
 1. **JavaScript is the ideal compile target for serverless functions.** 
   
-    There are a lot of reasons for this, cold-start being one of them, but more generally it's important to remember what the JVM is and is not good at. In particular, the JVM excels at long-lived multithreaded applications which are relatively memory-heavy and reply on medium-lifespan heap allocations. So in other words, persistent microservices.
+    There are a lot of reasons for this, cold-start being one of them, but more generally it's important to remember what the JVM is and is not good at. In particular, the JVM excels at long-lived multithreaded applications which are relatively memory-heavy and rely on medium-lifespan heap allocations. So in other words, persistent microservices.
 
     Serverless functions are, by definition, not this. They are not persistent, they are (generally) single-threaded, and they need to start very quickly with minimal warming. They do often apply moderate-to-significant heap pressure, but this factor is more than outweighed by the others.
 
