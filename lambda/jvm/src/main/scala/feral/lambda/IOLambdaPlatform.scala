@@ -55,8 +55,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
           }
         } yield ()
       }
-      .onFinalize(IO(input.close()))
-      .onFinalize(IO(output.close()))
+      .onFinalize(IO.blocking(input.close()) &> IO.blocking(output.close()))
       .use_
       .unsafeRunSync()(runtime)
 
