@@ -21,17 +21,20 @@ import io.circe.Encoder
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/s3-batch.d.ts
 
 final case class S3BatchResult(
-  invocationSchemaVersion: String,
-  treatMissingKeysAs: S3BatchResultCode,
-  invocationId: String,
-  results: List[S3BatchResultResult]
+    invocationSchemaVersion: String,
+    treatMissingKeysAs: S3BatchResultCode,
+    invocationId: String,
+    results: List[S3BatchResultResult]
 )
 
 object S3BatchResult {
   implicit val encoder: Encoder[S3BatchResult] =
-    Encoder.forProduct4("invocationSchemaVersion", "treatMissingKeysAs", "invocationId", "results")(r =>
-      (r.invocationSchemaVersion, r.treatMissingKeysAs, r.invocationId, r.results)
-    )
+    Encoder.forProduct4(
+      "invocationSchemaVersion",
+      "treatMissingKeysAs",
+      "invocationId",
+      "results")(r =>
+      (r.invocationSchemaVersion, r.treatMissingKeysAs, r.invocationId, r.results))
 }
 
 sealed trait S3BatchResultCode
@@ -42,15 +45,19 @@ object S3BatchResultCode {
   case object PermanentFailure extends S3BatchResultCode
 
   implicit val encoder: Encoder[S3BatchResultCode] = Encoder.encodeString.contramap {
-    case Succeeded        => "Succeeded"
+    case Succeeded => "Succeeded"
     case TemporaryFailure => "TemporaryFailure"
     case PermanentFailure => "PermanentFailure"
   }
 }
 
-final case class S3BatchResultResult(taskId: String, resultCode: S3BatchResultCode, resultString: String)
+final case class S3BatchResultResult(
+    taskId: String,
+    resultCode: S3BatchResultCode,
+    resultString: String)
 
 object S3BatchResultResult {
   implicit val encoder: Encoder[S3BatchResultResult] =
-    Encoder.forProduct3("taskId", "resultCode", "resultString")(r => (r.taskId, r.resultCode, r.resultString))
+    Encoder.forProduct3("taskId", "resultCode", "resultString")(r =>
+      (r.taskId, r.resultCode, r.resultString))
 }
