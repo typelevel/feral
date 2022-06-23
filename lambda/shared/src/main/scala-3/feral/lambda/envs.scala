@@ -21,4 +21,6 @@ import events._
 type ApiGatewayProxyLambdaEnv[F[_]] = LambdaEnv[F, ApiGatewayProxyEventV2]
 type DynamoDbStreamLambdaEnv[F[_]] = LambdaEnv[F, DynamoDbStreamEvent]
 type KinesisStreamLambdaEnv[F[_]] = LambdaEnv[F, KinesisStreamEvent]
+type S3BatchLambdaEnv[F[_]] = LambdaEnv[F, S3BatchEvent]
+type SnsLambdaEnv[F[_]] = LambdaEnv[F, SnsEvent]
 type SqsLambdaEnv[F[_]] = LambdaEnv[F, SqsEvent]
