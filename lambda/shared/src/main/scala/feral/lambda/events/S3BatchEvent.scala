@@ -24,7 +24,7 @@ import io.circe.Decoder
 final case class S3BatchEvent(
     invocationSchemaVersion: String,
     invocationId: String,
-    job: S3BatchJob,
+    job: S3BatchEventJob,
     tasks: List[S3BatchEventTask]
 )
 
@@ -36,10 +36,11 @@ object S3BatchEvent {
   implicit def kernelSource: KernelSource[S3BatchEvent] = KernelSource.emptyKernelSource
 }
 
-final case class S3BatchJob(id: String)
+final case class S3BatchEventJob(id: String)
 
-object S3BatchJob {
-  implicit val decoder: Decoder[S3BatchJob] = Decoder.forProduct1("id")(S3BatchJob.apply)
+object S3BatchEventJob {
+  implicit val decoder: Decoder[S3BatchEventJob] =
+    Decoder.forProduct1("id")(S3BatchEventJob.apply)
 }
 
 final case class S3BatchEventTask(

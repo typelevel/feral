@@ -22,7 +22,7 @@ import io.circe.Encoder
 
 final case class S3BatchResult(
     invocationSchemaVersion: String,
-    treatMissingKeysAs: S3BatchResultCode,
+    treatMissingKeysAs: S3BatchResultResultCode,
     invocationId: String,
     results: List[S3BatchResultResult]
 )
@@ -37,14 +37,14 @@ object S3BatchResult {
       (r.invocationSchemaVersion, r.treatMissingKeysAs, r.invocationId, r.results))
 }
 
-sealed trait S3BatchResultCode
+sealed abstract class S3BatchResultResultCode
 
-object S3BatchResultCode {
-  case object Succeeded extends S3BatchResultCode
-  case object TemporaryFailure extends S3BatchResultCode
-  case object PermanentFailure extends S3BatchResultCode
+object S3BatchResultResultCode {
+  case object Succeeded extends S3BatchResultResultCode
+  case object TemporaryFailure extends S3BatchResultResultCode
+  case object PermanentFailure extends S3BatchResultResultCode
 
-  implicit val encoder: Encoder[S3BatchResultCode] = Encoder.encodeString.contramap {
+  implicit val encoder: Encoder[S3BatchResultResultCode] = Encoder.encodeString.contramap {
     case Succeeded => "Succeeded"
     case TemporaryFailure => "TemporaryFailure"
     case PermanentFailure => "PermanentFailure"
@@ -53,7 +53,7 @@ object S3BatchResultCode {
 
 final case class S3BatchResultResult(
     taskId: String,
-    resultCode: S3BatchResultCode,
+    resultCode: S3BatchResultResultCode,
     resultString: String)
 
 object S3BatchResultResult {

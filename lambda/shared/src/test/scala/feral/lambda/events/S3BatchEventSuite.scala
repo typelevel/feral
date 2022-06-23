@@ -69,12 +69,12 @@ class S3BatchEventSuite extends FunSuite {
 
   def result = S3BatchResult(
     "1.0",
-    S3BatchResultCode.PermanentFailure,
+    S3BatchResultResultCode.PermanentFailure,
     "YXNkbGZqYWRmaiBhc2RmdW9hZHNmZGpmaGFzbGtkaGZza2RmaAo",
     List(
       S3BatchResultResult(
         "dGFza2lkZ29lc2hlcmUK",
-        S3BatchResultCode.Succeeded,
+        S3BatchResultResultCode.Succeeded,
         List("Mary Major", "John Stiles").asJson.noSpaces))
   )
 
