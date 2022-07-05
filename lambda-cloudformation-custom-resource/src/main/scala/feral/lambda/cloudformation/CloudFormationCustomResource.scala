@@ -30,8 +30,12 @@ import org.http4s.client.dsl.Http4sClientDsl
 
 trait CloudFormationCustomResource[F[_], Input, Output] {
   def createResource(input: Input): F[HandlerResponse[Output]]
-  def updateResource(input: Input): F[HandlerResponse[Output]]
-  def deleteResource(input: Input): F[HandlerResponse[Output]]
+  def updateResource(
+      input: Input,
+      physicalResourceId: PhysicalResourceId): F[HandlerResponse[Output]]
+  def deleteResource(
+      input: Input,
+      physicalResourceId: PhysicalResourceId): F[HandlerResponse[Output]]
 }
 
 object CloudFormationCustomResource {
@@ -47,11 +51,11 @@ object CloudFormationCustomResource {
     import http4sClientDsl._
 
     env.event.flatMap { event =>
-      (event.RequestType match {
-        case CreateRequest => handler.createResource(event.ResourceProperties)
-        case UpdateRequest => handler.updateResource(event.ResourceProperties)
-        case DeleteRequest => handler.deleteResource(event.ResourceProperties)
-        case OtherRequestType(other) => illegalRequestType(other)
+      ((event.RequestType, event.PhysicalResourceId) match {
+        case (CreateRequest, None) => handler.createResource(event.ResourceProperties)
+        case (UpdateRequest, Some(id)) => handler.updateResource(event.ResourceProperties, id)
+        case (DeleteRequest, Some(id)) => handler.deleteResource(event.ResourceProperties, id)
+        case (other, _) => illegalRequestType(other.toString)
       }).attempt
         .map(_.fold(exceptionResponse(event)(_), successResponse(event)(_)))
         .flatMap { resp => client.successful(PUT(resp.asJson, event.ResponseURL)) }

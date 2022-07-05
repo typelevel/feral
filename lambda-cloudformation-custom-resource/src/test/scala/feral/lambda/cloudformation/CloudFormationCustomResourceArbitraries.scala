@@ -165,7 +165,7 @@ trait CloudFormationCustomResourceArbitraries {
       requestId <- arbitrary[RequestId]
       resourceType <- arbitrary[ResourceType]
       logicalResourceId <- arbitrary[LogicalResourceId]
-      physicalResourceId <- arbitrary[Option[PhysicalResourceId]]
+      physicalResourceId <- arbitrary[PhysicalResourceId]
       resourceProperties <- arbitrary[A]
       oldResourceProperties <- arbitrary[Option[JsonObject]]
     } yield CloudFormationCustomResourceRequest(
@@ -175,7 +175,7 @@ trait CloudFormationCustomResourceArbitraries {
       requestId,
       resourceType,
       logicalResourceId,
-      physicalResourceId,
+      if (requestType == CreateRequest) None else physicalResourceId.some,
       resourceProperties,
       oldResourceProperties
     )
