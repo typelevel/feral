@@ -16,7 +16,7 @@
 
 name := "feral"
 
-ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / tlBaseVersion := "1.0"
 ThisBuild / startYear := Some(2021)
 
 ThisBuild / developers := List(
@@ -59,7 +59,7 @@ ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 val catsEffectVersion = "3.3.13"
 val circeVersion = "0.14.2"
 val fs2Version = "3.2.9"
-val http4sVersion = "0.23.13"
+val http4sVersion = "1.0.0-M34"
 val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
@@ -181,7 +181,6 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
-      "org.tpolecat" %%% "natchez-http4s" % "0.3.2",
       "org.tpolecat" %%% "skunk-core" % "0.3.1"
     )
   )
