@@ -83,11 +83,20 @@ class ResponseSerializationSuite
                   }
                 )
                 .deepDropNullValues
-            case _ =>
+            case CreateRequest =>
               Json.obj(
                 "Status" -> "SUCCESS".asJson,
                 "PhysicalResourceId" -> convertInputToFakePhysicalResourceId(
                   event.ResourceProperties).asJson,
+                "StackId" -> event.StackId.asJson,
+                "RequestId" -> event.RequestId.asJson,
+                "LogicalResourceId" -> event.LogicalResourceId.asJson,
+                "Data" -> event.RequestType.asJson
+              )
+            case UpdateRequest | DeleteRequest =>
+              Json.obj(
+                "Status" -> "SUCCESS".asJson,
+                "PhysicalResourceId" -> event.PhysicalResourceId.get.asJson,
                 "StackId" -> event.StackId.asJson,
                 "RequestId" -> event.RequestId.asJson,
                 "LogicalResourceId" -> event.LogicalResourceId.asJson,
@@ -142,14 +151,16 @@ object ResponseSerializationSuite {
         convertInputToFakePhysicalResourceId(input),
         CreateRequest.some.widen[CloudFormationRequestType]).pure[F]
 
-    override def updateResource(input: String): F[HandlerResponse[CloudFormationRequestType]] =
-      HandlerResponse(
-        convertInputToFakePhysicalResourceId(input),
-        UpdateRequest.some.widen[CloudFormationRequestType]).pure[F]
+    override def updateResource(
+        input: String,
+        physicalResourceId: PhysicalResourceId): F[HandlerResponse[CloudFormationRequestType]] =
+      HandlerResponse(physicalResourceId, UpdateRequest.some.widen[CloudFormationRequestType])
+        .pure[F]
 
-    override def deleteResource(input: String): F[HandlerResponse[CloudFormationRequestType]] =
-      HandlerResponse(
-        convertInputToFakePhysicalResourceId(input),
-        DeleteRequest.some.widen[CloudFormationRequestType]).pure[F]
+    override def deleteResource(
+        input: String,
+        physicalResourceId: PhysicalResourceId): F[HandlerResponse[CloudFormationRequestType]] =
+      HandlerResponse(physicalResourceId, DeleteRequest.some.widen[CloudFormationRequestType])
+        .pure[F]
   }
 }

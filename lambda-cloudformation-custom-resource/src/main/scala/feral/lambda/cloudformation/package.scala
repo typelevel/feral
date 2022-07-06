@@ -72,7 +72,9 @@ package cloudformation {
     case object CreateRequest extends CloudFormationRequestType
     case object UpdateRequest extends CloudFormationRequestType
     case object DeleteRequest extends CloudFormationRequestType
-    final case class OtherRequestType(requestType: String) extends CloudFormationRequestType
+    final case class OtherRequestType(requestType: String) extends CloudFormationRequestType {
+      override def toString: String = requestType
+    }
 
     implicit val encoder: Encoder[CloudFormationRequestType] = {
       case CreateRequest => "Create".asJson
