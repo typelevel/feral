@@ -28,16 +28,19 @@ abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
     private[lambda] val encoder: Encoder[Result]
 ) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
+    with IOLambdaSetup[Event, Result]
+    with IOSetup[Unit] {
 
-  final type Setup = (Event, Context[IO]) => IO[Option[Result]]
-  final override protected def setup: Resource[IO, Setup] = for {
+  final override protected def setup(ctx: Unit): Resource[IO, Setup] = for {
     handler <- handler
     localEvent <- IOLocal[Event](null.asInstanceOf[Event]).toResource
     localContext <- IOLocal[Context[IO]](null).toResource
     env = LambdaEnv.ioLambdaEnv(localEvent, localContext)
     result = handler(env)
   } yield { localEvent.set(_) *> localContext.set(_) *> result }
+
+  final override def setupAndRun(ev: Event, ctx: Context[IO]): IO[Option[Result]] =
+    setupMemo(()).flatMap(_(ev, ctx))
 
   def handler: Resource[IO, LambdaEnv[IO, Event] => IO[Option[Result]]]
 

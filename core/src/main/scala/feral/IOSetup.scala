@@ -16,30 +16,37 @@
 
 package feral
 
-import cats.effect.unsafe.IORuntime
-import cats.effect.kernel.Resource
+import cats.data.OptionT
 import cats.effect.IO
-import cats.effect.kernel.Deferred
+import cats.effect.kernel.{Deferred, Resource}
 import cats.syntax.all._
 
-private[feral] trait IOSetup {
-
-  protected def runtime: IORuntime = IORuntime.global
+private[feral] trait IOSetup[Context] {
 
   protected type Setup
-  protected def setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
+  protected def setup(ctx: Context): Resource[IO, Setup] =
+    Resource.pure(null.asInstanceOf[Setup])
 
-  private[feral] final lazy val setupMemo: IO[Setup] = {
-    val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
-    setup
-      .attempt
-      .allocated
-      .flatTap {
-        case (setup, _) =>
-          deferred.complete(setup)
-      }
-      .unsafeRunAndForget()(runtime)
-    deferred.get.rethrow
-  }
+  private[this] final lazy val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
 
+  private[feral] final def setupMemo(ctx: Context): IO[Setup] =
+    OptionT(deferred.tryGet)
+      .getOrElseF(
+        setup(ctx).attempt.allocated.flatMap {
+          case (setup, _) =>
+            deferred.complete(setup).as(setup)
+        }
+      )
+      .rethrow
+
+}
+
+private[feral] object IOSetup {
+  private[feral] def apply[Context, Result](setupRes: Context => Resource[IO, Result])(
+      ctx: Context): IO[Result] =
+    new IOSetup[Context] {
+      override protected type Setup = Result
+
+      override protected def setup(ctx: Context): Resource[IO, Setup] = setupRes(ctx)
+    }.setupMemo(ctx)
 }
