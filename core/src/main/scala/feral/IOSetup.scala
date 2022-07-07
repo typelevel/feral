@@ -20,11 +20,12 @@ import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.kernel.{Deferred, Resource}
 import cats.syntax.all._
+import scala.annotation.nowarn
 
 private[feral] trait IOSetup[Context] {
 
   protected type Setup
-  protected def setup(ctx: Context): Resource[IO, Setup] =
+  protected def setup(@nowarn ctx: Context): Resource[IO, Setup] =
     Resource.pure(null.asInstanceOf[Setup])
 
   private[this] final lazy val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
