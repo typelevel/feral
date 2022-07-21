@@ -24,7 +24,8 @@ import scala.concurrent.duration._
 
 private[lambda] trait ContextCompanionPlatform {
 
-  private[lambda] def fromJS[F[_]: Sync](context: facade.Context): Context[F] =
+  private[lambda] def fromJS[F[_]](context: facade.Context)(
+      implicit F: Sync[F]): F[Context[F]] = F.catchNonFatal {
     new Context(
       context.functionName,
       context.functionVersion,
@@ -62,6 +63,7 @@ private[lambda] trait ContextCompanionPlatform {
               .getOrElse(JsonObject.empty)
           )
         },
-      Sync[F].delay(context.getRemainingTimeInMillis().millis)
+      F.delay(context.getRemainingTimeInMillis().millis)
     )
+  }
 }

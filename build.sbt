@@ -73,6 +73,7 @@ lazy val root =
   tlCrossRootProject.aggregate(
     core,
     lambda,
+    lambdaTestkit,
     sbtLambda,
     lambdaHttp4s,
     lambdaCloudFormationCustomResource,
@@ -119,6 +120,15 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .dependsOn(core)
+
+lazy val lambdaTestkit = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("lambda-testkit"))
+  .settings(
+    name := "feral-lambda-testkit"
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
 
 lazy val sbtLambda = project
   .in(file("sbt-lambda"))

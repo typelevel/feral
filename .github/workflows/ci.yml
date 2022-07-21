@@ -126,11 +126,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target .js/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target .jvm/target lambda/js/target .native/target examples/.jvm/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: mkdir -p target lambda-cloudformation-custom-resource/.js/target lambda-testkit/.js/target lambda-http4s/.jvm/target .js/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target .jvm/target lambda/js/target .native/target examples/.jvm/target lambda/jvm/target lambda-testkit/.jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar target lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target .js/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target .jvm/target lambda/js/target .native/target examples/.jvm/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: tar cf targets.tar target lambda-cloudformation-custom-resource/.js/target lambda-testkit/.js/target lambda-http4s/.jvm/target .js/target core/.js/target examples/.js/target lambda-http4s/.js/target core/.jvm/target .jvm/target lambda/js/target .native/target examples/.jvm/target lambda/jvm/target lambda-testkit/.jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
