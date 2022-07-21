@@ -26,7 +26,8 @@ import scala.jdk.CollectionConverters._
 
 private[lambda] trait ContextCompanionPlatform {
 
-  private[lambda] def fromJava[F[_]: Sync](context: runtime.Context): Context[F] =
+  private[lambda] def fromJava[F[_]](context: runtime.Context)(
+      implicit F: Sync[F]): F[Context[F]] = F.catchNonFatal {
     new Context(
       context.getFunctionName(),
       context.getFunctionVersion(),
@@ -60,7 +61,8 @@ private[lambda] trait ContextCompanionPlatform {
           })
         )
       },
-      Sync[F].delay(context.getRemainingTimeInMillis().millis)
+      F.delay(context.getRemainingTimeInMillis().millis)
     )
+  }
 
 }
