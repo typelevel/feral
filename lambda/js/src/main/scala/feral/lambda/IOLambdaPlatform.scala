@@ -26,12 +26,23 @@ import scala.scalajs.js.|
 private[lambda] trait IOLambdaPlatform[Event, Result] {
   this: IOLambda[Event, Result] =>
 
+  /**
+   * Lambda handler. Implement this type with a val and a call to `handlerFn` to export your
+   * handler.
+   *
+   * @example
+   *   {{{
+   *  val handler: HandlerFn = handlerFn
+   *   }}}
+   */
+  final type HandlerFn = js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]]
+
   final def main(args: Array[String]): Unit =
     js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
 
   protected def handlerName: String = getClass.getSimpleName.init
 
-  private lazy val handlerFn
+  protected lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
     (event: js.Any, context: facade.Context) =>
       (for {
