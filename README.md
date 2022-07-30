@@ -26,6 +26,7 @@ There are several options to deploy your Lambda. For example you can use the [La
 ### CommonJS
 
 To deploy a CommonJS Scala.js Lambda, you will need to know the following:
+
 1. The runtime for your Lambda is Node.js 16.
 2. The handler for your Lambda is `index.yourLambdaName`.
     - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
@@ -46,14 +47,19 @@ It's possible to use ES Modules to run your Lambda. You need the following steps
     - The type `HandlerFn` is important so Scala.JS will emit your lambda as a JavaScript function.
     - `val` is important so your lambda function is emitted as a value, instead of a function returning another function.
     - The handler for your lambda is `index.yourLambdaName`
-4. Change these settings in your `build.sbt`:
+3. Change these settings in your `build.sbt`:
+
     ```scala
+    import org.scalajs.linker.interface.OutputPatterns
+    import _root_.io.circe.syntax._
+
     scalaJSUseMainModuleInitializer := false
-    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule).withOutputPatterns(OutputPatterns.fromJSFile("%.mjs")))
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule))
+    npmPackageAdditionalNpmConfig := Map("type" -> "module".asJson)
     ```
+
 4. Run `sbt npmPackage` to package your Lambda for deployment. You can have multiple lambda's by exporting multiple handler functions.
 5. For the tooling of your choice, follow their instructions for deploying a Node.js Lambda using the contents of the `target/scala-2.13/npm-package/` directory.
-
 
 As the feral project develops, one of the goals is to provide an sbt plugin that simplifies and automates the deployment process. If this appeals to you, please contribute feature requests, ideas, and/or code!
 
