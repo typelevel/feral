@@ -23,13 +23,37 @@ Next, implement your Lambda. Please refer to the [examples](examples/src/main/sc
 
 There are several options to deploy your Lambda. For example you can use the [Lambda console](https://docs.aws.amazon.com/lambda/latest/dg/foundation-console.html), the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
 
-To deploy a Scala.js Lambda, you will need to know the following:
+### CommonJS
+
+To deploy a CommonJS Scala.js Lambda, you will need to know the following:
 1. The runtime for your Lambda is Node.js 16.
 2. The handler for your Lambda is `index.yourLambdaName`.
     - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
     - `yourLambdaName` is the name of the Scala `object` you created that extends from `IOLambda`.
 3. Run `sbt npmPackage` to package your Lambda for deployment. Note that you can currently only have one Lambda per sbt (sub-)project. If you have multiple, you will need to select the one to deploy using `Compile / mainClass := Some("my.lambda.handler")`.
 4. For the tooling of your choice, follow their instructions for deploying a Node.js Lambda using the contents of the `target/scala-2.13/npm-package/` directory.
+
+### ES Modules
+
+It's possible to use ES Modules to run your Lambda. You need the following steps instead of the above:
+
+1. The runtime for your Lambda is Node.js 16.
+2. Add a `@JSExportTopLevel` inside your lambda object:
+    ```scala
+    @JSExportTopLevel("yourLambdaName")
+    val impl: HandlerFn = handlerFn
+    ```
+    - The type `HandlerFn` is important so Scala.JS will emit your lambda as a JavaScript function.
+    - `val` is important so your lambda function is emitted as a value, instead of a function returning another function.
+    - The handler for your lambda is `index.yourLambdaName`
+4. Change these settings in your `build.sbt`:
+    ```scala
+    scalaJSUseMainModuleInitializer := false
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule).withOutputPatterns(OutputPatterns.fromJSFile("%.mjs")))
+    ```
+4. Run `sbt npmPackage` to package your Lambda for deployment. You can have multiple lambda's by exporting multiple handler functions.
+5. For the tooling of your choice, follow their instructions for deploying a Node.js Lambda using the contents of the `target/scala-2.13/npm-package/` directory.
+
 
 As the feral project develops, one of the goals is to provide an sbt plugin that simplifies and automates the deployment process. If this appeals to you, please contribute feature requests, ideas, and/or code!
 

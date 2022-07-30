@@ -44,7 +44,7 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
 
     if (isESModule) {
       throw new Error(
-        s"Cannot run ES Module with main module. Use `@JSExportTopLevel` or CommonJS instead. See https://github.com/typelevel/feral#readme")
+        s"Cannot run ES Module with main module. Use `@JSExportTopLevel` or CommonJS instead. See https://github.com/typelevel/feral#es-modules")
     }
 
     js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
