@@ -22,7 +22,6 @@ import io.circe.scalajs._
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.|
-import scala.util.Try
 
 private[lambda] trait IOLambdaPlatform[Event, Result] {
   this: IOLambda[Event, Result] =>
@@ -33,24 +32,11 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
    *
    * @example
    *   {{{
+   *  @JSExportTopLevel("handler")
    *  val handler: HandlerFn = handlerFn
    *   }}}
    */
   final type HandlerFn = js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]]
-
-  final def main(args: Array[String]): Unit = {
-    // `exports` will throw a ReferenceError in ESModule (because `exports` comes from commonjs modules)
-    def isESModule = Try(js.Dynamic.global.exports).isFailure
-
-    if (isESModule) {
-      throw new Error(
-        s"Cannot run ES Module with main module. Use `@JSExportTopLevel` or CommonJS instead. See https://github.com/typelevel/feral#es-modules")
-    }
-
-    js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
-  }
-
-  protected def handlerName: String = getClass.getSimpleName.init
 
   final protected lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
