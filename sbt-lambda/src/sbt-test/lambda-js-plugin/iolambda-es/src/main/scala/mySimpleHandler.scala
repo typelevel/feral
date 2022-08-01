@@ -5,6 +5,6 @@ import scala.scalajs.js.annotation._
 object mySimpleHandler extends IOLambda.Simple[Unit, INothing] {
   def apply(event: Unit, context: Context[IO], init: Init): IO[Option[INothing]] = IO.none
 
-  @JSExportTopLevel("exportedHandler")
+  @JSExportTopLevel("mySimpleHandler")
   val impl: HandlerFn = handlerFn
 }
