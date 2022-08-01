@@ -16,7 +16,7 @@
 
 name := "feral"
 
-ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / tlBaseVersion := "0.2"
 ThisBuild / startYear := Some(2021)
 
 ThisBuild / developers := List(
