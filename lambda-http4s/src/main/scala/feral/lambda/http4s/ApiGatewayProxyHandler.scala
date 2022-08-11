@@ -24,22 +24,27 @@ import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
 import org.http4s.Charset
 import org.http4s.Headers
-import org.http4s.HttpRoutes
+import org.http4s.{HttpApp, HttpRoutes}
 import org.http4s.Method
 import org.http4s.Request
-import org.http4s.Response
 import org.http4s.Uri
 import org.http4s.headers.Cookie
 import org.http4s.headers.`Set-Cookie`
 
 object ApiGatewayProxyHandler {
-
   def apply[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
-      routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
+      routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpRoutes(routes)
+
+  def httpRoutes[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
+      routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpApp(
+    routes.orNotFound)
+
+  def httpApp[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
+      app: HttpApp[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
       event <- LambdaEnv.event
       request <- decodeEvent(event)
-      response <- routes(request).getOrElse(Response.notFound[F])
+      response <- app(request)
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- response
         .body
