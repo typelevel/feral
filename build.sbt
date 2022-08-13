@@ -76,7 +76,8 @@ lazy val root =
     sbtLambda,
     lambdaHttp4s,
     lambdaCloudFormationCustomResource,
-    examples
+    examples,
+    unidocs
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
@@ -188,3 +189,17 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .dependsOn(lambda, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)
+
+lazy val unidocs = project
+  .in(file("unidocs"))
+  .enablePlugins(TypelevelUnidocPlugin)
+  .settings(
+    name := "feral-docs",
+    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
+      core.jvm,
+      lambda.jvm,
+      sbtLambda,
+      lambdaHttp4s.jvm,
+      lambdaCloudFormationCustomResource.jvm
+    )
+  )
