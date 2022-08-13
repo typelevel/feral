@@ -21,7 +21,7 @@ import io.circe.Decoder
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/s3-batch.d.ts
 
-final case class S3BatchEvent(
+sealed abstract case class S3BatchEvent private (
     invocationSchemaVersion: String,
     invocationId: String,
     job: S3BatchEventJob,
@@ -29,6 +29,19 @@ final case class S3BatchEvent(
 )
 
 object S3BatchEvent {
+  private[lambda] def apply(
+      invocationSchemaVersion: String,
+      invocationId: String,
+      job: S3BatchEventJob,
+      tasks: List[S3BatchEventTask]
+  ): S3BatchEvent =
+    new S3BatchEvent(
+      invocationSchemaVersion,
+      invocationId,
+      job,
+      tasks
+    ) {}
+
   implicit val decoder: Decoder[S3BatchEvent] =
     Decoder.forProduct4("invocationSchemaVersion", "invocationId", "job", "tasks")(
       S3BatchEvent.apply)
@@ -36,20 +49,31 @@ object S3BatchEvent {
   implicit def kernelSource: KernelSource[S3BatchEvent] = KernelSource.emptyKernelSource
 }
 
-final case class S3BatchEventJob(id: String)
+sealed abstract case class S3BatchEventJob private (id: String)
 
 object S3BatchEventJob {
+  private[lambda] def apply(id: String): S3BatchEventJob =
+    new S3BatchEventJob(id) {}
+
   implicit val decoder: Decoder[S3BatchEventJob] =
     Decoder.forProduct1("id")(S3BatchEventJob.apply)
 }
 
-final case class S3BatchEventTask(
+sealed abstract case class S3BatchEventTask private (
     taskId: String,
     s3Key: String,
     s3VersionId: Option[String],
-    s3BucketArn: String)
+    s3BucketArn: String
+)
 
 object S3BatchEventTask {
+  private[lambda] def apply(
+      taskId: String,
+      s3Key: String,
+      s3VersionId: Option[String],
+      s3BucketArn: String
+  ): S3BatchEventTask = new S3BatchEventTask(taskId, s3Key, s3VersionId, s3BucketArn) {}
+
   implicit val decoder: Decoder[S3BatchEventTask] =
     Decoder.forProduct4("taskId", "s3Key", "s3VersionId", "s3BucketArn")(S3BatchEventTask.apply)
 }

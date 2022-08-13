@@ -26,16 +26,19 @@ import scodec.bits.ByteVector
 import java.time.Instant
 import java.util.UUID
 
-final case class SnsEvent(
+sealed abstract case class SnsEvent private (
     records: List[SnsEventRecord]
 )
 
 object SnsEvent {
+  private[lambda] def apply(records: List[SnsEventRecord]): SnsEvent =
+    new SnsEvent(records) {}
+
   implicit val decoder: Decoder[SnsEvent] =
     Decoder.forProduct1("Records")(SnsEvent.apply)
 }
 
-final case class SnsEventRecord(
+sealed abstract case class SnsEventRecord private (
     eventVersion: String,
     eventSubscriptionArn: String,
     eventSource: String,
@@ -43,6 +46,14 @@ final case class SnsEventRecord(
 )
 
 object SnsEventRecord {
+  private[lambda] def apply(
+      eventVersion: String,
+      eventSubscriptionArn: String,
+      eventSource: String,
+      sns: SnsMessage
+  ): SnsEventRecord =
+    new SnsEventRecord(eventVersion, eventSubscriptionArn, eventSource, sns) {}
+
   implicit val decoder: Decoder[SnsEventRecord] = Decoder.forProduct4(
     "EventVersion",
     "EventSubscriptionArn",
@@ -51,7 +62,7 @@ object SnsEventRecord {
   )(SnsEventRecord.apply)
 }
 
-final case class SnsMessage(
+sealed abstract case class SnsMessage private (
     signature: String,
     messageId: UUID,
     `type`: String,
@@ -66,6 +77,33 @@ final case class SnsMessage(
 )
 
 object SnsMessage {
+  private[lambda] def apply(
+      signature: String,
+      messageId: UUID,
+      `type`: String,
+      topicArn: String,
+      messageAttributes: Map[String, SnsMessageAttribute],
+      signatureVersion: String,
+      timestamp: Instant,
+      signingCertUrl: String,
+      message: String,
+      unsubscribeUrl: String,
+      subject: Option[String]
+  ): SnsMessage =
+    new SnsMessage(
+      signature,
+      messageId,
+      `type`,
+      topicArn,
+      messageAttributes,
+      signatureVersion,
+      timestamp,
+      signingCertUrl,
+      message,
+      unsubscribeUrl,
+      subject
+    ) {}
+
   private[this] implicit val instantDecoder: Decoder[Instant] = Decoder.decodeInstant
 
   implicit val decoder: Decoder[SnsMessage] = Decoder.forProduct11(
@@ -83,18 +121,44 @@ object SnsMessage {
   )(SnsMessage.apply)
 }
 
-sealed abstract class SnsMessageAttribute
+sealed abstract class SnsMessageAttribute extends Product with Serializable
 
 object SnsMessageAttribute {
-  final case class String(value: Predef.String) extends SnsMessageAttribute
-  final case class Binary(value: ByteVector) extends SnsMessageAttribute
-  final case class Number(value: BigDecimal) extends SnsMessageAttribute
-  final case class StringArray(value: List[SnsMessageAttributeArrayMember])
+  sealed abstract case class String private (value: Predef.String) extends SnsMessageAttribute
+  object String {
+    private[lambda] def apply(value: Predef.String): String =
+      new String(value) {}
+  }
+
+  sealed abstract case class Binary private (value: ByteVector) extends SnsMessageAttribute
+  object Binary {
+    private[lambda] def apply(value: ByteVector): Binary =
+      new Binary(value) {}
+  }
+
+  sealed abstract case class Number private (value: BigDecimal) extends SnsMessageAttribute
+  object Number {
+    private[lambda] def apply(value: BigDecimal): Number =
+      new Number(value) {}
+  }
+
+  sealed abstract case class StringArray private (value: List[SnsMessageAttributeArrayMember])
       extends SnsMessageAttribute
-  final case class Unknown(
+  object StringArray {
+    private[lambda] def apply(value: List[SnsMessageAttributeArrayMember]): StringArray =
+      new StringArray(value) {}
+  }
+
+  sealed abstract case class Unknown private (
       `type`: Predef.String,
       value: Option[Predef.String]
   ) extends SnsMessageAttribute
+  object Unknown {
+    private[lambda] def apply(
+        `type`: Predef.String,
+        value: Option[Predef.String]
+    ): Unknown = new Unknown(`type`, value) {}
+  }
 
   implicit val decoder: Decoder[SnsMessageAttribute] = {
     val getString: Decoder[Predef.String] = Decoder.instance(_.get[Predef.String]("Value"))
@@ -130,9 +194,26 @@ object SnsMessageAttribute {
 sealed abstract class SnsMessageAttributeArrayMember
 
 object SnsMessageAttributeArrayMember {
-  final case class String(value: Predef.String) extends SnsMessageAttributeArrayMember
-  final case class Number(value: BigDecimal) extends SnsMessageAttributeArrayMember
-  final case class Boolean(value: scala.Boolean) extends SnsMessageAttributeArrayMember
+  sealed abstract case class String private (value: Predef.String)
+      extends SnsMessageAttributeArrayMember
+  object String {
+    private[lambda] def apply(value: Predef.String): String =
+      new String(value) {}
+  }
+
+  sealed abstract case class Number private (value: BigDecimal)
+      extends SnsMessageAttributeArrayMember
+  object Number {
+    private[lambda] def apply(value: BigDecimal): Number =
+      new Number(value) {}
+  }
+
+  sealed abstract case class Boolean private (value: scala.Boolean)
+      extends SnsMessageAttributeArrayMember
+  object Boolean {
+    private[lambda] def apply(value: scala.Boolean): Boolean =
+      new Boolean(value) {}
+  }
 
   implicit val decoder: Decoder[SnsMessageAttributeArrayMember] = {
     val bool: Decoder[SnsMessageAttributeArrayMember.Boolean] =

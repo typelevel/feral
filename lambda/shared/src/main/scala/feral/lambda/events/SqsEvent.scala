@@ -28,16 +28,19 @@ import scala.util.Try
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/Sqs.d.ts
 // https://docs.aws.amazon.com/lambda/latest/dg/invoking-lambda-function.html#supported-event-source-Sqs
 
-final case class SqsEvent(
+sealed abstract case class SqsEvent private (
     records: List[SqsRecord]
 )
 
 object SqsEvent {
+  private[lambda] def apply(records: List[SqsRecord]): SqsEvent =
+    new SqsEvent(records) {}
+
   implicit val decoder: Decoder[SqsEvent] =
     Decoder.instance(_.get[List[SqsRecord]]("Records")).map(SqsEvent(_))
 }
 
-final case class SqsRecord(
+sealed abstract case class SqsRecord(
     messageId: String,
     receiptHandle: String,
     body: String,
@@ -50,6 +53,29 @@ final case class SqsRecord(
 )
 
 object SqsRecord {
+  private[lambda] def apply(
+      messageId: String,
+      receiptHandle: String,
+      body: String,
+      attributes: SqsRecordAttributes,
+      messageAttributes: Map[String, SqsMessageAttribute],
+      md5OfBody: String,
+      eventSource: String,
+      eventSourceArn: String,
+      awsRegion: String
+  ): SqsRecord =
+    new SqsRecord(
+      messageId,
+      receiptHandle,
+      body,
+      attributes,
+      messageAttributes,
+      md5OfBody,
+      eventSource,
+      eventSourceArn,
+      awsRegion
+    ) {}
+
   implicit val decoder: Decoder[SqsRecord] = Decoder.instance(i =>
     for {
       messageId <- i.get[String]("messageId")
@@ -74,7 +100,7 @@ object SqsRecord {
     ))
 }
 
-final case class SqsRecordAttributes(
+sealed abstract case class SqsRecordAttributes private (
     awsTraceHeader: Option[String],
     approximateReceiveCount: String,
     sentTimestamp: Instant,
@@ -86,6 +112,26 @@ final case class SqsRecordAttributes(
 )
 
 object SqsRecordAttributes {
+  private[lambda] def apply(
+      awsTraceHeader: Option[String],
+      approximateReceiveCount: String,
+      sentTimestamp: Instant,
+      senderId: String,
+      approximateFirstReceiveTimestamp: Instant,
+      sequenceNumber: Option[String],
+      messageGroupId: Option[String],
+      messageDeduplicationId: Option[String]
+  ): SqsRecordAttributes =
+    new SqsRecordAttributes(
+      awsTraceHeader,
+      approximateReceiveCount,
+      sentTimestamp,
+      senderId,
+      approximateFirstReceiveTimestamp,
+      sequenceNumber,
+      messageGroupId,
+      messageDeduplicationId
+    ) {}
 
   implicit val decoder: Decoder[SqsRecordAttributes] = Decoder.instance(i =>
     for {
@@ -112,17 +158,38 @@ object SqsRecordAttributes {
     Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
 }
 
-sealed abstract class SqsMessageAttribute
+sealed abstract class SqsMessageAttribute extends Product with Serializable
 object SqsMessageAttribute {
-  final case class String(value: Predef.String) extends SqsMessageAttribute
+  sealed abstract case class String private (value: Predef.String) extends SqsMessageAttribute
+  object String {
+    private[lambda] def apply(value: Predef.String): String =
+      new String(value) {}
+  }
 
-  final case class Binary(value: ByteVector) extends SqsMessageAttribute
-  final case class Number(value: BigDecimal) extends SqsMessageAttribute
-  final case class Unknown(
+  sealed abstract case class Binary private (value: ByteVector) extends SqsMessageAttribute
+  object Binary {
+    private[lambda] def apply(value: ByteVector): Binary =
+      new Binary(value) {}
+  }
+
+  sealed abstract case class Number private (value: BigDecimal) extends SqsMessageAttribute
+  object Number {
+    private[lambda] def apply(value: BigDecimal): Number =
+      new Number(value) {}
+  }
+
+  sealed abstract case class Unknown(
       stringValue: Option[Predef.String],
       binaryValue: Option[Predef.String],
       dataType: Predef.String
   ) extends SqsMessageAttribute
+  object Unknown {
+    private[lambda] def apply(
+        stringValue: Option[Predef.String],
+        binaryValue: Option[Predef.String],
+        dataType: Predef.String
+    ): Unknown = new Unknown(stringValue, binaryValue, dataType) {}
+  }
 
   implicit val decoder: Decoder[SqsMessageAttribute] = {
     val strValue =

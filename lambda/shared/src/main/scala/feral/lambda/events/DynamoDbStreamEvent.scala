@@ -81,7 +81,7 @@ object StreamRecord {
   )(StreamRecord.apply)
 }
 
-final case class DynamoDbRecord(
+sealed abstract case class DynamoDbRecord private (
     awsRegion: Option[String],
     dynamodb: Option[StreamRecord],
     eventID: Option[String],
@@ -93,6 +93,27 @@ final case class DynamoDbRecord(
 )
 
 object DynamoDbRecord {
+  private[lambda] def apply(
+      awsRegion: Option[String],
+      dynamodb: Option[StreamRecord],
+      eventID: Option[String],
+      eventName: Option[String],
+      eventSource: Option[String],
+      eventSourceArn: Option[String],
+      eventVersion: Option[String],
+      userIdentity: Option[Json]
+  ): DynamoDbRecord =
+    new DynamoDbRecord(
+      awsRegion,
+      dynamodb,
+      eventID,
+      eventName,
+      eventSource,
+      eventSourceArn,
+      eventVersion,
+      userIdentity
+    ) {}
+
   implicit val decoder: Decoder[DynamoDbRecord] = Decoder.forProduct8(
     "awsRegion",
     "dynamodb",
@@ -105,11 +126,14 @@ object DynamoDbRecord {
   )(DynamoDbRecord.apply)
 }
 
-final case class DynamoDbStreamEvent(
+sealed abstract case class DynamoDbStreamEvent private (
     records: List[DynamoDbRecord]
 )
 
 object DynamoDbStreamEvent {
+  private[lambda] def apply(records: List[DynamoDbRecord]): DynamoDbStreamEvent =
+    new DynamoDbStreamEvent(records) {}
+
   implicit val decoder: Decoder[DynamoDbStreamEvent] =
     Decoder.forProduct1("Records")(DynamoDbStreamEvent.apply)
 

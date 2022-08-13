@@ -20,18 +20,22 @@ package events
 import io.circe.Decoder
 import natchez.Kernel
 
-final case class Http(method: String)
+sealed abstract case class Http private (method: String)
 object Http {
+  private[lambda] def apply(method: String): Http = new Http(method) {}
+
   implicit val decoder: Decoder[Http] = Decoder.forProduct1("method")(Http.apply)
 }
-final case class RequestContext(http: Http)
 
+sealed abstract case class RequestContext private (http: Http)
 object RequestContext {
+  private[lambda] def apply(http: Http): RequestContext = new RequestContext(http) {}
+
   implicit val decoder: Decoder[RequestContext] =
     Decoder.forProduct1("http")(RequestContext.apply)
 }
 
-final case class ApiGatewayProxyEventV2(
+sealed abstract case class ApiGatewayProxyEventV2 private (
     rawPath: String,
     rawQueryString: String,
     cookies: Option[List[String]],
@@ -42,6 +46,25 @@ final case class ApiGatewayProxyEventV2(
 )
 
 object ApiGatewayProxyEventV2 {
+  private[lambda] def apply(
+      rawPath: String,
+      rawQueryString: String,
+      cookies: Option[List[String]],
+      headers: Map[String, String],
+      requestContext: RequestContext,
+      body: Option[String],
+      isBase64Encoded: Boolean
+  ): ApiGatewayProxyEventV2 =
+    new ApiGatewayProxyEventV2(
+      rawPath,
+      rawQueryString,
+      cookies,
+      headers,
+      requestContext,
+      body,
+      isBase64Encoded
+    ) {}
+
   implicit def decoder: Decoder[ApiGatewayProxyEventV2] = Decoder.forProduct7(
     "rawPath",
     "rawQueryString",

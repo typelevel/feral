@@ -18,7 +18,7 @@ package feral.lambda.events
 
 import io.circe.Encoder
 
-final case class ApiGatewayProxyStructuredResultV2(
+sealed abstract case class ApiGatewayProxyStructuredResultV2 private (
     statusCode: Int,
     headers: Map[String, String],
     body: String,
@@ -27,6 +27,21 @@ final case class ApiGatewayProxyStructuredResultV2(
 )
 
 object ApiGatewayProxyStructuredResultV2 {
+  def apply(
+      statusCode: Int,
+      headers: Map[String, String],
+      body: String,
+      isBase64Encoded: Boolean,
+      cookies: List[String]
+  ): ApiGatewayProxyStructuredResultV2 =
+    new ApiGatewayProxyStructuredResultV2(
+      statusCode,
+      headers,
+      body,
+      isBase64Encoded,
+      cookies
+    ) {}
+
   implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct5(
     "statusCode",
     "headers",

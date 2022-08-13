@@ -23,7 +23,7 @@ import scodec.bits.ByteVector
 
 import java.time.Instant
 
-final case class KinesisStreamRecordPayload(
+sealed abstract case class KinesisStreamRecordPayload private (
     approximateArrivalTimestamp: Instant,
     data: ByteVector,
     kinesisSchemaVersion: String,
@@ -32,6 +32,21 @@ final case class KinesisStreamRecordPayload(
 )
 
 object KinesisStreamRecordPayload {
+  private[lambda] def apply(
+      approximateArrivalTimestamp: Instant,
+      data: ByteVector,
+      kinesisSchemaVersion: String,
+      partitionKey: String,
+      sequenceNumber: String
+  ): KinesisStreamRecordPayload =
+    new KinesisStreamRecordPayload(
+      approximateArrivalTimestamp,
+      data,
+      kinesisSchemaVersion,
+      partitionKey,
+      sequenceNumber
+    ) {}
+
   implicit val decoder: Decoder[KinesisStreamRecordPayload] = Decoder.forProduct5(
     "approximateArrivalTimestamp",
     "data",
@@ -41,7 +56,7 @@ object KinesisStreamRecordPayload {
   )(KinesisStreamRecordPayload.apply)
 }
 
-final case class KinesisStreamRecord(
+sealed abstract case class KinesisStreamRecord private (
     awsRegion: String,
     eventID: String,
     eventName: String,
@@ -53,6 +68,27 @@ final case class KinesisStreamRecord(
 )
 
 object KinesisStreamRecord {
+  private[lambda] def apply(
+      awsRegion: String,
+      eventID: String,
+      eventName: String,
+      eventSource: String,
+      eventSourceArn: String,
+      eventVersion: String,
+      invokeIdentityArn: String,
+      kinesis: KinesisStreamRecordPayload
+  ): KinesisStreamRecord =
+    new KinesisStreamRecord(
+      awsRegion,
+      eventID,
+      eventName,
+      eventSource,
+      eventSourceArn,
+      eventVersion,
+      invokeIdentityArn,
+      kinesis
+    ) {}
+
   implicit val decoder: Decoder[KinesisStreamRecord] = Decoder.forProduct8(
     "awsRegion",
     "eventID",
@@ -65,11 +101,14 @@ object KinesisStreamRecord {
   )(KinesisStreamRecord.apply)
 }
 
-final case class KinesisStreamEvent(
+sealed abstract case class KinesisStreamEvent private (
     records: List[KinesisStreamRecord]
 )
 
 object KinesisStreamEvent {
+  private[lambda] def apply(records: List[KinesisStreamRecord]): KinesisStreamEvent =
+    new KinesisStreamEvent(records) {}
+
   implicit val decoder: Decoder[KinesisStreamEvent] =
     Decoder.forProduct1("Records")(KinesisStreamEvent.apply)
 

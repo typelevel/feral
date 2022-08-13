@@ -20,7 +20,7 @@ import io.circe.Encoder
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/s3-batch.d.ts
 
-final case class S3BatchResult(
+sealed abstract case class S3BatchResult private (
     invocationSchemaVersion: String,
     treatMissingKeysAs: S3BatchResultResultCode,
     invocationId: String,
@@ -28,6 +28,14 @@ final case class S3BatchResult(
 )
 
 object S3BatchResult {
+  private[lambda] def apply(
+      invocationSchemaVersion: String,
+      treatMissingKeysAs: S3BatchResultResultCode,
+      invocationId: String,
+      results: List[S3BatchResultResult]
+  ): S3BatchResult =
+    new S3BatchResult(invocationSchemaVersion, treatMissingKeysAs, invocationId, results) {}
+
   implicit val encoder: Encoder[S3BatchResult] =
     Encoder.forProduct4(
       "invocationSchemaVersion",
@@ -37,7 +45,7 @@ object S3BatchResult {
       (r.invocationSchemaVersion, r.treatMissingKeysAs, r.invocationId, r.results))
 }
 
-sealed abstract class S3BatchResultResultCode
+sealed abstract class S3BatchResultResultCode extends Product with Serializable
 
 object S3BatchResultResultCode {
   case object Succeeded extends S3BatchResultResultCode
@@ -51,12 +59,19 @@ object S3BatchResultResultCode {
   }
 }
 
-final case class S3BatchResultResult(
+sealed abstract case class S3BatchResultResult private (
     taskId: String,
     resultCode: S3BatchResultResultCode,
-    resultString: String)
+    resultString: String
+)
 
 object S3BatchResultResult {
+  private[lambda] def apply(
+      taskId: String,
+      resultCode: S3BatchResultResultCode,
+      resultString: String
+  ): S3BatchResultResult = new S3BatchResultResult(taskId, resultCode, resultString) {}
+
   implicit val encoder: Encoder[S3BatchResultResult] =
     Encoder.forProduct3("taskId", "resultCode", "resultString")(r =>
       (r.taskId, r.resultCode, r.resultString))
