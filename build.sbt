@@ -195,11 +195,15 @@ lazy val unidocs = project
   .enablePlugins(TypelevelUnidocPlugin)
   .settings(
     name := "feral-docs",
-    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-      core.jvm,
-      lambda.jvm,
-      sbtLambda,
-      lambdaHttp4s.jvm,
-      lambdaCloudFormationCustomResource.jvm
-    )
+    ScalaUnidoc / unidoc / unidocProjectFilter := {
+      if (scalaBinaryVersion.value == "2.12")
+        inProjects(sbtLambda)
+      else
+        inProjects(
+          core.jvm,
+          lambda.jvm,
+          lambdaHttp4s.jvm,
+          lambdaCloudFormationCustomResource.jvm
+        )
+    }
   )
