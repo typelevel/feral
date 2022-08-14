@@ -34,6 +34,8 @@ object SnsEvent {
   private[lambda] def apply(records: List[SnsEventRecord]): SnsEvent =
     new SnsEvent(records) {}
 
+  private[lambda] def unapply(event: SnsEvent): Nothing = ???
+
   implicit val decoder: Decoder[SnsEvent] =
     Decoder.forProduct1("Records")(SnsEvent.apply)
 }
@@ -53,6 +55,8 @@ object SnsEventRecord {
       sns: SnsMessage
   ): SnsEventRecord =
     new SnsEventRecord(eventVersion, eventSubscriptionArn, eventSource, sns) {}
+
+  private[lambda] def unapply(record: SnsEventRecord): Nothing = ???
 
   implicit val decoder: Decoder[SnsEventRecord] = Decoder.forProduct4(
     "EventVersion",
@@ -104,6 +108,8 @@ object SnsMessage {
       subject
     ) {}
 
+  private[lambda] def unapply(message: SnsMessage): Nothing = ???
+
   private[this] implicit val instantDecoder: Decoder[Instant] = Decoder.decodeInstant
 
   implicit val decoder: Decoder[SnsMessage] = Decoder.forProduct11(
@@ -128,18 +134,21 @@ object SnsMessageAttribute {
   object String {
     private[lambda] def apply(value: Predef.String): String =
       new String(value) {}
+    private[lambda] def unapply(string: String): Nothing = ???
   }
 
   sealed abstract case class Binary private (value: ByteVector) extends SnsMessageAttribute
   object Binary {
     private[lambda] def apply(value: ByteVector): Binary =
       new Binary(value) {}
+    private[lambda] def unapply(binary: Binary): Nothing = ???
   }
 
   sealed abstract case class Number private (value: BigDecimal) extends SnsMessageAttribute
   object Number {
     private[lambda] def apply(value: BigDecimal): Number =
       new Number(value) {}
+    private[lambda] def unapply(number: Number): Nothing = ???
   }
 
   sealed abstract case class StringArray private (value: List[SnsMessageAttributeArrayMember])
@@ -147,6 +156,7 @@ object SnsMessageAttribute {
   object StringArray {
     private[lambda] def apply(value: List[SnsMessageAttributeArrayMember]): StringArray =
       new StringArray(value) {}
+    private[lambda] def unapply(stringArray: StringArray): Nothing = ???
   }
 
   sealed abstract case class Unknown private (
@@ -158,6 +168,7 @@ object SnsMessageAttribute {
         `type`: Predef.String,
         value: Option[Predef.String]
     ): Unknown = new Unknown(`type`, value) {}
+    private[lambda] def unapply(unknown: Unknown): Nothing = ???
   }
 
   implicit val decoder: Decoder[SnsMessageAttribute] = {
@@ -199,6 +210,7 @@ object SnsMessageAttributeArrayMember {
   object String {
     private[lambda] def apply(value: Predef.String): String =
       new String(value) {}
+    private[lambda] def unapply(string: String): Nothing = ???
   }
 
   sealed abstract case class Number private (value: BigDecimal)
@@ -206,6 +218,7 @@ object SnsMessageAttributeArrayMember {
   object Number {
     private[lambda] def apply(value: BigDecimal): Number =
       new Number(value) {}
+    private[lambda] def unapply(number: Number): Nothing = ???
   }
 
   sealed abstract case class Boolean private (value: scala.Boolean)
@@ -213,6 +226,7 @@ object SnsMessageAttributeArrayMember {
   object Boolean {
     private[lambda] def apply(value: scala.Boolean): Boolean =
       new Boolean(value) {}
+    private[lambda] def unapply(boolean: Boolean): Nothing = ???
   }
 
   implicit val decoder: Decoder[SnsMessageAttributeArrayMember] = {

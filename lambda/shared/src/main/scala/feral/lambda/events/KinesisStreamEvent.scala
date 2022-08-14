@@ -47,6 +47,8 @@ object KinesisStreamRecordPayload {
       sequenceNumber
     ) {}
 
+  private[lambda] def unapply(payload: KinesisStreamRecordPayload): Nothing = ???
+
   implicit val decoder: Decoder[KinesisStreamRecordPayload] = Decoder.forProduct5(
     "approximateArrivalTimestamp",
     "data",
@@ -89,6 +91,8 @@ object KinesisStreamRecord {
       kinesis
     ) {}
 
+  private[lambda] def unapply(record: KinesisStreamRecord): Nothing = ???
+
   implicit val decoder: Decoder[KinesisStreamRecord] = Decoder.forProduct8(
     "awsRegion",
     "eventID",
@@ -108,6 +112,7 @@ sealed abstract case class KinesisStreamEvent private (
 object KinesisStreamEvent {
   private[lambda] def apply(records: List[KinesisStreamRecord]): KinesisStreamEvent =
     new KinesisStreamEvent(records) {}
+  private[lambda] def unapply(event: KinesisStreamEvent): Nothing = ???
 
   implicit val decoder: Decoder[KinesisStreamEvent] =
     Decoder.forProduct1("Records")(KinesisStreamEvent.apply)

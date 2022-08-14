@@ -35,6 +35,7 @@ sealed abstract case class SqsEvent private (
 object SqsEvent {
   private[lambda] def apply(records: List[SqsRecord]): SqsEvent =
     new SqsEvent(records) {}
+  private[lambda] def unapply(event: SqsEvent): Nothing = ???
 
   implicit val decoder: Decoder[SqsEvent] =
     Decoder.instance(_.get[List[SqsRecord]]("Records")).map(SqsEvent(_))
@@ -75,6 +76,8 @@ object SqsRecord {
       eventSourceArn,
       awsRegion
     ) {}
+
+  private[lambda] def unapply(record: SqsRecord): Nothing = ???
 
   implicit val decoder: Decoder[SqsRecord] = Decoder.instance(i =>
     for {
@@ -133,6 +136,8 @@ object SqsRecordAttributes {
       messageDeduplicationId
     ) {}
 
+  private[lambda] def unapply(attributes: SqsRecordAttributes): Nothing = ???
+
   implicit val decoder: Decoder[SqsRecordAttributes] = Decoder.instance(i =>
     for {
       awsTraceHeader <- i.get[Option[String]]("AWSTraceHeader")
@@ -164,18 +169,21 @@ object SqsMessageAttribute {
   object String {
     private[lambda] def apply(value: Predef.String): String =
       new String(value) {}
+    private[lambda] def unapply(string: String): Nothing = ???
   }
 
   sealed abstract case class Binary private (value: ByteVector) extends SqsMessageAttribute
   object Binary {
     private[lambda] def apply(value: ByteVector): Binary =
       new Binary(value) {}
+    private[lambda] def unapply(binary: Binary): Nothing = ???
   }
 
   sealed abstract case class Number private (value: BigDecimal) extends SqsMessageAttribute
   object Number {
     private[lambda] def apply(value: BigDecimal): Number =
       new Number(value) {}
+    private[lambda] def unapply(number: Number): Nothing = ???
   }
 
   sealed abstract case class Unknown(
@@ -189,6 +197,8 @@ object SqsMessageAttribute {
         binaryValue: Option[Predef.String],
         dataType: Predef.String
     ): Unknown = new Unknown(stringValue, binaryValue, dataType) {}
+
+    private[lambda] def unapply(unknown: Unknown): Nothing = ???
   }
 
   implicit val decoder: Decoder[SqsMessageAttribute] = {

@@ -23,6 +23,7 @@ import natchez.Kernel
 sealed abstract case class Http private (method: String)
 object Http {
   private[lambda] def apply(method: String): Http = new Http(method) {}
+  private[lambda] def unapply(http: Http): Nothing = ???
 
   implicit val decoder: Decoder[Http] = Decoder.forProduct1("method")(Http.apply)
 }
@@ -30,6 +31,7 @@ object Http {
 sealed abstract case class RequestContext private (http: Http)
 object RequestContext {
   private[lambda] def apply(http: Http): RequestContext = new RequestContext(http) {}
+  private[lambda] def unapply(requestContext: RequestContext): Nothing = ???
 
   implicit val decoder: Decoder[RequestContext] =
     Decoder.forProduct1("http")(RequestContext.apply)
@@ -64,6 +66,8 @@ object ApiGatewayProxyEventV2 {
       body,
       isBase64Encoded
     ) {}
+
+  private[lambda] def unapply(event: ApiGatewayProxyEventV2): Nothing = ???
 
   implicit def decoder: Decoder[ApiGatewayProxyEventV2] = Decoder.forProduct7(
     "rawPath",

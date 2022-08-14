@@ -36,6 +36,8 @@ object S3BatchResult {
   ): S3BatchResult =
     new S3BatchResult(invocationSchemaVersion, treatMissingKeysAs, invocationId, results) {}
 
+  private[lambda] def unapply(result: S3BatchResult): Nothing = ???
+
   implicit val encoder: Encoder[S3BatchResult] =
     Encoder.forProduct4(
       "invocationSchemaVersion",

@@ -42,6 +42,8 @@ object S3BatchEvent {
       tasks
     ) {}
 
+  private[lambda] def unapply(event: S3BatchEvent): Nothing = ???
+
   implicit val decoder: Decoder[S3BatchEvent] =
     Decoder.forProduct4("invocationSchemaVersion", "invocationId", "job", "tasks")(
       S3BatchEvent.apply)

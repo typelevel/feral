@@ -42,6 +42,8 @@ object ApiGatewayProxyStructuredResultV2 {
       cookies
     ) {}
 
+  private[lambda] def unapply(result: ApiGatewayProxyStructuredResultV2): Nothing = ???
+
   implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct5(
     "statusCode",
     "headers",
