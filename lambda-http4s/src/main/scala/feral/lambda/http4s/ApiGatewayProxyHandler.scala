@@ -22,11 +22,11 @@ import cats.effect.kernel.Concurrent
 import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
-import fs2.Chunk
 import org.http4s.Charset
 import org.http4s.Entity
 import org.http4s.Headers
-import org.http4s.{HttpApp, HttpRoutes}
+import org.http4s.HttpApp
+import org.http4s.HttpRoutes
 import org.http4s.MalformedMessageBodyFailure
 import org.http4s.Method
 import org.http4s.Request
@@ -52,9 +52,9 @@ object ApiGatewayProxyHandler {
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
       responseBody <- response.entity match {
         case Entity.Empty => "".pure
-        case Entity.Strict(chunk) => // TODO
-          if (isBase64Encoded) chunk.toByteVector.toBase64.pure
-          else chunk.toByteVector.decodeUtf8.liftTo
+        case Entity.Strict(bytes) =>
+          if (isBase64Encoded) bytes.toBase64.pure
+          else bytes.decodeUtf8.liftTo
         case Entity.Default(body, _) =>
           body
             .through(
@@ -101,6 +101,6 @@ object ApiGatewayProxyHandler {
     method,
     uri,
     headers = headers,
-    entity = body.foldMap(b => Entity.strict(Chunk.byteVector(b)))
+    entity = body.foldMap(b => Entity.strict(b))
   )
 }
