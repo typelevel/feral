@@ -56,9 +56,9 @@ val Scala213 = "2.13.8"
 val Scala3 = "3.1.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.3.13"
+val catsEffectVersion = "3.3.14"
 val circeVersion = "0.14.2"
-val fs2Version = "3.2.9"
+val fs2Version = "3.2.12"
 val http4sVersion = "1.0.0-M34"
 val natchezVersion = "0.1.6"
 val munitVersion = "0.7.29"
@@ -76,7 +76,8 @@ lazy val root =
     sbtLambda,
     lambdaHttp4s,
     lambdaCloudFormationCustomResource,
-    examples
+    examples,
+    unidocs
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
@@ -127,7 +128,7 @@ lazy val sbtLambda = project
     name := "sbt-feral-lambda",
     crossScalaVersions := Seq(Scala212),
     addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
-    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.0"),
+    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.1"),
     buildInfoPackage := "feral.lambda.sbt",
     buildInfoKeys += organization,
     scriptedLaunchOpts := {
@@ -187,3 +188,21 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .dependsOn(lambda, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)
+
+lazy val unidocs = project
+  .in(file("unidocs"))
+  .enablePlugins(TypelevelUnidocPlugin)
+  .settings(
+    name := "feral-docs",
+    ScalaUnidoc / unidoc / unidocProjectFilter := {
+      if (scalaBinaryVersion.value == "2.12")
+        inProjects(sbtLambda)
+      else
+        inProjects(
+          core.jvm,
+          lambda.jvm,
+          lambdaHttp4s.jvm,
+          lambdaCloudFormationCustomResource.jvm
+        )
+    }
+  )
