@@ -128,7 +128,7 @@ lazy val sbtLambda = project
     name := "sbt-feral-lambda",
     crossScalaVersions := Seq(Scala212),
     addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
-    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.1"),
+    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.2"),
     buildInfoPackage := "feral.lambda.sbt",
     buildInfoKeys += organization,
     scriptedLaunchOpts := {
