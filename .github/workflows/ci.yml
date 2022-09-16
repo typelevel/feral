@@ -98,7 +98,7 @@ jobs:
           node-version: 16
 
       - name: Check that workflows are up to date
-        run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' 'project /' githubWorkflowCheck
+        run: sbt githubWorkflowCheck
 
       - name: Check headers and formatting
         if: matrix.java == 'corretto@8'
