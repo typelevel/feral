@@ -28,18 +28,18 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.12.16, 3.1.3, 2.13.8]
+        scala: [2.12.17, 3.1.3, 2.13.8]
         java: [corretto@8, corretto@11]
         project: [rootJS, rootJVM]
         exclude:
-          - scala: 2.12.16
+          - scala: 2.12.17
             java: corretto@11
           - scala: 3.1.3
             java: corretto@11
           - project: rootJS
             java: corretto@11
           - project: rootJS
-            scala: 2.12.16
+            scala: 2.12.17
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -109,11 +109,11 @@ jobs:
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' Test/scalaJSLinkerResult
 
       - name: Test
-        if: matrix.scala != '2.12.16'
+        if: matrix.scala != '2.12.17'
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' test
 
       - name: Scripted
-        if: matrix.scala == '2.12.16'
+        if: matrix.scala == '2.12.17'
         run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' scripted
 
       - name: Check binary compatibility
