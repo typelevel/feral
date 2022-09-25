@@ -181,7 +181,7 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaKernel % "compile->compile;test->test")
+  .dependsOn(lambdaKernel % "compile->compile;test->test")
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -206,7 +206,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda)
+  .dependsOn(lambdaKernel)
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
