@@ -24,7 +24,7 @@ import io.circe.jawn.parse
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 
-private[lambda] trait ContextCompanionPlatform {
+private[lambda] object ContextPlatform {
 
   private[lambda] def fromJava[F[_]: Sync](context: runtime.Context): Context[F] =
     new Context(

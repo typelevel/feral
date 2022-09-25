@@ -46,7 +46,7 @@ final class Context[F[_]] private[lambda] (
     f(remainingTime))
 }
 
-object Context extends ContextCompanionPlatform
+object Context
 
 final class CognitoIdentity(
     val identityId: String,

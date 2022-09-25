@@ -47,7 +47,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .head
             .compile
             .lastOrError
-          context <- IO(Context.fromJava[IO](context))
+          context <- IO(ContextPlatform.fromJava[IO](context))
           _ <- OptionT(lambda(event, context)).foreachF { result =>
             Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
               IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))

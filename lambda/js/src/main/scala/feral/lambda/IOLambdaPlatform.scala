@@ -37,7 +37,7 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
       (for {
         lambda <- setupMemo
         event <- IO.fromEither(decodeJs[Event](event))
-        result <- lambda(event, Context.fromJS(context))
+        result <- lambda(event, ContextPlatform.fromJS(context))
       } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
   }
 }

@@ -61,9 +61,11 @@ val circeVersion = "0.14.3"
 val fs2Version = "3.3.0"
 val http4sVersion = "0.23.16"
 val natchezVersion = "0.1.6"
-val munitVersion = "0.7.29"
-val munitCEVersion = "1.0.7"
-val scalacheckEffectVersion = "1.0.4"
+val munitVersion = "1.0.0-M6"
+val munitCEVersion = "2.0.0-M3"
+val scalacheckEffectVersion = "2.0.0-M2"
+
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -72,6 +74,8 @@ lazy val commonSettings = Seq(
 lazy val root =
   tlCrossRootProject.aggregate(
     core,
+    lambdaKernel,
+    lambdaRuntime,
     lambda,
     sbtLambda,
     lambdaHttp4s,
@@ -91,25 +95,55 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
 
+lazy val lambdaKernel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("lambda-kernel"))
+  .settings(
+    name := "feral-lambda-kernel",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
+      "com.armanbilge" %%% "natchez-core" % "0.1.6-SNAPSHOT",
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "io.circe" %%% "circe-jawn" % circeVersion,
+      "org.scodec" %%% "scodec-bits" % "1.1.34",
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    )
+  )
+  .platformsSettings(JSPlatform, NativePlatform)(
+    libraryDependencies ++= Seq(
+      "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
+    )
+  )
+
+lazy val lambdaRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("feral-lambda-runtime"))
+  .settings(
+    name := "feral-lambda-kernel",
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-jawn" % circeVersion,
+      "org.http4s" %%% "http4s-client" % http4sVersion,
+      "org.http4s" %%% "http4s-circe" % http4sVersion
+    )
+  )
+  .dependsOn(lambdaKernel)
+
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .in(file("lambda"))
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "org.tpolecat" %%% "natchez-core" % natchezVersion,
-      "io.circe" %%% "circe-scodec" % circeVersion,
-      "io.circe" %%% "circe-jawn" % circeVersion,
-      "org.scodec" %%% "scodec-bits" % "1.1.34",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     )
   )
   .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
+      "io.circe" %%% "circe-scalajs" % circeVersion
     )
   )
   .jvmSettings(
@@ -119,7 +153,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-fs2" % "0.14.0"
     )
   )
-  .dependsOn(core)
+  .dependsOn(core, lambdaKernel)
 
 lazy val sbtLambda = project
   .in(file("sbt-lambda"))
@@ -147,7 +181,7 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda % "compile->compile;test->test")
+  .dependsOn(lambda, lambdaKernel % "compile->compile;test->test")
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -164,7 +198,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
       "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
       "com.eed3si9n.expecty" %%% "expecty" % "0.16.0" % Test,
