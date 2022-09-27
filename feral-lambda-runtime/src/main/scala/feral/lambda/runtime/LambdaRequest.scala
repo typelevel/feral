@@ -1,22 +1,23 @@
 package feral.lambda.runtime
 
+import cats.ApplicativeError
 import io.circe._
-import java.time.Instant
 
-case class LambdaRequest(val deadlineTimeInMs: Instant, val id: String, val invokedFunctionArn: String, body: Json)
+import java.time.Instant
+import org.http4s.Response
+
+case class LambdaRequest(
+    deadlineTimeInMs: Instant,
+    id: String,
+    invokedFunctionArn: String,
+    body: Json
+    )
 
 object LambdaRequest {
-    implicit val decoder: Decoder[LambdaRequest] = 
-        Decoder.forProduct4("deadlineTimeInMs", "id", "invokedFunctionArn", "body")(
-            LambdaRequest.apply)
+    // Still need to decide how to handle failed request or invalid header values
+    def fromResponse[F[_]](response: Response[F])(implicit F: ApplicativeError[F, Throwable]): F[LambdaRequest] = {
+        F.pure(LambdaRequest(???))
+        //Unsure on best way to unpack the response headers into LambdaRequest case class
+    }
+
 }
-
-
-
-// final def apply(c: HCursor): Decoder.Result[LambdaRequest] = 
-//             for {
-//                 deadlineTimeInMs <- ???
-//                 id <- ???
-//                 invokedFunctionArn <- ???
-//                 body <- ???
-//             } yield {LambdaRequest(deadlineTimeInMs, id, invokedFunctionArn, body)}

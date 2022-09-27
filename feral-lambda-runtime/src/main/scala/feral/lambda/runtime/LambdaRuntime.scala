@@ -21,57 +21,73 @@
 package feral.lambda
 package runtime
 
+import cats.Applicative
 import cats.syntax.all._
-import cats.effect.Sync
-import cats.effect.kernel.Concurrent
-import cats.effect.kernel.Resource
+import cats.effect.kernel.{Concurrent, Resource, Sync}
 import io.circe.Json
 import org.http4s.Method.POST
 import org.http4s.client.Client
-import org.http4s.circe.{jsonEncoderWithPrinter, jsonOf}
+import org.http4s.circe.jsonEncoderWithPrinter
 
 import scala.concurrent.duration.FiniteDuration
 import java.util.concurrent.TimeUnit
-import org.http4s.Uri
+import org.http4s.{EntityEncoder, Uri}
 import org.http4s.client.dsl.Http4sClientDsl
 import io.circe._
 
+import java.time.Instant //safe to use in native?
+import cats.effect.kernel.Async
+
 object FeralLambdaRuntime {
 
-  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Concurrent[F]): Resource[F, Unit] = {
+  val LAMBDA_VERSION_DATE = "2018-06-01"
+
+  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F]): Resource[F, Unit] = { //already have handler function???
     F.background {
-      val runtimeUrl = getRuntimeUrl(LambdaEnvironmentVariables.AWS_LAMBDA_RUNTIME_API)
-      implicit val lambdaRequestDecoder = jsonOf[F, LambdaRequest]
-      implicit val jsonEncoder = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true)) // F is sus, maybe doesnt have conc?
+      val runtimeUrl = getRuntimeUrl(LambdaReservedEnvVars.AWS_LAMBDA_RUNTIME_API)
+      implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
       val http4sClientDsl = new Http4sClientDsl[F] {}
       import http4sClientDsl._
       (for {
-        request <- client.expect[LambdaRequest](runtimeUrl)(lambdaRequestDecoder)
-        context = createContext(request)
+        request <- client.get(runtimeUrl)(LambdaRequest.fromResponse) // unsure how to deal with bad response
+        context <- createContext(request)
         result <- handler(request.body, context)
-        invocationUrl = getInvocationUrl(LambdaEnvironmentVariables.AWS_LAMBDA_RUNTIME_API, request.id)
-        _ <- client.successful(POST(result, invocationUrl)(jsonEncoder))
+        invocationUrl = getInvocationUrl(LambdaReservedEnvVars.AWS_LAMBDA_RUNTIME_API, request.id)
+        _ <- client.successful(POST(result, invocationUrl))
       } yield ()).foreverM
     }
-  }.as(()) //needs error handling 
+  }.as(()) // how to handle Outcome error and cancellation?
   
-  def createContext[F[_]](request: LambdaRequest)(implicit F: Concurrent[F]): Context[F] =
+  private def createContext[F[_]](request: LambdaRequest)(implicit F: Sync[F]): F[Context[F]] = for {
+    functionName <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_FUNCTION_NAME)
+    functionVersion <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_FUNCTION_VERSION)
+    functionMemorySize <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toInt)
+    logGroupName <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_LOG_GROUP_NAME)
+    logStreamName <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_LOG_STREAM_NAME)
+  } yield {
     new Context[F](
-      LambdaEnvironmentVariables.AWS_LAMBDA_FUNCTION_NAME,
-      LambdaEnvironmentVariables.AWS_LAMBDA_FUNCTION_VERSION,
+      functionName,
+      functionVersion,
       request.invokedFunctionArn,
-      LambdaEnvironmentVariables.AWS_LAMBDA_FUNCTION_MEMORY_SIZE,
+      functionMemorySize,
       request.id,
-      LambdaEnvironmentVariables.AWS_LAMBDA_LOG_GROUP_NAME,
-      LambdaEnvironmentVariables.AWS_LAMBDA_LOG_STREAM_NAME,
+      logGroupName,
+      logStreamName,
       None, //need
       None, //need
-      F.pure(FiniteDuration(request.deadlineTimeInMs.toEpochMilli, TimeUnit.MILLISECONDS)) // most likely wrong
+      F.delay(FiniteDuration(request.deadlineTimeInMs.toEpochMilli - Instant.now.toEpochMilli, TimeUnit.MILLISECONDS))
     )
+  }
 
-  val LAMBDA_VERSION_DATE = "2018-06-01" //is this date correct?
-  def getRuntimeUrl(api: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/next") //should be uri
-  def getInvocationUrl(api: String, id: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$id/response")
-  def LAMBDA_INIT_ERROR_URL_TEMPLATE = Uri.unsafeFromString(s"http://{0}/{1}/runtime/init/error")
-  def LAMBDA_ERROR_URL_TEMPLATE = Uri.unsafeFromString(s"http://{0}/{1}/runtime/invocation/{2}/error")
+  private def getRuntimeUrl(api: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/next") //need to be unsafe?
+
+  private def getInvocationUrl(api: String, id: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$id/response")
+
+  private def getInitErrorUrl(api: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/init/error")
+
+  private def getInvocationErrorUrl(api: String, errorType: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$errorType/error")
+
+  private def envVar[F[_]](envVar: String)(implicit F: Sync[F]): F[String] = {
+    F.delay(sys.env(envVar))
+  }
 }
