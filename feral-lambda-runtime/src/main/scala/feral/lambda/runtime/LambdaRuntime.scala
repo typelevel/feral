@@ -23,7 +23,7 @@ package runtime
 
 import cats.Applicative
 import cats.syntax.all._
-import cats.effect.kernel.{Concurrent, Resource, Sync}
+import cats.effect.kernel.{Resource, Sync}
 import io.circe.Json
 import org.http4s.Method.POST
 import org.http4s.client.Client
@@ -42,7 +42,7 @@ object FeralLambdaRuntime {
 
   val LAMBDA_VERSION_DATE = "2018-06-01"
 
-  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F]): Resource[F, Unit] = { //already have handler function???
+  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F]): Resource[F, Unit] = {
     F.background {
       val runtimeUrl = getRuntimeUrl(LambdaReservedEnvVars.AWS_LAMBDA_RUNTIME_API)
       implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
@@ -83,8 +83,10 @@ object FeralLambdaRuntime {
 
   private def getInvocationUrl(api: String, id: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$id/response")
 
+  // Called if initialization of handler function fails, seems impossible here since handler function is provided as constructor?
   private def getInitErrorUrl(api: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/init/error")
 
+  // from docs, called "if the function returns an error or the runtime encounters an error", will be used after error handling implemented
   private def getInvocationErrorUrl(api: String, errorType: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$errorType/error")
 
   private def envVar[F[_]](envVar: String)(implicit F: Sync[F]): F[String] = {
