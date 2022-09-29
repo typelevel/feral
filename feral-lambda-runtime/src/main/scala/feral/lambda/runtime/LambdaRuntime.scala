@@ -14,56 +14,54 @@
  * limitations under the License.
  */
 
-// TODO implement a runtime here
-// it should retrieve incoming events and handle them with the handler
-// it will run on a background fiber, whose lifecycle is controlled by the resource
-
 package feral.lambda
 package runtime
 
-import cats.Applicative
 import cats.syntax.all._
-import cats.effect.kernel.{Resource, Sync}
+import cats.effect.kernel.Sync
 import io.circe.Json
 import org.http4s.Method.POST
 import org.http4s.client.Client
 import org.http4s.circe.jsonEncoderWithPrinter
-
 import scala.concurrent.duration.FiniteDuration
 import java.util.concurrent.TimeUnit
 import org.http4s.{EntityEncoder, Uri}
 import org.http4s.client.dsl.Http4sClientDsl
 import io.circe._
-
-import java.time.Instant //safe to use in native?
 import cats.effect.kernel.Async
+import cats.effect.std.Env
+import org.http4s.implicits.http4sLiteralsSyntax
+
+// TODO apply function error handling
+  // How to run global or static code from handler?
+// TODO Custom AWS header models
+// TODO CognitoIdentity/ClientContext JSON encoding
 
 object FeralLambdaRuntime {
 
-  val LAMBDA_VERSION_DATE = "2018-06-01"
+  final val ApiVersion = "2018-06-01"
 
-  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F]): Resource[F, Unit] = {
-    F.background {
-      val runtimeUrl = getRuntimeUrl(LambdaReservedEnvVars.AWS_LAMBDA_RUNTIME_API)
-      implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
-      val http4sClientDsl = new Http4sClientDsl[F] {}
-      import http4sClientDsl._
-      (for {
-        request <- client.get(runtimeUrl)(LambdaRequest.fromResponse) // unsure how to deal with bad response
-        context <- createContext(request)
-        result <- handler(request.body, context)
-        invocationUrl = getInvocationUrl(LambdaReservedEnvVars.AWS_LAMBDA_RUNTIME_API, request.id)
-        _ <- client.successful(POST(result, invocationUrl))
-      } yield ()).foreverM
-    }
-  }.as(()) // how to handle Outcome error and cancellation?
+  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F]): F[Unit] = {
+    implicit val lambdaEnv: LambdaRuntimeEnv[F] = LambdaRuntimeEnv(Env.make) // maybe better way
+    implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
+    val http4sClientDsl = new Http4sClientDsl[F] {}
+    import http4sClientDsl._
+    (for {
+      runtimeApi <- lambdaEnv.lambdaRuntimeApi
+      request <- client.get(getRuntimeUrl(runtimeApi))(LambdaRequest.fromResponse)
+      context <- createContext(request)
+      result <- handler(request.body, context)
+      invocationUrl = getInvocationUrl(LambdaRuntimeEnv.AWS_LAMBDA_RUNTIME_API, request.id)
+      _ <- client.successful(POST(result, invocationUrl))
+    } yield ()).foreverM
+  }.void
   
-  private def createContext[F[_]](request: LambdaRequest)(implicit F: Sync[F]): F[Context[F]] = for {
-    functionName <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_FUNCTION_NAME)
-    functionVersion <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_FUNCTION_VERSION)
-    functionMemorySize <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toInt)
-    logGroupName <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_LOG_GROUP_NAME)
-    logStreamName <- envVar(LambdaReservedEnvVars.AWS_LAMBDA_LOG_STREAM_NAME)
+  private def createContext[F[_]](request: LambdaRequest)(implicit F: Sync[F], lambdaEnv: LambdaRuntimeEnv[F]): F[Context[F]] = for {
+    functionName <- lambdaEnv.lambdaFunctionName
+    functionVersion <- lambdaEnv.lambdaFunctionVersion
+    functionMemorySize <- lambdaEnv.lambdaFunctionMemorySize
+    logGroupName <- lambdaEnv.lambdaLogGroupName
+    logStreamName <- lambdaEnv.lambdaLogStreamName
   } yield {
     new Context[F](
       functionName,
@@ -73,23 +71,18 @@ object FeralLambdaRuntime {
       request.id,
       logGroupName,
       logStreamName,
-      None, //need
-      None, //need
-      F.delay(FiniteDuration(request.deadlineTimeInMs.toEpochMilli - Instant.now.toEpochMilli, TimeUnit.MILLISECONDS))
+      None,
+      None,
+      F.realTimeInstant.map(curTime => FiniteDuration(request.deadlineTimeInMs.toEpochMilli - curTime.toEpochMilli, TimeUnit.MILLISECONDS))/// how to provide test version?, maybe separate Clock parameter?
     )
   }
 
-  private def getRuntimeUrl(api: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/next") //need to be unsafe?
+  private def getRuntimeUrl(api: String) = uri"http://$api/$ApiVersion/runtime/invocation/next"
 
-  private def getInvocationUrl(api: String, id: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$id/response")
+  private def getInvocationUrl(api: String, id: String) = uri"http://$api/$ApiVersion/runtime/invocation/$id/response"
 
-  // Called if initialization of handler function fails, seems impossible here since handler function is provided as constructor?
-  private def getInitErrorUrl(api: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/init/error")
+  private def getInitErrorUrl(api: String) = uri"http://$api/$ApiVersion/runtime/init/error"
 
-  // from docs, called "if the function returns an error or the runtime encounters an error", will be used after error handling implemented
-  private def getInvocationErrorUrl(api: String, errorType: String) = Uri.unsafeFromString(s"http://$api/$LAMBDA_VERSION_DATE/runtime/invocation/$errorType/error")
+  private def getInvocationErrorUrl(api: String, errorType: String) = uri"http://$api/$ApiVersion/runtime/invocation/$errorType/error"
 
-  private def envVar[F[_]](envVar: String)(implicit F: Sync[F]): F[String] = {
-    F.delay(sys.env(envVar))
-  }
 }

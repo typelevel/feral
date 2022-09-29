@@ -56,7 +56,7 @@ val Scala213 = "2.13.9"
 val Scala3 = "3.1.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.3.14"
+val catsEffectVersion = "3.4.0-RC1"
 val circeVersion = "0.14.3"
 val fs2Version = "3.3.0"
 val http4sVersion = "0.23.16"
@@ -121,8 +121,9 @@ lazy val lambdaRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("feral-lambda-runtime"))
   .settings(
-    name := "feral-lambda-kernel",
+    name := "feral-lambda-runtime",
     libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion
