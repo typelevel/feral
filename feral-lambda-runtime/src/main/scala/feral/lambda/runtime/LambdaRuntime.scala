@@ -18,50 +18,58 @@ package feral.lambda
 package runtime
 
 import cats.syntax.all._
-import cats.effect.kernel.Sync
+import cats.effect.syntax.all._
+import cats.effect.kernel.{Async, Concurrent, Sync}
 import io.circe.Json
 import org.http4s.Method.POST
 import org.http4s.client.Client
-import org.http4s.circe.jsonEncoderWithPrinter
+import org.http4s.circe._
+
 import scala.concurrent.duration.FiniteDuration
 import java.util.concurrent.TimeUnit
-import org.http4s.{EntityEncoder, Uri}
+import org.http4s.{EntityEncoder, Request, Uri}
 import org.http4s.client.dsl.Http4sClientDsl
 import io.circe._
-import cats.effect.kernel.Async
+import cats.effect.kernel.Outcome._
 import cats.effect.std.Env
+import io.circe.syntax.EncoderOps
 import org.http4s.implicits.http4sLiteralsSyntax
-
-// TODO apply function error handling
-  // How to run global or static code from handler?
-// TODO Custom AWS header models
-// TODO CognitoIdentity/ClientContext JSON encoding
+import scala.concurrent.CancellationException
 
 object FeralLambdaRuntime {
 
   final val ApiVersion = "2018-06-01"
 
-  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F]): F[Unit] = {
-    implicit val lambdaEnv: LambdaRuntimeEnv[F] = LambdaRuntimeEnv(Env.make) // maybe better way
+  // TODO find out where to use initErrorUrl
+  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
-    val http4sClientDsl = new Http4sClientDsl[F] {}
-    import http4sClientDsl._
     (for {
-      runtimeApi <- lambdaEnv.lambdaRuntimeApi
+      runtimeApi <- env.lambdaRuntimeApi
       request <- client.get(getRuntimeUrl(runtimeApi))(LambdaRequest.fromResponse)
       context <- createContext(request)
-      result <- handler(request.body, context)
-      invocationUrl = getInvocationUrl(LambdaRuntimeEnv.AWS_LAMBDA_RUNTIME_API, request.id)
-      _ <- client.successful(POST(result, invocationUrl))
+      handlerFiber <- handler(request.body, context).start
+      outcome <- handlerFiber.join
+      invocationErrorUrl = getInvocationErrorUrl(runtimeApi, request.id)
+      result <- outcome match {
+        case Succeeded(result: F[Json]) => result
+        case Errored(e: Throwable) =>
+          val error = LambdaErrorRequest(e.getMessage, "exception", List())
+          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.raiseError(e)
+        case Canceled() =>
+          val error = LambdaErrorRequest("cancelled", "cancellation", List()) // TODO need to think about better messages
+          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.raiseError(new CancellationException) // is this correct behaviour
+      }
+      invocationUrl = getInvocationUrl(runtimeApi, request.id)
+      _ <- client.expect[Unit](Request(POST, invocationUrl).withEntity(result))
     } yield ()).foreverM
-  }.void
+  }
   
-  private def createContext[F[_]](request: LambdaRequest)(implicit F: Sync[F], lambdaEnv: LambdaRuntimeEnv[F]): F[Context[F]] = for {
-    functionName <- lambdaEnv.lambdaFunctionName
-    functionVersion <- lambdaEnv.lambdaFunctionVersion
-    functionMemorySize <- lambdaEnv.lambdaFunctionMemorySize
-    logGroupName <- lambdaEnv.lambdaLogGroupName
-    logStreamName <- lambdaEnv.lambdaLogStreamName
+  private def createContext[F[_]](request: LambdaRequest)(implicit F: Sync[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
+    functionName <- env.lambdaFunctionName
+    functionVersion <- env.lambdaFunctionVersion
+    functionMemorySize <- env.lambdaFunctionMemorySize
+    logGroupName <- env.lambdaLogGroupName
+    logStreamName <- env.lambdaLogStreamName
   } yield {
     new Context[F](
       functionName,
@@ -71,18 +79,18 @@ object FeralLambdaRuntime {
       request.id,
       logGroupName,
       logStreamName,
-      None,
-      None,
-      F.realTimeInstant.map(curTime => FiniteDuration(request.deadlineTimeInMs.toEpochMilli - curTime.toEpochMilli, TimeUnit.MILLISECONDS))/// how to provide test version?, maybe separate Clock parameter?
+      request.identity,
+      request.clientContext,
+      F.realTime.map(curTime => request.deadlineTimeInMs - curTime)
     )
   }
 
-  private def getRuntimeUrl(api: String) = uri"http://$api/$ApiVersion/runtime/invocation/next"
+  private def getRuntimeUrl(api: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/invocation/next")
 
-  private def getInvocationUrl(api: String, id: String) = uri"http://$api/$ApiVersion/runtime/invocation/$id/response"
+  private def getInvocationUrl(api: String, id: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/invocation/$id/response")
 
-  private def getInitErrorUrl(api: String) = uri"http://$api/$ApiVersion/runtime/init/error"
+  private def getInitErrorUrl(api: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/init/error")
 
-  private def getInvocationErrorUrl(api: String, errorType: String) = uri"http://$api/$ApiVersion/runtime/invocation/$errorType/error"
+  private def getInvocationErrorUrl(api: String, requestId: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/invocation/$requestId/error")
 
 }
