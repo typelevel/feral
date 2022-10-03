@@ -34,7 +34,7 @@ object LambdaRequest {
             deadlineTimeInMs <- F.fromOption(response.headers.get(CIString(deadlineTimeHeader)), new NoSuchElementException(deadlineTimeHeader)).map(_.head.value.toLong)
             identity <- F.pure(response.headers.get(CIString(cognitoIdentityHeader)).flatMap(_.head.value.asJson.as[CognitoIdentity].toOption))
             clientContext <- F.pure(response.headers.get(CIString(clientContextHeader)).flatMap(_.head.value.asJson.as[ClientContext].toOption))
-            body <- F.rethrow(jsonDecoder.decode(response, strict = false).value) // basically a reimplementation of response.as[Json] from dsl
+            body <- response.as[Json]
         } yield {
             new LambdaRequest(FiniteDuration.apply(deadlineTimeInMs, TimeUnit.MILLISECONDS), id, invokedFunctionArn, identity, clientContext, body)
         }

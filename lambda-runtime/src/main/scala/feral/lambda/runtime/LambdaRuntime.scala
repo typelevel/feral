@@ -17,6 +17,9 @@
 package feral.lambda
 package runtime
 
+import cats.{ApplicativeError, MonadThrow}
+import cats.data.OptionT
+import cats.effect.Temporal
 import cats.syntax.all._
 import cats.effect.syntax.all._
 import cats.effect.kernel.{Async, Concurrent, Sync}
@@ -34,6 +37,7 @@ import cats.effect.kernel.Outcome._
 import cats.effect.std.Env
 import io.circe.syntax.EncoderOps
 import org.http4s.implicits.http4sLiteralsSyntax
+
 import scala.concurrent.CancellationException
 
 object FeralLambdaRuntime {
@@ -41,30 +45,30 @@ object FeralLambdaRuntime {
   final val ApiVersion = "2018-06-01"
 
   // TODO find out where to use initErrorUrl
-  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Async[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
+  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     (for {
       runtimeApi <- env.lambdaRuntimeApi
-      request <- client.get(getRuntimeUrl(runtimeApi))(LambdaRequest.fromResponse)
+      runtimeUrl <- getRuntimeUrl(runtimeApi)
+      request <- client.get(runtimeUrl)(LambdaRequest.fromResponse)
       context <- createContext(request)
+      invocationErrorUrl <- getInvocationErrorUrl(runtimeApi, request.id)
       handlerFiber <- handler(request.body, context).start
-      outcome <- handlerFiber.join
-      invocationErrorUrl = getInvocationErrorUrl(runtimeApi, request.id)
-      result <- outcome match {
-        case Succeeded(result: F[Json]) => result
+      result <- handlerFiber.join.flatMap {
+        case Succeeded(result: F[Json]) => Option(result).sequence
         case Errored(e: Throwable) =>
           val error = LambdaErrorRequest(e.getMessage, "exception", List())
-          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.raiseError(e)
+          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.pure(None)
         case Canceled() =>
           val error = LambdaErrorRequest("cancelled", "cancellation", List()) // TODO need to think about better messages
-          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.raiseError(new CancellationException) // is this correct behaviour
+          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.pure(None)
       }
-      invocationUrl = getInvocationUrl(runtimeApi, request.id)
-      _ <- client.expect[Unit](Request(POST, invocationUrl).withEntity(result))
+      invocationUrl <- getInvocationUrl(runtimeApi, request.id)
+      _ <- result.map(body => client.expect[Unit](Request(POST, invocationUrl).withEntity(body))).sequence
     } yield ()).foreverM
   }
   
-  private def createContext[F[_]](request: LambdaRequest)(implicit F: Sync[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
+  private def createContext[F[_]](request: LambdaRequest)(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
     functionName <- env.lambdaFunctionName
     functionVersion <- env.lambdaFunctionVersion
     functionMemorySize <- env.lambdaFunctionMemorySize
@@ -85,12 +89,12 @@ object FeralLambdaRuntime {
     )
   }
 
-  private def getRuntimeUrl(api: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/invocation/next")
+  private def getRuntimeUrl[F[_]: MonadThrow](api: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/next").liftTo[F]
 
-  private def getInvocationUrl(api: String, id: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/invocation/$id/response")
+  private def getInvocationUrl[F[_]: MonadThrow](api: String, id: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/$id/response").liftTo[F]
 
-  private def getInitErrorUrl(api: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/init/error")
+  private def getInitErrorUrl[F[_]: MonadThrow](api: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/init/error").liftTo[F]
 
-  private def getInvocationErrorUrl(api: String, requestId: String) = Uri.unsafeFromString("http://$api/$ApiVersion/runtime/invocation/$requestId/error")
+  private def getInvocationErrorUrl[F[_]: MonadThrow](api: String, requestId: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/$requestId/error").liftTo[F]
 
 }

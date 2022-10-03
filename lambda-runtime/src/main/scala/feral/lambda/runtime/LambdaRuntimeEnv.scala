@@ -41,35 +41,35 @@ object LambdaRuntimeEnv {
   def apply[F[_]](implicit lre: LambdaRuntimeEnv[F]): LambdaRuntimeEnv[F] = lre
 
   implicit def forEnv[F[_]: MonadThrow](implicit env: Env[F]): LambdaRuntimeEnv[F] = new LambdaRuntimeEnv[F] {
-    override def handler: F[String] = getOrThrow(HANDLER)
+    override def handler: F[String] = getOrRaise(HANDLER)
 
-    override def region: F[String] = getOrThrow(AWS_REGION)
+    override def region: F[String] = getOrRaise(AWS_REGION)
 
-    override def executionEnv: F[String] = getOrThrow(AWS_EXECUTION_ENV)
+    override def executionEnv: F[String] = getOrRaise(AWS_EXECUTION_ENV)
 
-    override def lambdaFunctionName: F[String] = getOrThrow(AWS_LAMBDA_FUNCTION_NAME)
+    override def lambdaFunctionName: F[String] = getOrRaise(AWS_LAMBDA_FUNCTION_NAME)
 
-    override def lambdaFunctionMemorySize: F[Int] = getOrThrow(AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toInt) // TODO better way?
+    override def lambdaFunctionMemorySize: F[Int] = getOrRaise(AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toInt) // TODO better way?
 
-    override def lambdaFunctionVersion: F[String] = getOrThrow(AWS_LAMBDA_FUNCTION_VERSION)
+    override def lambdaFunctionVersion: F[String] = getOrRaise(AWS_LAMBDA_FUNCTION_VERSION)
 
-    override def lambdaLogGroupName: F[String] = getOrThrow(AWS_LAMBDA_LOG_GROUP_NAME)
+    override def lambdaLogGroupName: F[String] = getOrRaise(AWS_LAMBDA_LOG_GROUP_NAME)
 
-    override def lambdaLogStreamName: F[String] = getOrThrow(AWS_LAMBDA_LOG_STREAM_NAME)
+    override def lambdaLogStreamName: F[String] = getOrRaise(AWS_LAMBDA_LOG_STREAM_NAME)
 
-    override def accessKeyId: F[String] = getOrThrow(AWS_ACCESS_KEY_ID)
+    override def accessKeyId: F[String] = getOrRaise(AWS_ACCESS_KEY_ID)
 
-    override def secretAccessKey: F[String] = getOrThrow(AWS_SECRET_ACCESS_KEY)
+    override def secretAccessKey: F[String] = getOrRaise(AWS_SECRET_ACCESS_KEY)
 
-    override def lambdaRuntimeApi: F[String] = getOrThrow(AWS_LAMBDA_RUNTIME_API)
+    override def lambdaRuntimeApi: F[String] = getOrRaise(AWS_LAMBDA_RUNTIME_API)
 
-    override def lambdaTaskRoot: F[String] = getOrThrow(LAMBDA_TASK_ROOT)
+    override def lambdaTaskRoot: F[String] = getOrRaise(LAMBDA_TASK_ROOT)
 
-    override def lambdaRuntimeDir: F[String] = getOrThrow(LAMBDA_RUNTIME_DIR)
+    override def lambdaRuntimeDir: F[String] = getOrRaise(LAMBDA_RUNTIME_DIR)
 
-    override def timezone: F[String] = getOrThrow(TZ)
+    override def timezone: F[String] = getOrRaise(TZ)
 
-    private[this] def getOrThrow(envName: String): F[String] =
+    private[this] def getOrRaise(envName: String): F[String] =
       env.get(envName).flatMap(_.liftTo(new NoSuchElementException(envName)))
   }
 }

@@ -119,7 +119,7 @@ lazy val lambdaKernel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val lambdaRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
-  .in(file("feral-lambda-runtime"))
+  .in(file("lambda-runtime"))
   .settings(
     name := "feral-lambda-runtime",
     libraryDependencies ++= Seq(
