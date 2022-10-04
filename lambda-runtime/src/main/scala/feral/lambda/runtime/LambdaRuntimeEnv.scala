@@ -49,7 +49,7 @@ object LambdaRuntimeEnv {
 
     override def lambdaFunctionName: F[String] = getOrRaise(AWS_LAMBDA_FUNCTION_NAME)
 
-    override def lambdaFunctionMemorySize: F[Int] = getOrRaise(AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toInt) // TODO better way?
+    override def lambdaFunctionMemorySize: F[Int] = getOrRaise(AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toIntOption.liftTo(new NumberFormatException(_)))
 
     override def lambdaFunctionVersion: F[String] = getOrRaise(AWS_LAMBDA_FUNCTION_VERSION)
 

@@ -44,13 +44,13 @@ object FeralLambdaRuntime {
 
   final val ApiVersion = "2018-06-01"
 
-  // TODO find out where to use initErrorUrl
+  // TODO refactor into setup and per-request phases, need to find boundary between two phases
   def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     (for {
       runtimeApi <- env.lambdaRuntimeApi
-      runtimeUrl <- getRuntimeUrl(runtimeApi)
-      request <- client.get(runtimeUrl)(LambdaRequest.fromResponse)
+      nextInvocationUrl <- getNextInvocationUrl(runtimeApi)
+      request <- client.get(nextInvocationUrl)(LambdaRequest.fromResponse)
       context <- createContext(request)
       invocationErrorUrl <- getInvocationErrorUrl(runtimeApi, request.id)
       handlerFiber <- handler(request.body, context).start
@@ -63,10 +63,14 @@ object FeralLambdaRuntime {
           val error = LambdaErrorRequest("cancelled", "cancellation", List()) // TODO need to think about better messages
           client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> F.pure(None)
       }
-      invocationUrl <- getInvocationUrl(runtimeApi, request.id)
-      _ <- result.map(body => client.expect[Unit](Request(POST, invocationUrl).withEntity(body))).sequence
+      invocationResponseUrl <- getInvocationResponseUrl(runtimeApi, request.id)
+      _ <- result.map(body => client.expect[Unit](Request(POST, invocationResponseUrl).withEntity(body))).sequence
     } yield ()).foreverM
   }
+
+  //private def initializationPhase[F[_]]()(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = ???
+
+  //private def taskProcessingPhase[F[_]]()(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = ???
   
   private def createContext[F[_]](request: LambdaRequest)(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
     functionName <- env.lambdaFunctionName
@@ -89,9 +93,9 @@ object FeralLambdaRuntime {
     )
   }
 
-  private def getRuntimeUrl[F[_]: MonadThrow](api: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/next").liftTo[F]
+  private def getNextInvocationUrl[F[_]: MonadThrow](api: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/next").liftTo[F]
 
-  private def getInvocationUrl[F[_]: MonadThrow](api: String, id: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/$id/response").liftTo[F]
+  private def getInvocationResponseUrl[F[_]: MonadThrow](api: String, id: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/invocation/$id/response").liftTo[F]
 
   private def getInitErrorUrl[F[_]: MonadThrow](api: String): F[Uri] = Uri.fromString(s"http://$api/$ApiVersion/runtime/init/error").liftTo[F]
 
