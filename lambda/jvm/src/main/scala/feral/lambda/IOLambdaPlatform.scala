@@ -29,7 +29,7 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
-    extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
+    extends lambdaRuntime.RequestStreamHandler { this: IOLambdaSetup[Event, Result] =>
 
   final def handleRequest(
       input: InputStream,
@@ -38,7 +38,6 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
     Resource
       .eval {
         for {
-          lambda <- setupMemo
           event <- fs2
             .io
             .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
@@ -48,7 +47,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
             .compile
             .lastOrError
           context <- IO(Context.fromJava[IO](context))
-          _ <- OptionT(lambda(event, context)).foreachF { result =>
+          _ <- OptionT(setupAndRun(event, context)).foreachF { result =>
             Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
               IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
             }

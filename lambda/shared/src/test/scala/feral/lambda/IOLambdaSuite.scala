@@ -34,11 +34,10 @@ class IOLambdaSuite extends CatsEffectSuite {
             .as(_.event.map(Some(_)) <* invokeCounter.getAndUpdate(_ + 1))
         }
       }
-      handler <- lambda.setupMemo
       _ <- ('0' to 'z')
         .map(_.toString)
         .toList
-        .traverse(x => handler(x, mockContext).assertEquals(Some(x)))
+        .traverse(x => lambda.setupAndRun(x, mockContext).assertEquals(Some(x)))
       _ <- allocationCounter.get.assertEquals(1)
       _ <- invokeCounter.get.assertEquals(75)
     } yield ()
