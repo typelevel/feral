@@ -22,12 +22,11 @@ import cats.data.OptionT
 import cats.effect.Temporal
 import cats.syntax.all._
 import cats.effect.syntax.all._
-import cats.effect.kernel.{Async, Concurrent, Sync}
+import cats.effect.kernel.{Async, Concurrent, Resource, Sync}
 import io.circe.Json
 import org.http4s.Method.POST
 import org.http4s.client.Client
 import org.http4s.circe._
-
 import scala.concurrent.duration.FiniteDuration
 import java.util.concurrent.TimeUnit
 import org.http4s.{EntityEncoder, Request, Uri}
@@ -44,16 +43,17 @@ object FeralLambdaRuntime {
 
   final val ApiVersion = "2018-06-01"
 
-  // TODO refactor into setup and per-request phases, need to find boundary between two phases
-  def apply[F[_]](client: Client[F])(handler: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
+  def apply[F[_]](client: Client[F])(handler: Resource[F, (Json, Context[F]) => F[Json]])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] =
+    handler.use(handler => env.lambdaRuntimeApi.flatMap(api => processEvents(api, client, handler)))
+
+  private def processEvents[F[_]](runtimeApi: String, client: Client[F], handlerFun: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     (for {
-      runtimeApi <- env.lambdaRuntimeApi
       nextInvocationUrl <- getNextInvocationUrl(runtimeApi)
       request <- client.get(nextInvocationUrl)(LambdaRequest.fromResponse)
       context <- createContext(request)
       invocationErrorUrl <- getInvocationErrorUrl(runtimeApi, request.id)
-      handlerFiber <- handler(request.body, context).start
+      handlerFiber <- handlerFun(request.body, context).start
       result <- handlerFiber.join.flatMap {
         case Succeeded(result: F[Json]) => Option(result).sequence
         case Errored(e: Throwable) =>
@@ -67,10 +67,6 @@ object FeralLambdaRuntime {
       _ <- result.map(body => client.expect[Unit](Request(POST, invocationResponseUrl).withEntity(body))).sequence
     } yield ()).foreverM
   }
-
-  //private def initializationPhase[F[_]]()(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = ???
-
-  //private def taskProcessingPhase[F[_]]()(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = ???
   
   private def createContext[F[_]](request: LambdaRequest)(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
     functionName <- env.lambdaFunctionName
