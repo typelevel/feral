@@ -8,6 +8,8 @@ class `Lambda-Runtime-Invoked-Function-Arn`(val value: String)
 
 object `Lambda-Runtime-Invoked-Function-Arn`{
 
+  def apply(value: String) = new `Lambda-Runtime-Invoked-Function-Arn`(value)
+
   val name: String = "Lambda-Runtime-Invoked-Function-Arn"
 
   def parse(s: String): ParseResult[`Lambda-Runtime-Invoked-Function-Arn`] =

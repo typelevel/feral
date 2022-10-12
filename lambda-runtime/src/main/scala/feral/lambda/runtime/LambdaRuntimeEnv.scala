@@ -6,20 +6,20 @@ import cats.effect.std.Env
 import cats.syntax.all._
 
 trait LambdaRuntimeEnv[F[_]] {
-  def handler: F[String]
-  def region: F[String]
-  def executionEnv: F[String]
+  //def handler: F[String]
+  //def region: F[String]
+  //def executionEnv: F[String]
   def lambdaFunctionName: F[String]
   def lambdaFunctionMemorySize: F[Int]
   def lambdaFunctionVersion: F[String]
   def lambdaLogGroupName: F[String]
   def lambdaLogStreamName: F[String]
-  def accessKeyId: F[String]
-  def secretAccessKey: F[String]
+  //def accessKeyId: F[String]
+  //def secretAccessKey: F[String]
   def lambdaRuntimeApi: F[String]
-  def lambdaTaskRoot: F[String]
-  def lambdaRuntimeDir: F[String]
-  def timezone: F[String]
+  //def lambdaTaskRoot: F[String]
+  //def lambdaRuntimeDir: F[String]
+  //def timezone: F[String]
 }
 
 object LambdaRuntimeEnv {
@@ -41,15 +41,15 @@ object LambdaRuntimeEnv {
   def apply[F[_]](implicit lre: LambdaRuntimeEnv[F]): LambdaRuntimeEnv[F] = lre
 
   implicit def forEnv[F[_]: MonadThrow](implicit env: Env[F]): LambdaRuntimeEnv[F] = new LambdaRuntimeEnv[F] {
-    override def handler: F[String] = getOrRaise(HANDLER)
+    //override def handler: F[String] = getOrRaise(HANDLER)
 
-    override def region: F[String] = getOrRaise(AWS_REGION)
+    //override def region: F[String] = getOrRaise(AWS_REGION)
 
-    override def executionEnv: F[String] = getOrRaise(AWS_EXECUTION_ENV)
+    //override def executionEnv: F[String] = getOrRaise(AWS_EXECUTION_ENV)
 
     override def lambdaFunctionName: F[String] = getOrRaise(AWS_LAMBDA_FUNCTION_NAME)
 
-    override def lambdaFunctionMemorySize: F[Int] = getOrRaise(AWS_LAMBDA_FUNCTION_MEMORY_SIZE).map(_.toIntOption.liftTo(new NumberFormatException(_)))
+    override def lambdaFunctionMemorySize: F[Int] = getOrRaise(AWS_LAMBDA_FUNCTION_MEMORY_SIZE).flatMap(value => value.toIntOption.liftTo(new NumberFormatException(value)))
 
     override def lambdaFunctionVersion: F[String] = getOrRaise(AWS_LAMBDA_FUNCTION_VERSION)
 
@@ -57,17 +57,17 @@ object LambdaRuntimeEnv {
 
     override def lambdaLogStreamName: F[String] = getOrRaise(AWS_LAMBDA_LOG_STREAM_NAME)
 
-    override def accessKeyId: F[String] = getOrRaise(AWS_ACCESS_KEY_ID)
+    //override def accessKeyId: F[String] = getOrRaise(AWS_ACCESS_KEY_ID)
 
-    override def secretAccessKey: F[String] = getOrRaise(AWS_SECRET_ACCESS_KEY)
+    //override def secretAccessKey: F[String] = getOrRaise(AWS_SECRET_ACCESS_KEY)
 
     override def lambdaRuntimeApi: F[String] = getOrRaise(AWS_LAMBDA_RUNTIME_API)
 
-    override def lambdaTaskRoot: F[String] = getOrRaise(LAMBDA_TASK_ROOT)
+    //override def lambdaTaskRoot: F[String] = getOrRaise(LAMBDA_TASK_ROOT)
 
-    override def lambdaRuntimeDir: F[String] = getOrRaise(LAMBDA_RUNTIME_DIR)
+    //override def lambdaRuntimeDir: F[String] = getOrRaise(LAMBDA_RUNTIME_DIR)
 
-    override def timezone: F[String] = getOrRaise(TZ)
+    //override def timezone: F[String] = getOrRaise(TZ)
 
     private[this] def getOrRaise(envName: String): F[String] =
       env.get(envName).flatMap(_.liftTo(new NoSuchElementException(envName)))

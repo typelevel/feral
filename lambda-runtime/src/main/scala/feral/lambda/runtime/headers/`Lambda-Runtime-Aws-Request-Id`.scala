@@ -8,6 +8,8 @@ class `Lambda-Runtime-Aws-Request-Id`(val value: String)
 
 object `Lambda-Runtime-Aws-Request-Id` {
 
+  def apply(value: String) = new `Lambda-Runtime-Aws-Request-Id`(value)
+
   val name: String = "Lambda-Runtime-Aws-Request-Id"
 
   def parse(s: String): ParseResult[`Lambda-Runtime-Aws-Request-Id`] =

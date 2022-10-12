@@ -8,6 +8,8 @@ class `Lambda-Runtime-Deadline-Ms`(val value: Long)
 
 object `Lambda-Runtime-Deadline-Ms` {
 
+  def apply(value: Long) = new `Lambda-Runtime-Deadline-Ms`(value)
+
   val name: String = "Lambda-Runtime-Deadline-Ms"
 
   def parse(s: String): ParseResult[`Lambda-Runtime-Deadline-Ms`] =
