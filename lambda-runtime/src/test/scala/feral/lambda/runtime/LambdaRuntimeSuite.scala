@@ -2,7 +2,7 @@ package feral.lambda.runtime
 
 import cats.effect.IO
 import feral.lambda.{ClientContext, ClientContextClient, ClientContextEnv, CognitoIdentity, Context}
-import io.circe.{Json, JsonObject, Printer}
+import io.circe.{Decoder, Json, JsonObject, Printer}
 import cats.syntax.all._
 import cats.effect._
 import cats.effect.syntax.all._
@@ -48,9 +48,9 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
 
   def defaultRoutes(invocationQuota: Deferred[IO, Unit]): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / "next" =>
-      (for {
-        firstInvoc <- invocationQuota.complete() // used so response is only returned on first request to prevent infinite loop of runtime
-        _ <- IO.raiseWhen(!firstInvoc)(new Exception("not first invocation"))
+      for {
+        firstInvoc <- invocationQuota.complete()
+        _ <- if (firstInvoc) IO.unit else IO.never // infinite loop if not first request, assumed behaviour of actual next invocation endpoint?
         headers = Headers(
           `Lambda-Runtime-Aws-Request-Id`("testId"),
           `Lambda-Runtime-Deadline-Ms`(20),
@@ -76,7 +76,7 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
         )
         body = Json.obj("eventField" -> "test".asJson)
         resp <- Ok(body, headers)
-      } yield resp).handleErrorWith(_ => NotFound("sdfsdf")) // work in progress, need to figure out how lambda knows how to stop running
+      } yield resp
     case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" => Ok()
     case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "error" => Ok()
   }
@@ -86,13 +86,14 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
     for {
       invocationQuota <- Deferred[IO, Unit]
       eventualInvocationId <- Deferred[IO, String]
-      client = Client.fromHttpApp[IO]((defaultRoutes(invocationQuota) <+> HttpRoutes.of[IO] {
+      client = Client.fromHttpApp[IO]((HttpRoutes.of[IO] {
         case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" =>
           eventualInvocationId.complete(id) >> Ok()
-      }).orNotFound)
+      } <+> defaultRoutes(invocationQuota)).orNotFound)
       handler = (_: Json, _: Context[IO]) => JsonObject.empty.asJson.pure[IO]
-      _ <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO]))
+      runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       invocationId <- eventualInvocationId.get.timeout(2.seconds)
+      _ <- runtimeFiber.cancel
     } yield assert(invocationId == "testId")
   }
 
@@ -103,9 +104,10 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
       eventualInvocation <- Deferred[IO, (Json, Context[IO])]
       client = Client.fromHttpApp[IO](defaultRoutes(invocationQuota).orNotFound)
       handler = (json: Json, context: Context[IO]) => eventualInvocation.complete((json, context)) >> JsonObject.empty.asJson.pure[IO]
-      _ <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO]))
+      runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       (jsonEvent, context) <- eventualInvocation.get.timeout(2.seconds)
       expectedJson = Json.obj("eventField" -> "test".asJson)
+      _ <- runtimeFiber.cancel
     } yield {
       assert(jsonEvent eqv expectedJson)
       assert(context.clientContext.get.client.appTitle == "test")
@@ -124,22 +126,23 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
     for {
       invocationQuota <- Deferred[IO, Unit]
       eventualInvocationError <- Deferred[IO, Json]
-      client = Client.fromHttpApp((defaultRoutes(invocationQuota) <+> HttpRoutes.of[IO] {
+      client = Client.fromHttpApp((HttpRoutes.of[IO] {
         case req@POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "error" =>
           for {
             body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
             _ <- eventualInvocationError.complete(body)
             resp <- Ok()
           } yield resp
-      }).orNotFound)
+      } <+> defaultRoutes(invocationQuota)).orNotFound)
       handler = (_: Json, _: Context[IO]) => IO.raiseError[Json](new Exception("oops"))
-      _ <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO]))
+      runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       invocationError <- eventualInvocationError.get.timeout(2.seconds)
       expectedBody = Json.obj(
-        "errorMessage" -> "error".asJson,
-        "errorType" -> "error".asJson,
+        "errorMessage" -> "oops".asJson,
+        "errorType" -> "exception".asJson,
         "stackTrace" -> List[String]().asJson
       )
+      _ <- runtimeFiber.cancel
     } yield assert(invocationError eqv expectedBody)
   }
 
@@ -148,22 +151,23 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
     for {
       invocationQuota <- Deferred[IO, Unit]
       eventualInvocationError <- Deferred[IO, Json]
-      client = Client.fromHttpApp((defaultRoutes(invocationQuota) <+> HttpRoutes.of[IO] {
+      client = Client.fromHttpApp((HttpRoutes.of[IO] {
         case req@POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "error" =>
           for {
             body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
             _ <- eventualInvocationError.complete(body)
             resp <- Ok()
           } yield resp
-      }).orNotFound)
+      } <+> defaultRoutes(invocationQuota)).orNotFound)
       handler = (_: Json, _: Context[IO]) => JsonObject.empty.asJson.pure[IO]
-      _ <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO]))
+      runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       invocationError <- eventualInvocationError.get.timeout(2.seconds)
       expectedBody = Json.obj(
-        "errorMessage" -> "error".asJson,
-        "errorType" -> "error".asJson,
+        "errorMessage" -> "oops".asJson,
+        "errorType" -> "exception".asJson,
         "stackTrace" -> List[String]().asJson
       )
+      _ <- runtimeFiber.cancel
     } yield assert(invocationError eqv expectedBody)
 
   }

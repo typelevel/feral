@@ -30,6 +30,7 @@ import org.http4s.{EntityEncoder, Request, Uri}
 import io.circe._
 import cats.effect.kernel.Outcome._
 import io.circe.syntax.EncoderOps
+import scala.concurrent.CancellationException
 
 object FeralLambdaRuntime {
 
@@ -43,20 +44,21 @@ object FeralLambdaRuntime {
     (for {
       nextInvocationUrl <- getNextInvocationUrl(runtimeApi)
       request <- client.get(nextInvocationUrl)(LambdaRequest.fromResponse[F])
-      context <- createContext(request)
-      invocationErrorUrl <- getInvocationErrorUrl(runtimeApi, request.id)
-      handlerFiber <- handlerFun(request.body, context).start
-      result <- handlerFiber.join.flatMap {
-        case Succeeded(result: F[Json]) => Option(result).sequence
-        case Errored(e: Throwable) =>
+      invocationErrorUrl <- getInvocationErrorUrl(runtimeApi, request.id) // unsure if errors in these lines can be counted as initialization errors or not, runtime crashes for just now
+      _ <- (for {
+        context <- createContext(request)
+        handlerFiber <- handlerFun(request.body, context).start
+        result <- handlerFiber.join.flatMap {
+          case Succeeded(result: F[Json]) => result
+          case Errored(e: Throwable) => F.raiseError[Json](e)
+          case Canceled() => F.raiseError[Json](new CancellationException)
+        }
+        invocationResponseUrl <- getInvocationResponseUrl(runtimeApi, request.id)
+        _ <- client.expect[Unit](Request(POST, invocationResponseUrl).withEntity(result))
+      } yield ()).handleErrorWith(e => {
           val error = LambdaErrorRequest(e.getMessage, "exception", List())
-          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> Option.empty[Json].pure[F]
-        case Canceled() =>
-          val error = LambdaErrorRequest("cancelled", "cancellation", List()) // TODO need to think about better messages
-          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson)) >> Option.empty[Json].pure[F]
-      }
-      invocationResponseUrl <- getInvocationResponseUrl(runtimeApi, request.id)
-      _ <- result.map(body => client.expect[Unit](Request(POST, invocationResponseUrl).withEntity(body))).sequence
+          client.expect[Unit](Request(POST, invocationErrorUrl).withEntity(error.asJson))
+        })
     } yield ()).foreverM
   }
   
