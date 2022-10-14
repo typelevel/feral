@@ -16,35 +16,69 @@
 
 name := "feral"
 
-ThisBuild / baseVersion := "0.1"
+ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / startYear := Some(2021)
 
-ThisBuild / organization := "org.typelevel"
-ThisBuild / organizationName := "Typelevel"
-ThisBuild / publishGithubUser := "armanbilge"
-ThisBuild / publishFullName := "Arman Bilge"
+ThisBuild / developers := List(
+  tlGitHubDev("armanbilge", "Arman Bilge"),
+  tlGitHubDev("bpholt", "Brian Holt"),
+  tlGitHubDev("djspiewak", "Daniel Spiewak")
+)
 
-ThisBuild / crossScalaVersions := Seq("3.0.1", "2.12.14", "2.13.6")
+ThisBuild / githubWorkflowJavaVersions := Seq("8", "11").map(JavaSpec.corretto(_))
+ThisBuild / githubWorkflowBuildMatrixExclusions +=
+  MatrixExclude(Map("project" -> "rootJS", "scala" -> Scala212))
 
-val catsEffectVersion = "3.2.3"
-val circeVersion = "0.14.1"
-val fs2Version = "3.1.0"
-val http4sVersion = "1.0.0-M24"
+ThisBuild / githubWorkflowBuild ~= { steps =>
+  val scriptedStep = WorkflowStep.Sbt(
+    List(s"scripted"),
+    name = Some("Scripted"),
+    cond = Some(s"matrix.scala == '$Scala212'")
+  )
+  steps.flatMap {
+    case step @ WorkflowStep.Sbt(List("test"), _, _, _, _, _) =>
+      val ciStep = step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
+      List(ciStep, scriptedStep)
+    case step => List(step)
+  }
+}
+
+ThisBuild / githubWorkflowBuildPreamble +=
+  WorkflowStep.Use(
+    UseRef.Public("actions", "setup-node", "v2"),
+    name = Some("Setup NodeJS v16 LTS"),
+    params = Map("node-version" -> "16"),
+    cond = Some("matrix.project == 'rootJS'")
+  )
+
+val Scala212 = "2.12.17"
+val Scala213 = "2.13.9"
+val Scala3 = "3.2.0"
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
+
+val catsEffectVersion = "3.3.14"
+val circeVersion = "0.14.3"
+val fs2Version = "3.3.0"
+val http4sVersion = "0.23.16"
+val natchezVersion = "0.1.6"
+val munitVersion = "0.7.29"
+val munitCEVersion = "1.0.7"
+val scalacheckEffectVersion = "1.0.4"
+
+lazy val commonSettings = Seq(
+  crossScalaVersions := Seq(Scala3, Scala213)
+)
 
 lazy val root =
-  project
-    .in(file("."))
-    .aggregate(
-      core.js,
-      core.jvm,
-      lambda.js,
-      lambda.jvm,
-      lambdaEvents.js,
-      lambdaEvents.jvm,
-      lambdaApiGatewayProxyHttp4s.js,
-      lambdaApiGatewayProxyHttp4s.jvm,
-      cloudflareWorker
-    )
-    .enablePlugins(NoPublishPlugin)
+  tlCrossRootProject.aggregate(
+    core,
+    lambda,
+    sbtLambda,
+    lambdaHttp4s,
+    lambdaCloudFormationCustomResource,
+    examples,
+    unidocs
+  )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -52,21 +86,30 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-core",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion
     )
   )
+  .settings(commonSettings)
 
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .in(file("lambda"))
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "io.circe" %%% "circe-jawn" % circeVersion,
+      "org.scodec" %%% "scodec-bits" % "1.1.34",
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
     )
   )
+  .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
     )
   )
   .jvmSettings(
@@ -78,25 +121,32 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   )
   .dependsOn(core)
 
-lazy val lambdaEvents = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("lambda-events"))
+lazy val sbtLambda = project
+  .in(file("sbt-lambda"))
+  .enablePlugins(SbtPlugin, BuildInfoPlugin)
   .settings(
-    name := "feral-lambda-events",
-    libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-generic" % circeVersion
-    )
+    name := "sbt-feral-lambda",
+    crossScalaVersions := Seq(Scala212),
+    addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
+    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.2"),
+    buildInfoPackage := "feral.lambda.sbt",
+    buildInfoKeys += organization,
+    scriptedLaunchOpts := {
+      scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+    },
+    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated
   )
 
-lazy val lambdaApiGatewayProxyHttp4s = crossProject(JSPlatform, JVMPlatform)
+lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .in(file("lambda-api-gateway-proxy-http4s"))
+  .in(file("lambda-http4s"))
   .settings(
-    name := "feral-lambda-api-gateway-proxy-http4s",
+    name := "feral-lambda-http4s",
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-core" % http4sVersion
+      "org.http4s" %%% "http4s-server" % http4sVersion
     )
   )
+  .settings(commonSettings)
   .dependsOn(lambda, lambdaEvents)
 
 lazy val cloudflareWorker = project
@@ -113,3 +163,64 @@ lazy val cloudflareWorker = project
     )
   ).dependsOn(core.js)
   
+  .settings(commonSettings)
+  .dependsOn(lambda % "compile->compile;test->test")
+
+lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("lambda-cloudformation-custom-resource"))
+  .settings(
+    name := "feral-lambda-cloudformation-custom-resource",
+    scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => Seq("-Ywarn-macros:after")
+      case _ => Nil
+    }),
+    libraryDependencies ++= Seq(
+      "io.monix" %%% "newtypes-core" % "0.2.3",
+      "org.http4s" %%% "http4s-client" % http4sVersion,
+      "org.http4s" %%% "http4s-circe" % http4sVersion,
+      "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
+      "com.eed3si9n.expecty" %%% "expecty" % "0.16.0" % Test,
+      "io.circe" %%% "circe-testing" % circeVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
+lazy val examples = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("examples"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-dsl" % http4sVersion,
+      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.tpolecat" %%% "natchez-xray" % natchezVersion,
+      "org.tpolecat" %%% "natchez-http4s" % "0.3.2",
+      "org.tpolecat" %%% "skunk-core" % "0.3.2"
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda, lambdaHttp4s)
+  .enablePlugins(NoPublishPlugin)
+
+lazy val unidocs = project
+  .in(file("unidocs"))
+  .enablePlugins(TypelevelUnidocPlugin)
+  .settings(
+    name := "feral-docs",
+    ScalaUnidoc / unidoc / unidocProjectFilter := {
+      if (scalaBinaryVersion.value == "2.12")
+        inProjects(sbtLambda)
+      else
+        inProjects(
+          core.jvm,
+          lambda.jvm,
+          lambdaHttp4s.jvm,
+          lambdaCloudFormationCustomResource.jvm
+        )
+    }
+  )

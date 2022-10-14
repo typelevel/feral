@@ -22,14 +22,14 @@ import cats.effect.IO
 import cats.effect.kernel.Deferred
 import cats.syntax.all._
 
-trait IOSetup {
-  
+private[feral] trait IOSetup {
+
   protected def runtime: IORuntime = IORuntime.global
 
   protected type Setup
-  protected val setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
+  protected def setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
 
-  private[feral] final val setupMemo: IO[Setup] = {
+  private[feral] final lazy val setupMemo: IO[Setup] = {
     val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
     setup
       .attempt

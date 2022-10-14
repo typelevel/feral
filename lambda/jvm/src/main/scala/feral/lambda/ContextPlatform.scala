@@ -16,15 +16,18 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.effect.Sync
 import com.amazonaws.services.lambda.runtime
+import io.circe.JsonObject
+import io.circe.jawn.parse
 
 import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
 
 private[lambda] trait ContextCompanionPlatform {
 
-  private[lambda] def fromJava(context: runtime.Context): Context =
-    Context(
+  private[lambda] def fromJava[F[_]: Sync](context: runtime.Context): Context[F] =
+    new Context(
       context.getFunctionName(),
       context.getFunctionVersion(),
       context.getInvokedFunctionArn(),
@@ -33,27 +36,31 @@ private[lambda] trait ContextCompanionPlatform {
       context.getLogGroupName(),
       context.getLogStreamName(),
       Option(context.getIdentity()).map { identity =>
-        CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
+        new CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
       },
       Option(context.getClientContext()).map { clientContext =>
-        ClientContext(
-          ClientContextClient(
+        new ClientContext(
+          new ClientContextClient(
             clientContext.getClient().getInstallationId(),
             clientContext.getClient().getAppTitle(),
             clientContext.getClient().getAppVersionName(),
             clientContext.getClient().getAppVersionCode(),
             clientContext.getClient().getAppPackageName()
           ),
-          ClientContextEnv(
+          new ClientContextEnv(
             clientContext.getEnvironment().get("platformVersion"),
             clientContext.getEnvironment().get("platform"),
             clientContext.getEnvironment().get("make"),
             clientContext.getEnvironment().get("model"),
             clientContext.getEnvironment().get("locale")
-          )
+          ),
+          JsonObject.fromIterable(clientContext.getCustom().asScala.view.flatMap {
+            case (k, v) =>
+              parse(v).toOption.map(k -> _)
+          })
         )
       },
-      IO(context.getRemainingTimeInMillis().millis)
+      Sync[F].delay(context.getRemainingTimeInMillis().millis)
     )
 
 }

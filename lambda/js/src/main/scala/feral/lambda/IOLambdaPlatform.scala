@@ -26,11 +26,18 @@ import scala.scalajs.js.|
 private[lambda] trait IOLambdaPlatform[Event, Result] {
   this: IOLambda[Event, Result] =>
 
-  // @JSExportTopLevel("handler") // TODO
-  final def handler(event: js.Any, context: facade.Context): js.Promise[js.Any | Unit] =
-    (for {
-      setup <- setupMemo
-      event <- IO.fromEither(decodeJs[Event](event))
-      result <- apply(event, Context.fromJS(context), setup)
-    } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
+  final def main(args: Array[String]): Unit =
+    js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
+
+  protected def handlerName: String = getClass.getSimpleName.init
+
+  private lazy val handlerFn
+      : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
+    (event: js.Any, context: facade.Context) =>
+      (for {
+        lambda <- setupMemo
+        event <- IO.fromEither(decodeJs[Event](event))
+        result <- lambda(event, Context.fromJS(context))
+      } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
+  }
 }

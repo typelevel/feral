@@ -16,47 +16,61 @@
 
 package feral.lambda
 
-import cats.effect.IO
+import cats.~>
+import io.circe.JsonObject
 
 import scala.concurrent.duration.FiniteDuration
 
-final case class Context(
-    functionName: String,
-    functionVersion: String,
-    invokedFunctionArn: String,
-    memoryLimitInMB: Int,
-    awsRequestId: String,
-    logGroupName: String,
-    logStreamName: String,
-    identity: Option[CognitoIdentity],
-    clientContext: Option[ClientContext],
-    remainingTime: IO[FiniteDuration]
-)
+final class Context[F[_]] private[lambda] (
+    val functionName: String,
+    val functionVersion: String,
+    val invokedFunctionArn: String,
+    val memoryLimitInMB: Int,
+    val awsRequestId: String,
+    val logGroupName: String,
+    val logStreamName: String,
+    val identity: Option[CognitoIdentity],
+    val clientContext: Option[ClientContext],
+    val remainingTime: F[FiniteDuration]
+) {
+  def mapK[G[_]](f: F ~> G): Context[G] = new Context(
+    functionName,
+    functionVersion,
+    invokedFunctionArn,
+    memoryLimitInMB,
+    awsRequestId,
+    logGroupName,
+    logStreamName,
+    identity,
+    clientContext,
+    f(remainingTime))
+}
 
 object Context extends ContextCompanionPlatform
 
-final case class CognitoIdentity(
-    identityId: String,
-    identityPoolId: String
+final class CognitoIdentity(
+    val identityId: String,
+    val identityPoolId: String
 )
 
-final case class ClientContext(
-    client: ClientContextClient,
-    env: ClientContextEnv
+final class ClientContext(
+    val client: ClientContextClient,
+    val env: ClientContextEnv,
+    val custom: JsonObject
 )
 
-final case class ClientContextClient(
-    installationId: String,
-    appTitle: String,
-    appVersionName: String,
-    appVersionCode: String,
-    appPackageName: String
+final class ClientContextClient(
+    val installationId: String,
+    val appTitle: String,
+    val appVersionName: String,
+    val appVersionCode: String,
+    val appPackageName: String
 )
 
-final case class ClientContextEnv(
-    platformVersion: String,
-    platform: String,
-    make: String,
-    model: String,
-    locale: String
+final class ClientContextEnv(
+    val platformVersion: String,
+    val platform: String,
+    val make: String,
+    val model: String,
+    val locale: String
 )
