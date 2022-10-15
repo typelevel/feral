@@ -46,11 +46,11 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
     override def lambdaRuntimeApi: IO[String] = runtimeApi
   }
 
-  def defaultRoutes(invocationQuota: Deferred[IO, Unit]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def defaultRoutes(invocationQuota: Ref[IO, Int]): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / "next" =>
       for {
-        firstInvoc <- invocationQuota.complete()
-        _ <- if (firstInvoc) IO.unit else IO.never // infinite loop if not first request, assumed behaviour of actual next invocation endpoint?
+        currentInvocations <- invocationQuota.modify(cur => (cur-1, cur))
+        _ <- if (currentInvocations > 0) IO.unit else IO.never // infinite loop if not first request, assumed behaviour of actual next invocation endpoint?
         headers = Headers(
           `Lambda-Runtime-Aws-Request-Id`("testId"),
           `Lambda-Runtime-Deadline-Ms`(20),
@@ -84,7 +84,7 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
   test("The runtime can process an event and pass the result to the invocation response url") {
     implicit val env: LambdaRuntimeEnv[IO] = createTestEnv()
     for {
-      invocationQuota <- Deferred[IO, Unit]
+      invocationQuota <- Ref[IO].of(1)
       eventualInvocationId <- Deferred[IO, String]
       client = Client.fromHttpApp[IO]((HttpRoutes.of[IO] {
         case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" =>
@@ -100,7 +100,7 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
   test("A valid context and JSON event is passed to the handler function during invocation") {
     implicit val env: LambdaRuntimeEnv[IO] = createTestEnv()
     for {
-      invocationQuota <- Deferred[IO, Unit]
+      invocationQuota <- Ref[IO].of(1)
       eventualInvocation <- Deferred[IO, (Json, Context[IO])]
       client = Client.fromHttpApp[IO](defaultRoutes(invocationQuota).orNotFound)
       handler = (json: Json, context: Context[IO]) => eventualInvocation.complete((json, context)) >> JsonObject.empty.asJson.pure[IO]
@@ -124,7 +124,7 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
   test("The runtime will call the invocation error url when the handler function errors during processing") {
     implicit val env: LambdaRuntimeEnv[IO] = createTestEnv()
     for {
-      invocationQuota <- Deferred[IO, Unit]
+      invocationQuota <- Ref[IO].of(1)
       eventualInvocationError <- Deferred[IO, Json]
       client = Client.fromHttpApp((HttpRoutes.of[IO] {
         case req@POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "error" =>
@@ -149,7 +149,7 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
   test("The runtime will call the invocation error url when a needed environment variable is not available") {
     implicit val env: LambdaRuntimeEnv[IO] = createTestEnv(funcName = IO.raiseError(new Exception("oops")))
     for {
-      invocationQuota <- Deferred[IO, Unit]
+      invocationQuota <- Ref[IO].of(1)
       eventualInvocationError <- Deferred[IO, Json]
       client = Client.fromHttpApp((HttpRoutes.of[IO] {
         case req@POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "error" =>
@@ -170,6 +170,42 @@ class LambdaRuntimeSuite extends CatsEffectSuite {
       _ <- runtimeFiber.cancel
     } yield assert(invocationError eqv expectedBody)
 
+  }
+
+  // TODO needs refactoring
+  test("The runtime will continue to process events even after encountering an invocation error") {
+    implicit val env: LambdaRuntimeEnv[IO] = createTestEnv()
+    for {
+      invocationQuota <- Ref[IO].of(2)
+      eventualInvocationError <- Deferred[IO, Json]
+      eventualResponse <- Deferred[IO, String]
+      client = Client.fromHttpApp((HttpRoutes.of[IO] {
+        case req@POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "error" =>
+          for {
+            body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
+            _ <- eventualInvocationError.complete(body)
+            resp <- Ok()
+          } yield resp
+        case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" =>
+          eventualResponse.complete(id) >> Ok()
+      } <+> defaultRoutes(invocationQuota)).orNotFound)
+      handler = (_: Json, _: Context[IO]) => for {
+        currentInvocations <- invocationQuota.get
+        resp <- if (currentInvocations < 1) JsonObject.empty.asJson.pure[IO] else IO.raiseError(new Exception("oops first invocation"))
+      } yield resp
+      runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
+      invocationError <- eventualInvocationError.get.timeout(2.seconds)
+      expectedErrorBody = Json.obj(
+        "errorMessage" -> "oops first invocation".asJson,
+        "errorType" -> "exception".asJson,
+        "stackTrace" -> List[String]().asJson
+      )
+      secondInvocationResponse <- eventualResponse.get.timeout(2.seconds)
+      _ <- runtimeFiber.cancel
+    } yield {
+      assert(invocationError eqv expectedErrorBody)
+      assert(secondInvocationResponse eqv "testId")
+    }
   }
 
 }
