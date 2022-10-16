@@ -2,7 +2,7 @@ package feral.lambda.runtime
 
 import cats.effect.IO
 import feral.lambda.{ClientContext, ClientContextClient, ClientContextEnv, CognitoIdentity, Context}
-import io.circe.{Decoder, Json, JsonObject, Printer}
+import io.circe.{Decoder, Encoder, Json, JsonObject, Printer}
 import cats.syntax.all._
 import cats.effect._
 import cats.effect.syntax.all._

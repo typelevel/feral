@@ -6,6 +6,8 @@ import feral.lambda.CognitoIdentity
 import io.circe.Decoder
 import io.circe.syntax.EncoderOps
 import io.circe._
+import io.circe.jawn._
+import cats.syntax.all._
 
 class `Lambda-Runtime-Client-Identity`(val value: CognitoIdentity)
 
@@ -14,17 +16,14 @@ object `Lambda-Runtime-Client-Identity` {
   def apply(value: CognitoIdentity) = new `Lambda-Runtime-Client-Identity`(value)
 
   val name: String = "Lambda-Runtime-Client-Identity"
-
-  def parse(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] =
-    s
-    .asJson
-    .as[CognitoIdentity]
-    .toOption
-    .toRight(new ParseFailure(s, "Unable to parse client identity header"))
-    .map(new `Lambda-Runtime-Client-Identity`(_))
+  def parser(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] = (for {
+    parsedJson <- parse(s)
+    identity <- parsedJson.as[CognitoIdentity]
+  } yield `Lambda-Runtime-Client-Identity`(identity))
+    .leftMap(_ => new ParseFailure(s, "Unable to parse client identity header"))
 
   implicit val headerInstance: Header[`Lambda-Runtime-Client-Identity`, Header.Single] =
-    Header.create(CIString(name), _.value.asJson.toString, parse)
+    Header.create(CIString(name), _.value.asJson.toString, parser)
 
   implicit val cognitoIdentityDecoder: Decoder[CognitoIdentity] =
     Decoder.forProduct2("identity_id", "identity_pool_id")((identityId: String, poolId: String) =>

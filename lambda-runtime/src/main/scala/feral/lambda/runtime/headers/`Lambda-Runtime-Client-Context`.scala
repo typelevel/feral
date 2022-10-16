@@ -7,6 +7,8 @@ import feral.lambda.runtime.headers.`Lambda-Runtime-Client-Context`.headerInstan
 import feral.lambda.{ClientContext, ClientContextClient, ClientContextEnv, CognitoIdentity}
 import io.circe.{Decoder, Encoder, JsonObject}
 import io.circe.syntax.EncoderOps
+import io.circe.jawn._
+import cats.syntax.all._
 
 class `Lambda-Runtime-Client-Context`(val value: ClientContext)
 
@@ -16,16 +18,14 @@ object `Lambda-Runtime-Client-Context` {
 
   val name: String = "Lambda-Runtime-Client-Context"
 
-  def parse(s: String): ParseResult[`Lambda-Runtime-Client-Context`] =
-    s
-    .asJson
-    .as[ClientContext]
-    .toOption
-    .toRight(new ParseFailure(s, "Unable to parse client identity header"))
-    .map(new `Lambda-Runtime-Client-Context`(_))
+  def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] = (for {
+    parsedJson <- parse(s)
+    clientContext <- parsedJson.as[ClientContext]
+  } yield `Lambda-Runtime-Client-Context`(clientContext))
+    .leftMap(_ => new ParseFailure(s, "Unable to parse client identity header"))
 
   implicit val headerInstance: Header[`Lambda-Runtime-Client-Context`, Header.Single] =
-    Header.create(CIString(name), _.value.asJson.toString, parse)
+    Header.create(CIString(name), _.value.asJson.toString, parser)
 
   implicit val clientContextClientDecoder: Decoder[ClientContextClient] = Decoder.forProduct5("client_id", "app_title", "app_version_name", "app_version_code", "app_package_name")(
     (clientId: String, appTitle: String, appVersionName: String, appVersionCode: String, appPackageName: String) =>
