@@ -1,2 +1,2 @@
-scalaVersion := "2.13.9"
+scalaVersion := "2.13.10"
 enablePlugins(LambdaJSPlugin)
