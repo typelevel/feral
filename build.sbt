@@ -147,7 +147,7 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda)
+  .dependsOn(lambda % "compile->compile;test->test")
 
 lazy val cloudflareWorker = project
   .in(file("cloudflare-worker"))
@@ -164,7 +164,6 @@ lazy val cloudflareWorker = project
   ).dependsOn(core.js)
   
   .settings(commonSettings)
-  .dependsOn(sbtLambda)
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
