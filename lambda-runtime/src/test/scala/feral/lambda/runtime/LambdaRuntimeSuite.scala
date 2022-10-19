@@ -1,25 +1,13 @@
 package feral.lambda.runtime
 
 import cats.effect.IO
-import feral.lambda.{ClientContext, ClientContextClient, ClientContextEnv, CognitoIdentity, Context}
-import io.circe.{Decoder, Encoder, Json, JsonObject, Printer}
+import feral.lambda.Context
+import io.circe.Json
 import cats.syntax.all._
 import cats.effect._
-import cats.effect.syntax.all._
 import io.circe.syntax.EncoderOps
 import munit._
-import org.http4s.Method.{GET, POST}
-import org.http4s.{HttpApp, HttpRoutes}
-import org.http4s.Uri.Path.Root
-import org.http4s._
 import org.http4s.client.Client
-import org.typelevel.jawn.Parser
-import io.circe.jawn.CirceSupportParser.facade
-import io.circe.jawn.parse
-import org.http4s.dsl.io._
-import feral.lambda.runtime.headers._
-import org.http4s.circe.jsonEncoderWithPrinter
-
 import scala.concurrent.duration.DurationInt
 
 class LambdaRuntimeSuite extends BaseRuntimeSuite {
@@ -57,8 +45,17 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
     }
   }
 
-  test("The runtime will call the initialization error url when ???") {
-
+  test("The runtime will call the initialization error url when the handler function cannot be acquired") {
+    implicit val env: LambdaRuntimeEnv[IO] = createTestEnv()
+    for {
+      invocationQuota <- Ref[IO].of(0)
+      eventualInitError <- Deferred[IO, Json]
+      client = Client.fromHttpApp((testInitErrorRoute(eventualInitError) <+> defaultRoutes(invocationQuota)).orNotFound)
+      badHandlerResource = Resource.make[IO, (Json, Context[IO]) => IO[Json]](IO.raiseError(new Exception("Failure acquiring handler")))(_ => IO.unit)
+      runtimeFiber <- FeralLambdaRuntime(client)(badHandlerResource).start
+      errorRequest <- eventualInitError.get.timeout(2.seconds)
+      _ <- runtimeFiber.cancel
+    } yield assert(errorRequest eqv errorRequestJson())
   }
 
   test("The runtime will call the invocation error url when the handler function errors during processing") {
@@ -71,7 +68,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       errorRequest <- eventualInvocationError.get.timeout(2.seconds)
       _ <- runtimeFiber.cancel
-    } yield assert(errorRequest eqv invocationErrorRequest())
+    } yield assert(errorRequest eqv errorRequestJson())
   }
 
   test("The runtime will call the invocation error url when a needed environment variable is not available") {
@@ -84,7 +81,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       errorRequest <- eventualInvocationError.get.timeout(2.seconds)
       _ <- runtimeFiber.cancel
-    } yield assert(errorRequest eqv invocationErrorRequest())
+    } yield assert(errorRequest eqv errorRequestJson())
   }
 
   test("The runtime will continue to process events even after encountering an invocation error") {
@@ -107,7 +104,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       secondInvocationResponse <- eventualResponse.get.timeout(2.seconds)
       _ <- runtimeFiber.cancel
     } yield {
-      assert(invocationError eqv invocationErrorRequest("oops first invocation"))
+      assert(invocationError eqv errorRequestJson("oops first invocation"))
       assert(secondInvocationResponse eqv "testId")
     }
   }

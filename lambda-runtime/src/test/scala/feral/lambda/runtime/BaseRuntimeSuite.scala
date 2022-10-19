@@ -80,6 +80,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
       } yield resp
     case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / _ / "response" => Ok()
     case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / _ / "error" => Ok()
+    case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "init" / "error" => Ok()
   }
 
   def testInvocationErrorRoute(eventualInvocationError: Deferred[IO, Json]): HttpRoutes[IO] = HttpRoutes.of[IO] {
@@ -96,7 +97,16 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
       eventualInvocationId.complete(id) >> Ok()
   }
 
-  def invocationErrorRequest(errorMessage: String = "oops", errorType: String = "exception"): Json = Json.obj(
+  def testInitErrorRoute(eventualInitError: Deferred[IO, Json]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case req@POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "init" / "error" =>
+      for {
+        body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
+        _ <- eventualInitError.complete(body)
+        resp <- Ok()
+      } yield resp
+  }
+
+  def errorRequestJson(errorMessage: String = "oops", errorType: String = "exception"): Json = Json.obj(
     "errorMessage" -> errorMessage.asJson,
     "errorType" -> errorType.asJson,
     "stackTrace" -> List[String]().asJson
