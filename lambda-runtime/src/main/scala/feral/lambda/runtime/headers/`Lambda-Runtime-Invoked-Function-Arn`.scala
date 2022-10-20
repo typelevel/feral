@@ -5,7 +5,7 @@ import org.typelevel.ci._
 
 final class `Lambda-Runtime-Invoked-Function-Arn`(val value: String)
 
-object `Lambda-Runtime-Invoked-Function-Arn`{
+object `Lambda-Runtime-Invoked-Function-Arn` {
 
   def apply(value: String) = new `Lambda-Runtime-Invoked-Function-Arn`(value)
 
