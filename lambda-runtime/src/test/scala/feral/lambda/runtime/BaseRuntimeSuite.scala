@@ -4,6 +4,7 @@ import munit.CatsEffectSuite
 import cats.effect.IO
 import feral.lambda._
 import io.circe._
+import cats.syntax.all._
 import cats.effect._
 import io.circe.syntax.EncoderOps
 import munit._
@@ -12,6 +13,7 @@ import org.http4s.HttpRoutes
 import org.http4s.Uri.Path.Root
 import org.http4s._
 import org.typelevel.jawn.Parser
+import io.circe.jawn.CirceSupportParser.facade
 import org.http4s.dsl.io._
 import feral.lambda.runtime.headers._
 import org.http4s.circe.jsonEncoderWithPrinter

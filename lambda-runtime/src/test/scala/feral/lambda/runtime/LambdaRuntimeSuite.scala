@@ -8,6 +8,7 @@ import cats.effect._
 import io.circe.syntax.EncoderOps
 import munit._
 import org.http4s.client.Client
+
 import scala.concurrent.duration.DurationInt
 
 class LambdaRuntimeSuite extends BaseRuntimeSuite {
