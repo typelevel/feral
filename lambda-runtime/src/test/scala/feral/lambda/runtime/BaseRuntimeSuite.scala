@@ -92,7 +92,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
       } yield resp
   }
 
-  def testNextInvocationRoute(eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def testInvocationResponseRoute(eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case POST -> Root / "testApi" / FeralLambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" =>
       eventualInvocationId.complete(id) >> Ok()
   }

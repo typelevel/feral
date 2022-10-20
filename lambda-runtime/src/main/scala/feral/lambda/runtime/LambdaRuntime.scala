@@ -37,11 +37,14 @@ object FeralLambdaRuntime {
 
   final val ApiVersion = "2018-06-01"
 
-  def apply[F[_]](client: Client[F])(handlerResource: Resource[F, (Json, Context[F]) => F[Json]])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = for {
-    api <- env.lambdaRuntimeApi
-    runtimeUri <- Uri.fromString(s"/$api/$ApiVersion/runtime/").liftTo[F]
-  } yield handlerResource
-      .attempt.use(_.fold(handleInitError(runtimeUri, client, _), processEvents(runtimeUri, client, _)))
+  def apply[F[_]](client: Client[F])(handlerResource: Resource[F, (Json, Context[F]) => F[Json]])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] =
+    handlerResource.attempt.use { handlerOrError =>
+      for {
+        api <- env.lambdaRuntimeApi
+        runtimeUri <- Uri.fromString(s"/$api/$ApiVersion/runtime/").liftTo[F]
+        _ <- handlerOrError.fold(handleInitError(runtimeUri, client, _), processEvents(runtimeUri, client, _))
+      } yield ()
+    }
 
   private def processEvents[F[_]](runtimeUri: Uri, client: Client[F], handler: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
@@ -72,7 +75,7 @@ object FeralLambdaRuntime {
     val error = LambdaErrorRequest(e.getMessage, "exception", List())
     client.expect[Unit](Request(POST, initErrorUri).withEntity(error.asJson)) >> F.raiseError[Unit](e)
   }
-  
+
   private def createContext[F[_]](request: LambdaRequest)(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
     functionName <- env.lambdaFunctionName
     functionVersion <- env.lambdaFunctionVersion

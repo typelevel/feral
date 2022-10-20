@@ -17,7 +17,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
     for {
       invocationQuota <- Ref[IO].of(1)
       eventualInvocationId <- Deferred[IO, String]
-      client = Client.fromHttpApp[IO]((testNextInvocationRoute(eventualInvocationId) <+> defaultRoutes(invocationQuota)).orNotFound)
+      client = Client.fromHttpApp[IO]((testInvocationResponseRoute(eventualInvocationId) <+> defaultRoutes(invocationQuota)).orNotFound)
       handler = (_: Json, _: Context[IO]) => Json.obj().pure[IO]
       runtimeFiber <- FeralLambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       invocationId <- eventualInvocationId.get.timeout(2.seconds)
@@ -55,7 +55,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       runtimeFiber <- FeralLambdaRuntime(client)(badHandlerResource).start
       errorRequest <- eventualInitError.get.timeout(2.seconds)
       _ <- runtimeFiber.cancel
-    } yield assert(errorRequest eqv errorRequestJson())
+    } yield assert(errorRequest eqv errorRequestJson("Failure acquiring handler"))
   }
 
   test("The runtime will call the invocation error url when the handler function errors during processing") {
@@ -92,7 +92,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       eventualResponse <- Deferred[IO, String]
       client = Client.fromHttpApp(
         (testInvocationErrorRoute(eventualInvocationError)
-        <+> testNextInvocationRoute(eventualResponse)
+        <+> testInvocationResponseRoute(eventualResponse)
         <+> defaultRoutes(invocationQuota)).orNotFound
       )
       handler = (_: Json, _: Context[IO]) => for {
