@@ -1,6 +1,6 @@
 package feral.lambda.runtime.headers
 
-import org.http4s.{Header, Method, ParseFailure, ParseResult}
+import org.http4s._
 import org.typelevel.ci._
 import feral.lambda.CognitoIdentity
 import io.circe.Decoder
@@ -9,14 +9,14 @@ import io.circe._
 import io.circe.jawn._
 import cats.syntax.all._
 
-class `Lambda-Runtime-Client-Identity`(val value: CognitoIdentity)
+final class `Lambda-Runtime-Client-Identity`(val value: CognitoIdentity)
 
 object `Lambda-Runtime-Client-Identity` {
 
   def apply(value: CognitoIdentity) = new `Lambda-Runtime-Client-Identity`(value)
 
-  val name: String = "Lambda-Runtime-Client-Identity"
-  def parser(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] = (for {
+  final val name: String = "Lambda-Runtime-Client-Identity"
+  private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] = (for {
     parsedJson <- parse(s)
     identity <- parsedJson.as[CognitoIdentity]
   } yield `Lambda-Runtime-Client-Identity`(identity))

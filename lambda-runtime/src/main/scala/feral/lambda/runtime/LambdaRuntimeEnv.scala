@@ -1,7 +1,6 @@
 package feral.lambda.runtime
 
-import cats.{ApplicativeError, Functor, MonadThrow}
-import cats.effect.kernel.Sync
+import cats.MonadThrow
 import cats.effect.std.Env
 import cats.syntax.all._
 
@@ -15,12 +14,12 @@ trait LambdaRuntimeEnv[F[_]] {
 }
 
 object LambdaRuntimeEnv {
-  private[this] final val AWS_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME"
-  private[this] final val AWS_LAMBDA_FUNCTION_MEMORY_SIZE = "AWS_LAMBDA_FUNCTION_MEMORY_SIZE"
-  private[this] final val AWS_LAMBDA_FUNCTION_VERSION = "AWS_LAMBDA_FUNCTION_VERSION"
-  private[this] final val AWS_LAMBDA_LOG_GROUP_NAME = "AWS_LAMBDA_LOG_GROUP_NAME"
-  private[this] final val AWS_LAMBDA_LOG_STREAM_NAME = "AWS_LAMBDA_LOG_STREAM_NAME"
-  private[this] final val AWS_LAMBDA_RUNTIME_API = "AWS_LAMBDA_RUNTIME_API"
+  private[runtime] final val AWS_LAMBDA_FUNCTION_NAME = "AWS_LAMBDA_FUNCTION_NAME"
+  private[runtime] final val AWS_LAMBDA_FUNCTION_MEMORY_SIZE = "AWS_LAMBDA_FUNCTION_MEMORY_SIZE"
+  private[runtime] final val AWS_LAMBDA_FUNCTION_VERSION = "AWS_LAMBDA_FUNCTION_VERSION"
+  private[runtime] final val AWS_LAMBDA_LOG_GROUP_NAME = "AWS_LAMBDA_LOG_GROUP_NAME"
+  private[runtime] final val AWS_LAMBDA_LOG_STREAM_NAME = "AWS_LAMBDA_LOG_STREAM_NAME"
+  private[runtime] final val AWS_LAMBDA_RUNTIME_API = "AWS_LAMBDA_RUNTIME_API"
 
   def apply[F[_]](implicit lre: LambdaRuntimeEnv[F]): LambdaRuntimeEnv[F] = lre
 
@@ -38,7 +37,7 @@ object LambdaRuntimeEnv {
 
     override def lambdaRuntimeApi: F[String] = getOrRaise(AWS_LAMBDA_RUNTIME_API)
 
-    private[this] def getOrRaise(envName: String): F[String] =
+    private[runtime] def getOrRaise(envName: String): F[String] =
       env.get(envName).flatMap(_.liftTo(new NoSuchElementException(envName)))
   }
 }

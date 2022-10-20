@@ -2,13 +2,13 @@ package feral.lambda.runtime
 
 import io.circe.Encoder
 
-final class LambdaErrorRequest(val errorMessage: String, val errorType: String, val stackTrace: List[String])
+final class LambdaErrorBody(val errorMessage: String, val errorType: String, val stackTrace: List[String])
 
-object LambdaErrorRequest {
+object LambdaErrorBody {
   def apply(errorMessage: String, errorType: String, stackTrace: List[String]) =
-    new LambdaErrorRequest(errorMessage, errorType, stackTrace)
+    new LambdaErrorBody(errorMessage, errorType, stackTrace)
 
-  implicit val encoder: Encoder[LambdaErrorRequest] =
+  implicit val encoder: Encoder[LambdaErrorBody] =
     Encoder.forProduct3("errorMessage", "errorType", "stackTrace")(e =>
       (e.errorMessage, e.errorType, e.stackTrace))
 }

@@ -17,23 +17,22 @@
 package feral.lambda
 package runtime
 
-import cats.{ApplicativeError, MonadThrow}
-import cats.effect.{IO, Temporal}
+import cats.effect.Temporal
 import cats.syntax.all._
 import cats.effect.syntax.all._
-import cats.effect.kernel.{Async, Concurrent, Resource, Sync}
+import cats.effect.kernel.Resource
 import io.circe.Json
-import org.http4s.Method.POST
+import org.http4s.Method.{GET, POST}
 import org.http4s.client.Client
 import org.http4s.circe._
-import org.http4s.{EntityEncoder, Request, Uri}
+import org.http4s._
 import io.circe._
 import cats.effect.kernel.Outcome._
 import io.circe.syntax.EncoderOps
 
 import scala.concurrent.CancellationException
 
-object FeralLambdaRuntime {
+object LambdaRuntime {
 
   final val ApiVersion = "2018-06-01"
 
@@ -46,7 +45,7 @@ object FeralLambdaRuntime {
       } yield ()
     }
 
-  private def processEvents[F[_]](runtimeUri: Uri, client: Client[F], handler: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
+  private[runtime] def processEvents[F[_]](runtimeUri: Uri, client: Client[F], handler: (Json, Context[F]) => F[Json])(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     val nextInvocationUri = runtimeUri / "invocation" / "next"
     (for {
@@ -63,20 +62,20 @@ object FeralLambdaRuntime {
         invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
         _ <- client.expect[Unit](Request(POST, invocationResponseUri).withEntity(result))
       } yield ()).handleErrorWith(e => {
-          val error = LambdaErrorRequest(e.getMessage, "exception", List())
+          val error = LambdaErrorBody(e.getMessage, "Exception", List())
           client.expect[Unit](Request(POST, invocationErrorUri).withEntity(error.asJson))
         })
     } yield ()).foreverM
   }
 
-  private def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], e: Throwable)(implicit F: Temporal[F]): F[Unit] = {
+  private[runtime] def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], e: Throwable)(implicit F: Temporal[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] = jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     val initErrorUri = runtimeUri / "init" / "error"
-    val error = LambdaErrorRequest(e.getMessage, "exception", List())
+    val error = LambdaErrorBody(e.getMessage, "Exception", List())
     client.expect[Unit](Request(POST, initErrorUri).withEntity(error.asJson)) >> F.raiseError[Unit](e)
   }
 
-  private def createContext[F[_]](request: LambdaRequest)(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
+  private[runtime] def createContext[F[_]](request: LambdaRequest)(implicit F: Temporal[F], env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
     functionName <- env.lambdaFunctionName
     functionVersion <- env.lambdaFunctionVersion
     functionMemorySize <- env.lambdaFunctionMemorySize

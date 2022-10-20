@@ -3,11 +3,9 @@ package feral.lambda.runtime
 import cats.effect.kernel.Concurrent
 import io.circe._
 import cats.syntax.all._
-import feral.lambda.{ClientContext, ClientContextClient, ClientContextEnv, CognitoIdentity}
-import io.circe.syntax.EncoderOps
+import feral.lambda._
 import org.http4s.circe._
-import org.http4s.{EntityDecoder, Headers, Response, headers}
-import org.typelevel.ci.CIString
+import org.http4s._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import feral.lambda.runtime.headers._
@@ -32,7 +30,7 @@ object LambdaRequest {
             body <- response.as[Json]
         } yield {
             new LambdaRequest(
-                FiniteDuration.apply(deadlineTimeInMs.value, TimeUnit.MILLISECONDS),
+                FiniteDuration(deadlineTimeInMs.value, TimeUnit.MILLISECONDS),
                 id.value,
                 invokedFunctionArn.value,
                 identity.map(_.value),

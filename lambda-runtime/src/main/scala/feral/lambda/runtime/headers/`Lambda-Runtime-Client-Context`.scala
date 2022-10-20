@@ -1,24 +1,22 @@
 package feral.lambda.runtime.headers
 
-import org.http4s.{Header, Method, ParseFailure, ParseResult}
+import org.http4s._
 import org.typelevel.ci._
-import cats.parse.{Parser0, Rfc5234}
-import feral.lambda.runtime.headers.`Lambda-Runtime-Client-Context`.headerInstance
-import feral.lambda.{ClientContext, ClientContextClient, ClientContextEnv, CognitoIdentity}
+import feral.lambda._
 import io.circe.{Decoder, Encoder, JsonObject}
 import io.circe.syntax.EncoderOps
 import io.circe.jawn._
 import cats.syntax.all._
 
-class `Lambda-Runtime-Client-Context`(val value: ClientContext)
+final class `Lambda-Runtime-Client-Context`(val value: ClientContext)
 
 object `Lambda-Runtime-Client-Context` {
 
   def apply(value: ClientContext) = new `Lambda-Runtime-Client-Context`(value)
 
-  val name: String = "Lambda-Runtime-Client-Context"
+  final val name: String = "Lambda-Runtime-Client-Context"
 
-  def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] = (for {
+  private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] = (for {
     parsedJson <- parse(s)
     clientContext <- parsedJson.as[ClientContext]
   } yield `Lambda-Runtime-Client-Context`(clientContext))
