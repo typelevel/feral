@@ -111,6 +111,7 @@ lazy val lambdaKernel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "io.circe" %%% "circe-literal" % circeVersion % Test
     )
   )
+  .settings(commonSettings)
   .platformsSettings(JSPlatform, NativePlatform)(
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
@@ -132,6 +133,7 @@ lazy val lambdaRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       "org.http4s" %%% "http4s-circe" % http4sVersion
     )
   )
+  .settings(commonSettings)
   .dependsOn(lambdaKernel)
 
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
