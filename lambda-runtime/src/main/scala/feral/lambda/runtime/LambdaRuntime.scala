@@ -65,8 +65,8 @@ object LambdaRuntime {
         context <- createContext(request)
         handlerFiber <- handler(request.body, context).start
         result <- handlerFiber.join.flatMap {
-          case Succeeded(result: F[Json]) => result
-          case Errored(e: Throwable) => F.raiseError[Json](e)
+          case Succeeded(result) => result
+          case Errored(e) => F.raiseError[Json](e)
           case Canceled() => F.raiseError[Json](new CancellationException)
         }
         invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
