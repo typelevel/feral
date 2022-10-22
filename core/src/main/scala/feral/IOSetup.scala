@@ -20,7 +20,6 @@ import cats.effect.unsafe.IORuntime
 import cats.effect.kernel.Resource
 import cats.effect.IO
 import cats.effect.kernel.Deferred
-import cats.syntax.all._
 
 private[feral] trait IOSetup {
 
