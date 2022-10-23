@@ -23,7 +23,6 @@ import cats.syntax.all._
 import cats.effect._
 import io.circe.syntax.EncoderOps
 import org.http4s.client.Client
-
 import scala.concurrent.duration.DurationInt
 
 class LambdaRuntimeSuite extends BaseRuntimeSuite {
@@ -65,7 +64,7 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
   }
 
   test(
-    "The runtime will call the initialization error url when the handler function cannot be acquired") {
+    "The runtime will call the initialization error url and raise an exception when the handler function cannot be acquired") {
     implicit val env: LambdaRuntimeEnv[IO] = createTestEnv()
     for {
       invocationQuota <- Ref[IO].of(0)
@@ -76,8 +75,11 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
         IO.raiseError(new Exception("Failure acquiring handler")))(_ => IO.unit)
       runtimeFiber <- LambdaRuntime(client)(badHandlerResource).start
       errorRequest <- eventualInitError.get.timeout(2.seconds)
-      _ <- runtimeFiber.cancel
-    } yield assert(errorRequest eqv expectedErrorBody("Failure acquiring handler"))
+      runtimeOutcome <- runtimeFiber.join.timeout(2.seconds)
+    } yield {
+      assert(errorRequest eqv expectedErrorBody("Failure acquiring handler"))
+      assert(runtimeOutcome.isError)
+    }
   }
 
   test(

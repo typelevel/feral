@@ -70,10 +70,10 @@ object LambdaRuntime {
           case Canceled() => F.raiseError[Json](new CancellationException)
         }
         invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
-        _ <- client.expect[Unit](Request(POST, invocationResponseUri).withEntity(result))
+        _ <- client.expect[Unit](Request[F](POST, invocationResponseUri).withEntity(result))
       } yield ()).handleErrorWith(e => {
         val error = LambdaErrorBody(e.getMessage, "Exception", List())
-        client.expect[Unit](Request(POST, invocationErrorUri).withEntity(error.asJson))
+        client.expect[Unit](Request[F](POST, invocationErrorUri).withEntity(error.asJson))
       })
     } yield ()).foreverM
   }
@@ -84,7 +84,7 @@ object LambdaRuntime {
       jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     val initErrorUri = runtimeUri / "init" / "error"
     val error = LambdaErrorBody(e.getMessage, "Exception", List())
-    client.expect[Unit](Request(POST, initErrorUri).withEntity(error.asJson)) >> F
+    client.expect[Unit](Request[F](POST, initErrorUri).withEntity(error.asJson)) >> F
       .raiseError[Unit](e)
   }
 
