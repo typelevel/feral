@@ -174,7 +174,12 @@ lazy val sbtLambda = project
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
-    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal, lambdaKernel.js / publishLocal).evaluated
+    scripted := scripted
+      .dependsOn(
+        core.js / publishLocal,
+        lambda.js / publishLocal,
+        lambdaKernel.js / publishLocal)
+      .evaluated
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
