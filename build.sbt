@@ -102,7 +102,7 @@ lazy val lambdaKernel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "feral-lambda-kernel",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
-      "com.armanbilge" %%% "natchez-core" % "0.1.6-SNAPSHOT",
+      "org.tpolecat" %%% "natchez-core" % "0.1.6-269-2b28bcd-SNAPSHOT",
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "org.scodec" %%% "scodec-bits" % "1.1.34",
