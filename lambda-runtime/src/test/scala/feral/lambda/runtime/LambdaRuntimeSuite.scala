@@ -51,7 +51,8 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       handler = (json: Json, context: Context[IO]) =>
         eventualInvocation.complete((json, context)) >> Json.obj().pure[IO]
       runtimeFiber <- LambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
-      (jsonEvent, context) <- eventualInvocation.get.timeout(2.seconds)
+      invocation <- eventualInvocation.get.timeout(2.seconds)
+      (jsonEvent, context) = invocation
       expectedJson = Json.obj("eventField" -> "test".asJson)
       _ <- runtimeFiber.cancel
     } yield {
