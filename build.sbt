@@ -26,8 +26,10 @@ ThisBuild / developers := List(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq("8", "11").map(JavaSpec.corretto(_))
-ThisBuild / githubWorkflowBuildMatrixExclusions +=
-  MatrixExclude(Map("project" -> "rootJS", "scala" -> Scala212))
+ThisBuild / githubWorkflowBuildMatrixExclusions ++=
+  Seq(
+    MatrixExclude(Map("project" -> "rootJS", "scala" -> Scala212)),
+    MatrixExclude(Map("project" -> "rootNative", "scala" -> Scala212)))
 
 ThisBuild / githubWorkflowBuild ~= { steps =>
   val scriptedStep = WorkflowStep.Sbt(

@@ -42,6 +42,8 @@ jobs:
             java: corretto@11
           - project: rootJS
             scala: 2.12.17
+          - project: rootNative
+            scala: 2.12.17
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -211,16 +213,6 @@ jobs:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootJVM
 
       - name: Inflate target directories (2.12.17, rootJVM)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
-      - name: Download target directories (2.12.17, rootNative)
-        uses: actions/download-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootNative
-
-      - name: Inflate target directories (2.12.17, rootNative)
         run: |
           tar xf targets.tar
           rm targets.tar
