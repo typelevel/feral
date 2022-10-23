@@ -103,7 +103,7 @@ lazy val lambdaKernel = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     name := "feral-lambda-kernel",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect-kernel" % catsEffectVersion,
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "org.tpolecat" %%% "natchez-core" % "0.1.6-269-2b28bcd-SNAPSHOT",
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
@@ -126,11 +126,9 @@ lazy val lambdaRuntime = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     name := "feral-lambda-runtime",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
-      "io.circe" %%% "circe-jawn" % circeVersion,
       "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion
     )

@@ -38,10 +38,7 @@ private[feral] trait IOSetup {
           deferred.complete(setup)
       }
       .unsafeRunAndForget()(runtime)
-    deferred.get.flatMap {
-      case Right(a) => IO.pure(a)
-      case Left(ex) => IO.raiseError(ex)
-    }
+    deferred.get.rethrow
   }
 
 }
