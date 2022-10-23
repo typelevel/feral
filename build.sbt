@@ -248,7 +248,9 @@ lazy val unidocs = project
           core.jvm,
           lambda.jvm,
           lambdaHttp4s.jvm,
-          lambdaCloudFormationCustomResource.jvm
+          lambdaCloudFormationCustomResource.jvm,
+          lambdaKernel.jvm,
+          lambdaRuntime.jvm
         )
     }
   )
