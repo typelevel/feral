@@ -22,7 +22,7 @@ import io.circe.scalajs._
 
 import scala.concurrent.duration._
 
-private[lambda] trait ContextCompanionPlatform {
+private[lambda] object ContextPlatform {
 
   private[lambda] def fromJS[F[_]: Sync](context: facade.Context): Context[F] =
     new Context(

@@ -30,7 +30,6 @@ import org.http4s.Request
 import org.http4s.Uri
 import org.http4s.headers.Cookie
 import org.http4s.headers.`Set-Cookie`
-
 object ApiGatewayProxyHandler {
   def apply[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpRoutes(routes)
