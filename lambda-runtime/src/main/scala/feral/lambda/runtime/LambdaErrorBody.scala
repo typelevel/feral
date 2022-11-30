@@ -17,6 +17,9 @@
 package feral.lambda.runtime
 
 import io.circe.Encoder
+import io.circe.Printer
+import org.http4s.EntityEncoder
+import org.http4s.circe._
 
 private[runtime] final class LambdaErrorBody(
     val errorMessage: String,
@@ -38,4 +41,7 @@ private[runtime] object LambdaErrorBody {
   implicit val encoder: Encoder[LambdaErrorBody] =
     Encoder.forProduct3("errorMessage", "errorType", "stackTrace")(e =>
       (e.errorMessage, e.errorType, e.stackTrace))
+
+  implicit def entityEncoder[F[_]]: EntityEncoder[F, LambdaErrorBody] =
+    jsonEncoderWithPrinterOf(Printer.noSpaces.copy(dropNullValues = true))
 }

@@ -28,7 +28,6 @@ import org.http4s.circe._
 import org.http4s._
 import io.circe._
 import cats.effect.kernel.Outcome._
-import io.circe.syntax.EncoderOps
 
 import scala.concurrent.CancellationException
 
@@ -73,18 +72,16 @@ object LambdaRuntime {
         _ <- client.expect[Unit](Request[F](POST, invocationResponseUri).withEntity(result))
       } yield ()).handleErrorWith { ex =>
         val error = LambdaErrorBody.fromThrowable(ex)
-        client.expect[Unit](Request[F](POST, invocationErrorUri).withEntity(error.asJson))
+        client.expect[Unit](Request[F](POST, invocationErrorUri).withEntity(error))
       }
     } yield ()).foreverM
   }
 
   private[this] def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], ex: Throwable)(
       implicit F: Temporal[F]): F[Unit] = {
-    implicit val jsonEncoder: EntityEncoder[F, Json] =
-      jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     val initErrorUri = runtimeUri / "init" / "error"
     val error = LambdaErrorBody.fromThrowable(ex)
-    client.expect[Unit](Request[F](POST, initErrorUri).withEntity(error.asJson)) *>
+    client.expect[Unit](Request[F](POST, initErrorUri).withEntity(error)) *>
       F.raiseError[Unit](ex)
   }
 
