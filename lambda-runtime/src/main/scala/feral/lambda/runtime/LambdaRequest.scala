@@ -25,7 +25,8 @@ import org.http4s._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import feral.lambda.runtime.headers._
-final class LambdaRequest(
+
+private[runtime] final class LambdaRequest(
     val deadlineTimeInMs: FiniteDuration,
     val id: String,
     val invokedFunctionArn: String,
@@ -34,7 +35,7 @@ final class LambdaRequest(
     val body: Json
 )
 
-object LambdaRequest {
+private[runtime] object LambdaRequest {
   def fromResponse[F[_]](response: Response[F])(implicit F: Concurrent[F]): F[LambdaRequest] = {
     implicit val jsonDecoder: EntityDecoder[F, Json] = jsonDecoderIncremental
     for {
