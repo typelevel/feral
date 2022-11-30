@@ -24,13 +24,13 @@ import io.circe.syntax.EncoderOps
 import io.circe.jawn._
 import cats.syntax.all._
 
-final class `Lambda-Runtime-Client-Context`(val value: ClientContext)
+private[runtime] final class `Lambda-Runtime-Client-Context`(val value: ClientContext)
 
-object `Lambda-Runtime-Client-Context` {
+private[runtime] object `Lambda-Runtime-Client-Context` {
 
   def apply(value: ClientContext) = new `Lambda-Runtime-Client-Context`(value)
 
-  final val name: String = "Lambda-Runtime-Client-Context"
+  final val name = "Lambda-Runtime-Client-Context"
 
   private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] = (for {
     parsedJson <- parse(s)

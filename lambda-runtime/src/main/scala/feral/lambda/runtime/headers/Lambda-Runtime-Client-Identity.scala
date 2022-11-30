@@ -25,13 +25,14 @@ import io.circe._
 import io.circe.jawn._
 import cats.syntax.all._
 
-final class `Lambda-Runtime-Client-Identity`(val value: CognitoIdentity)
+private[runtime] final class `Lambda-Runtime-Client-Identity`(val value: CognitoIdentity)
 
-object `Lambda-Runtime-Client-Identity` {
+private[runtime] object `Lambda-Runtime-Client-Identity` {
 
   def apply(value: CognitoIdentity) = new `Lambda-Runtime-Client-Identity`(value)
 
-  final val name: String = "Lambda-Runtime-Client-Identity"
+  final val name = "Lambda-Runtime-Client-Identity"
+
   private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] = (for {
     parsedJson <- parse(s)
     identity <- parsedJson.as[CognitoIdentity]
