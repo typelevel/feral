@@ -49,7 +49,7 @@ object LambdaRuntime {
       } yield ()
     }
 
-  private[runtime] def processEvents[F[_]](
+  private[this] def processEvents[F[_]](
       runtimeUri: Uri,
       client: Client[F],
       handler: (Json, Context[F]) => F[Json])(
@@ -71,24 +71,24 @@ object LambdaRuntime {
         }
         invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
         _ <- client.expect[Unit](Request[F](POST, invocationResponseUri).withEntity(result))
-      } yield ()).handleErrorWith(e => {
-        val error = LambdaErrorBody(e.getMessage, "Exception", List())
+      } yield ()).handleErrorWith { ex =>
+        val error = LambdaErrorBody.fromThrowable(ex)
         client.expect[Unit](Request[F](POST, invocationErrorUri).withEntity(error.asJson))
-      })
+      }
     } yield ()).foreverM
   }
 
-  private[runtime] def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], e: Throwable)(
+  private[this] def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], ex: Throwable)(
       implicit F: Temporal[F]): F[Unit] = {
     implicit val jsonEncoder: EntityEncoder[F, Json] =
       jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
     val initErrorUri = runtimeUri / "init" / "error"
-    val error = LambdaErrorBody(e.getMessage, "Exception", List())
-    client.expect[Unit](Request[F](POST, initErrorUri).withEntity(error.asJson)) >> F
-      .raiseError[Unit](e)
+    val error = LambdaErrorBody.fromThrowable(ex)
+    client.expect[Unit](Request[F](POST, initErrorUri).withEntity(error.asJson)) *>
+      F.raiseError[Unit](ex)
   }
 
-  private[runtime] def createContext[F[_]](request: LambdaRequest)(
+  private[this] def createContext[F[_]](request: LambdaRequest)(
       implicit F: Temporal[F],
       env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
     functionName <- env.lambdaFunctionName

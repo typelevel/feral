@@ -24,8 +24,16 @@ private[runtime] final class LambdaErrorBody(
     val stackTrace: List[String])
 
 private[runtime] object LambdaErrorBody {
+
   def apply(errorMessage: String, errorType: String, stackTrace: List[String]) =
     new LambdaErrorBody(errorMessage, errorType, stackTrace)
+
+  def fromThrowable(ex: Throwable): LambdaErrorBody =
+    LambdaErrorBody(
+      ex.getMessage,
+      ex.getClass.getSimpleName,
+      ex.getStackTrace().toList.map(_.toString)
+    )
 
   implicit val encoder: Encoder[LambdaErrorBody] =
     Encoder.forProduct3("errorMessage", "errorType", "stackTrace")(e =>
