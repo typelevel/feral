@@ -32,11 +32,11 @@ private[runtime] object `Lambda-Runtime-Client-Context` {
 
   final val name = "Lambda-Runtime-Client-Context"
 
-  private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] = (for {
-    parsedJson <- parse(s)
-    clientContext <- parsedJson.as[ClientContext]
-  } yield `Lambda-Runtime-Client-Context`(clientContext)).leftMap(_ =>
-    new ParseFailure(s, "Unable to parse client identity header"))
+  private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] =
+    decode[ClientContext](s).bimap(
+      _ => ParseFailure(s, "Unable to parse client context header"),
+      `Lambda-Runtime-Client-Context`(_)
+    )
 
   implicit val headerInstance: Header[`Lambda-Runtime-Client-Context`, Header.Single] =
     Header.create(CIString(name), _.value.asJson.toString, parser)

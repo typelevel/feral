@@ -29,7 +29,7 @@ private[runtime] object `Lambda-Runtime-Deadline-Ms` {
 
   private[headers] def parse(s: String): ParseResult[`Lambda-Runtime-Deadline-Ms`] =
     s.toLongOption
-      .toRight(new ParseFailure(s, "Unable to parse to millisecond value"))
+      .toRight(ParseFailure(s, "Unable to parse to millisecond value"))
       .map(`Lambda-Runtime-Deadline-Ms`(_))
 
   implicit val headerInstance: Header[`Lambda-Runtime-Deadline-Ms`, Header.Single] =
