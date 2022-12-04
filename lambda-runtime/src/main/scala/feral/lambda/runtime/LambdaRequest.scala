@@ -27,7 +27,7 @@ import scala.concurrent.duration.FiniteDuration
 import feral.lambda.runtime.headers._
 
 private[runtime] final class LambdaRequest(
-    val deadlineTimeInMs: FiniteDuration,
+    val deadlineTime: FiniteDuration,
     val id: String,
     val invokedFunctionArn: String,
     val identity: Option[CognitoIdentity],

@@ -113,7 +113,7 @@ object LambdaRuntime {
       logStreamName,
       request.identity,
       request.clientContext,
-      F.realTime.map(curTime => request.deadlineTimeInMs - curTime)
+      F.realTime.map(curTime => request.deadlineTime - curTime)
     )
   }
 }
