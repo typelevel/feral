@@ -24,7 +24,9 @@ import cats.effect._
 import io.circe.syntax.EncoderOps
 import org.http4s.Method.{GET, POST}
 import org.http4s.HttpRoutes
+import org.http4s.Uri
 import org.http4s.Uri.Path.Root
+import org.http4s.syntax.all._
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.circe._
@@ -41,7 +43,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
       funcVersion: IO[String] = IO("1.0"),
       logGroupName: IO[String] = IO("test"),
       logStreamName: IO[String] = IO("test"),
-      runtimeApi: IO[String] = IO("testApi")): LambdaRuntimeEnv[IO] = new LambdaRuntimeEnv[IO] {
+      runtimeApi: IO[Uri] = IO(uri"testApi")): LambdaRuntimeEnv[IO] = new LambdaRuntimeEnv[IO] {
 
     def lambdaFunctionName: IO[String] = funcName
 
@@ -53,7 +55,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
 
     def lambdaLogStreamName: IO[String] = logStreamName
 
-    def lambdaRuntimeApi: IO[String] = runtimeApi
+    def lambdaRuntimeApi: IO[Uri] = runtimeApi
   }
 
   def defaultRoutes(invocationQuota: Ref[IO, Int]): HttpRoutes[IO] =

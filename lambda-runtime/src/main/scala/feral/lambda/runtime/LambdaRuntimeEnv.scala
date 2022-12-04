@@ -19,6 +19,7 @@ package feral.lambda.runtime
 import cats.MonadThrow
 import cats.effect.std.Env
 import cats.syntax.all._
+import org.http4s.Uri
 
 trait LambdaRuntimeEnv[F[_]] {
   def lambdaFunctionName: F[String]
@@ -26,7 +27,7 @@ trait LambdaRuntimeEnv[F[_]] {
   def lambdaFunctionVersion: F[String]
   def lambdaLogGroupName: F[String]
   def lambdaLogStreamName: F[String]
-  def lambdaRuntimeApi: F[String]
+  def lambdaRuntimeApi: F[Uri]
 }
 
 object LambdaRuntimeEnv {
@@ -54,7 +55,8 @@ object LambdaRuntimeEnv {
 
       def lambdaLogStreamName: F[String] = getOrRaise(AWS_LAMBDA_LOG_STREAM_NAME)
 
-      def lambdaRuntimeApi: F[String] = getOrRaise(AWS_LAMBDA_RUNTIME_API)
+      def lambdaRuntimeApi: F[Uri] =
+        getOrRaise(AWS_LAMBDA_RUNTIME_API).flatMap(Uri.fromString(_).liftTo)
 
       def getOrRaise(envName: String): F[String] =
         env.get(envName).flatMap(_.liftTo(new NoSuchElementException(envName)))

@@ -42,7 +42,7 @@ object LambdaRuntime {
     handlerResource.attempt.use { handlerOrError =>
       for {
         api <- env.lambdaRuntimeApi
-        runtimeUri <- Uri.fromString(s"/$api/$ApiVersion/runtime/").liftTo[F]
+        runtimeUri = api / ApiVersion / "runtime"
         _ <- handlerOrError
           .fold(handleInitError(runtimeUri, client, _), processEvents(runtimeUri, client, _))
       } yield ()
