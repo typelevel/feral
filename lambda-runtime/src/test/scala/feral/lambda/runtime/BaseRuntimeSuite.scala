@@ -38,27 +38,28 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
   implicit val jsonEncoder: EntityEncoder[IO, Json] =
     jsonEncoderWithPrinter[IO](Printer.noSpaces.copy(dropNullValues = true))
 
-  private[runtime] def createTestEnv(
+  def createTestEnv(
       funcName: IO[String] = IO("test"),
       memorySize: IO[Int] = IO(144),
       funcVersion: IO[String] = IO("1.0"),
       logGroupName: IO[String] = IO("test"),
       logStreamName: IO[String] = IO("test"),
       runtimeApi: IO[String] = IO("testApi")): LambdaRuntimeEnv[IO] = new LambdaRuntimeEnv[IO] {
-    override def lambdaFunctionName: IO[String] = funcName
 
-    override def lambdaFunctionMemorySize: IO[Int] = memorySize
+    def lambdaFunctionName: IO[String] = funcName
 
-    override def lambdaFunctionVersion: IO[String] = funcVersion
+    def lambdaFunctionMemorySize: IO[Int] = memorySize
 
-    override def lambdaLogGroupName: IO[String] = logGroupName
+    def lambdaFunctionVersion: IO[String] = funcVersion
 
-    override def lambdaLogStreamName: IO[String] = logStreamName
+    def lambdaLogGroupName: IO[String] = logGroupName
 
-    override def lambdaRuntimeApi: IO[String] = runtimeApi
+    def lambdaLogStreamName: IO[String] = logStreamName
+
+    def lambdaRuntimeApi: IO[String] = runtimeApi
   }
 
-  private[runtime] def defaultRoutes(invocationQuota: Ref[IO, Int]): HttpRoutes[IO] =
+  def defaultRoutes(invocationQuota: Ref[IO, Int]): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case GET -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / "next" =>
         for {
@@ -99,37 +100,36 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
         Ok()
     }
 
-  private[runtime] def testInvocationErrorRoute(
-      eventualInvocationError: Deferred[IO, Json]): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case req @ POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / _ / "error" =>
-      for {
-        body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
-        _ <- eventualInvocationError.complete(body)
-        resp <- Ok()
-      } yield resp
-  }
+  def testInvocationErrorRoute(eventualInvocationError: Deferred[IO, Json]): HttpRoutes[IO] =
+    HttpRoutes.of[IO] {
+      case req @ POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / _ / "error" =>
+        for {
+          body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
+          _ <- eventualInvocationError.complete(body)
+          resp <- Ok()
+        } yield resp
+    }
 
-  private[runtime] def testInvocationResponseRoute(
-      eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" =>
-      eventualInvocationId.complete(id) >> Ok()
-  }
+  def testInvocationResponseRoute(eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] =
+    HttpRoutes.of[IO] {
+      case POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / id / "response" =>
+        eventualInvocationId.complete(id) >> Ok()
+    }
 
-  private[runtime] def testInitErrorRoute(
-      eventualInitError: Deferred[IO, Json]): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case req @ POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "init" / "error" =>
-      for {
-        body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
-        _ <- eventualInitError.complete(body)
-        resp <- Ok()
-      } yield resp
-  }
+  def testInitErrorRoute(eventualInitError: Deferred[IO, Json]): HttpRoutes[IO] =
+    HttpRoutes.of[IO] {
+      case req @ POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "init" / "error" =>
+        for {
+          body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
+          _ <- eventualInitError.complete(body)
+          resp <- Ok()
+        } yield resp
+    }
 
-  private[runtime] def expectedErrorBody(
-      errorMessage: String = "Error",
-      errorType: String = "Exception"): Json = Json.obj(
-    "errorMessage" -> errorMessage.asJson,
-    "errorType" -> errorType.asJson,
-    "stackTrace" -> List[String]().asJson
-  )
+  def expectedErrorBody(errorMessage: String = "Error", errorType: String = "Exception"): Json =
+    Json.obj(
+      "errorMessage" -> errorMessage.asJson,
+      "errorType" -> errorType.asJson,
+      "stackTrace" -> List[String]().asJson
+    )
 }
