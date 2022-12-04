@@ -55,27 +55,34 @@ object LambdaRuntime {
       handler: (Json, Context[F]) => F[Json])(
       implicit F: Temporal[F],
       env: LambdaRuntimeEnv[F]): F[Nothing] = {
+
     implicit val jsonEncoder: EntityEncoder[F, Json] =
       jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
+
     val nextInvocationUri = runtimeUri / "invocation" / "next"
-    (for {
-      request <- client.get(nextInvocationUri)(LambdaRequest.fromResponse[F])
-      invocationErrorUri = runtimeUri / "invocation" / request.id / "error"
-      _ <- (for {
-        context <- createContext(request)
-        handlerFiber <- handler(request.body, context).start
-        result <- handlerFiber.join.flatMap {
-          case Succeeded(result) => result
-          case Errored(e) => F.raiseError[Json](e)
-          case Canceled() => F.raiseError[Json](new CancellationException)
+
+    client
+      .get(nextInvocationUri)(LambdaRequest.fromResponse[F])
+      .flatMap { request =>
+        val respond = for {
+          context <- createContext(request)
+          handlerFiber <- handler(request.body, context).start
+          result <- handlerFiber.join.flatMap {
+            case Succeeded(result) => result
+            case Errored(e) => F.raiseError[Json](e)
+            case Canceled() => F.raiseError[Json](new CancellationException)
+          }
+          invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
+          _ <- client.expect[Unit](Request[F](POST, invocationResponseUri).withEntity(result))
+        } yield ()
+
+        respond.handleErrorWith { ex =>
+          val error = LambdaErrorBody.fromThrowable(ex)
+          val invocationErrorUri = runtimeUri / "invocation" / request.id / "error"
+          client.expect[Unit](Request[F](POST, invocationErrorUri).withEntity(error))
         }
-        invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
-        _ <- client.expect[Unit](Request[F](POST, invocationResponseUri).withEntity(result))
-      } yield ()).handleErrorWith { ex =>
-        val error = LambdaErrorBody.fromThrowable(ex)
-        client.expect[Unit](Request[F](POST, invocationErrorUri).withEntity(error))
       }
-    } yield ()).foreverM
+      .foreverM
   }
 
   private[this] def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], ex: Throwable)(
