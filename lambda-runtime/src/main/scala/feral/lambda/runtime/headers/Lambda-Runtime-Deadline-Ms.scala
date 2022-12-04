@@ -25,7 +25,7 @@ private[runtime] object `Lambda-Runtime-Deadline-Ms` {
 
   def apply(value: Long) = new `Lambda-Runtime-Deadline-Ms`(value)
 
-  final val name = "Lambda-Runtime-Deadline-Ms"
+  final val name = ci"Lambda-Runtime-Deadline-Ms"
 
   private[headers] def parse(s: String): ParseResult[`Lambda-Runtime-Deadline-Ms`] =
     s.toLongOption
@@ -33,6 +33,6 @@ private[runtime] object `Lambda-Runtime-Deadline-Ms` {
       .map(`Lambda-Runtime-Deadline-Ms`(_))
 
   implicit val headerInstance: Header[`Lambda-Runtime-Deadline-Ms`, Header.Single] =
-    Header.createRendered(CIString(name), _.value, parse)
+    Header.createRendered(name, _.value, parse)
 
 }

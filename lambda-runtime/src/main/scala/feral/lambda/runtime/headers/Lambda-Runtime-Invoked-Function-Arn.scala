@@ -25,11 +25,11 @@ private[runtime] object `Lambda-Runtime-Invoked-Function-Arn` {
 
   def apply(value: String) = new `Lambda-Runtime-Invoked-Function-Arn`(value)
 
-  final val name = "Lambda-Runtime-Invoked-Function-Arn"
+  final val name = ci"Lambda-Runtime-Invoked-Function-Arn"
 
   private[headers] def parse(s: String): ParseResult[`Lambda-Runtime-Invoked-Function-Arn`] =
     ParseResult.success(`Lambda-Runtime-Invoked-Function-Arn`(s))
 
   implicit val headerInstance: Header[`Lambda-Runtime-Invoked-Function-Arn`, Header.Single] =
-    Header.createRendered(CIString(name), _.value, parse)
+    Header.createRendered(name, _.value, parse)
 }

@@ -30,7 +30,7 @@ private[runtime] object `Lambda-Runtime-Client-Context` {
 
   def apply(value: ClientContext) = new `Lambda-Runtime-Client-Context`(value)
 
-  final val name = "Lambda-Runtime-Client-Context"
+  final val name = ci"Lambda-Runtime-Client-Context"
 
   private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] =
     decode[ClientContext](s).bimap(
@@ -39,7 +39,7 @@ private[runtime] object `Lambda-Runtime-Client-Context` {
     )
 
   implicit val headerInstance: Header[`Lambda-Runtime-Client-Context`, Header.Single] =
-    Header.create(CIString(name), _.value.asJson.toString, parser)
+    Header.create(name, _.value.asJson.toString, parser)
 
   implicit val clientContextClientDecoder: Decoder[ClientContextClient] = Decoder.forProduct5(
     "client_id",

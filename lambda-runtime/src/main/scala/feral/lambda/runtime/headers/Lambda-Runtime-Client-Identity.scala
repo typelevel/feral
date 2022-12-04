@@ -31,7 +31,7 @@ private[runtime] object `Lambda-Runtime-Client-Identity` {
 
   def apply(value: CognitoIdentity) = new `Lambda-Runtime-Client-Identity`(value)
 
-  final val name = "Lambda-Runtime-Client-Identity"
+  final val name = ci"Lambda-Runtime-Client-Identity"
 
   private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] =
     decode[CognitoIdentity](s).bimap(
@@ -40,7 +40,7 @@ private[runtime] object `Lambda-Runtime-Client-Identity` {
     )
 
   implicit val headerInstance: Header[`Lambda-Runtime-Client-Identity`, Header.Single] =
-    Header.create(CIString(name), _.value.asJson.toString, parser)
+    Header.create(name, _.value.asJson.toString, parser)
 
   implicit val cognitoIdentityDecoder: Decoder[CognitoIdentity] =
     Decoder.forProduct2("identity_id", "identity_pool_id")(
