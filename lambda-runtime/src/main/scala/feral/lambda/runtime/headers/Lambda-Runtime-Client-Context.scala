@@ -34,7 +34,7 @@ private[runtime] object `Lambda-Runtime-Client-Context` {
 
   private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Context`] =
     decode[ClientContext](s).bimap(
-      _ => ParseFailure(s, "Unable to parse client context header"),
+      e => ParseFailure(name.toString, e.toString),
       `Lambda-Runtime-Client-Context`(_)
     )
 
