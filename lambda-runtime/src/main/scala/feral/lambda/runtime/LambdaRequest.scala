@@ -51,7 +51,7 @@ private[runtime] object LambdaRequest {
         .headers
         .get[`Lambda-Runtime-Deadline-Ms`]
         .liftTo(new NoSuchElementException(`Lambda-Runtime-Deadline-Ms`.name.toString))
-      identity <- response.headers.get[`Lambda-Runtime-Client-Identity`].pure
+      clientIdentity <- response.headers.get[`Lambda-Runtime-Client-Identity`].pure
       clientContext <- response.headers.get[`Lambda-Runtime-Client-Context`].pure
       body <- response.as[Json]
     } yield {
@@ -59,7 +59,7 @@ private[runtime] object LambdaRequest {
         FiniteDuration(deadlineTimeInMs.value, TimeUnit.MILLISECONDS),
         id.value,
         invokedFunctionArn.value,
-        identity.map(_.value),
+        clientIdentity.map(_.value),
         clientContext.map(_.value),
         body
       )

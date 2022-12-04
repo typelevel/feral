@@ -35,7 +35,7 @@ private[runtime] object `Lambda-Runtime-Client-Identity` {
 
   private[headers] def parser(s: String): ParseResult[`Lambda-Runtime-Client-Identity`] =
     decode[CognitoIdentity](s).bimap(
-      e => ParseFailure(header.name.toString, e.toString),
+      e => ParseFailure(name.toString, e.toString),
       `Lambda-Runtime-Client-Identity`(_)
     )
 

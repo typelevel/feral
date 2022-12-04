@@ -29,7 +29,7 @@ private[runtime] object `Lambda-Runtime-Deadline-Ms` {
 
   private[headers] def parse(s: String): ParseResult[`Lambda-Runtime-Deadline-Ms`] =
     s.toLongOption
-      .toRight(ParseFailure(header.name.toString, s))
+      .toRight(ParseFailure(name.toString, s))
       .map(`Lambda-Runtime-Deadline-Ms`(_))
 
   implicit val headerInstance: Header[`Lambda-Runtime-Deadline-Ms`, Header.Single] =
