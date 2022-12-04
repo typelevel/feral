@@ -20,18 +20,15 @@ import munit.CatsEffectSuite
 import cats.effect.IO
 import feral.lambda._
 import io.circe._
-import cats.syntax.all._
 import cats.effect._
 import io.circe.syntax.EncoderOps
 import org.http4s.Method.{GET, POST}
 import org.http4s.HttpRoutes
 import org.http4s.Uri.Path.Root
 import org.http4s._
-import org.typelevel.jawn.Parser
-import io.circe.jawn.CirceSupportParser.facade
 import org.http4s.dsl.io._
+import org.http4s.circe._
 import feral.lambda.runtime.headers._
-import org.http4s.circe.jsonEncoderWithPrinter
 
 abstract class BaseRuntimeSuite extends CatsEffectSuite {
 
@@ -63,7 +60,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
     HttpRoutes.of[IO] {
       case GET -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / "next" =>
         for {
-          currentInvocations <- invocationQuota.modify(cur => (cur - 1, cur))
+          currentInvocations <- invocationQuota.getAndUpdate(_ - 1)
           _ <- if (currentInvocations > 0) IO.unit else IO.never
           headers = Headers(
             `Lambda-Runtime-Aws-Request-Id`("testId"),
@@ -103,11 +100,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
   def testInvocationErrorRoute(eventualInvocationError: Deferred[IO, Json]): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req @ POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "invocation" / _ / "error" =>
-        for {
-          body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
-          _ <- eventualInvocationError.complete(body)
-          resp <- Ok()
-        } yield resp
+        req.as[Json].flatTap(eventualInvocationError.complete) *> Ok()
     }
 
   def testInvocationResponseRoute(eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] =
@@ -119,11 +112,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
   def testInitErrorRoute(eventualInitError: Deferred[IO, Json]): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req @ POST -> Root / "testApi" / LambdaRuntime.ApiVersion / "runtime" / "init" / "error" =>
-        for {
-          body <- req.body.compile.to(Array).flatMap(Parser.parseFromByteArray(_).liftTo[IO])
-          _ <- eventualInitError.complete(body)
-          resp <- Ok()
-        } yield resp
+        req.as[Json].flatTap(eventualInitError.complete(_)) *> Ok()
     }
 
   def expectedErrorBody(errorMessage: String = "Error", errorType: String = "Exception"): Json =
