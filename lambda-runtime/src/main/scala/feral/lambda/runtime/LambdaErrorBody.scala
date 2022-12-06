@@ -16,7 +16,7 @@
 
 package feral.lambda.runtime
 
-import io.circe.{Decoder, Encoder, Printer}
+import io.circe.{Encoder, Printer}
 import org.http4s.EntityEncoder
 import org.http4s.circe._
 
