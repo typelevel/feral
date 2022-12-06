@@ -123,4 +123,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
       "errorType" -> errorType.asJson,
       "stackTrace" -> List[String]().asJson
     )
+
+  def lambdaErrorBodyJsonNoStackTrace(errorBody: Json): Option[Json] =
+    errorBody.hcursor.downField("stackTrace").withFocus(_ => List[String]().asJson).top
 }

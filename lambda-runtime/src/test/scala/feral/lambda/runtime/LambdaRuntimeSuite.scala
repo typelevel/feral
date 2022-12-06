@@ -76,9 +76,10 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
         IO.raiseError(new Exception("Failure acquiring handler")))(_ => IO.unit)
       runtimeFiber <- LambdaRuntime(client)(badHandlerResource).start
       errorRequest <- eventualInitError.get.timeout(2.seconds)
+      errorRequestNoStackTrace = lambdaErrorBodyJsonNoStackTrace(errorRequest)
       runtimeOutcome <- runtimeFiber.join.timeout(2.seconds)
     } yield {
-      assert(errorRequest eqv expectedErrorBody("Failure acquiring handler"))
+      assert(errorRequestNoStackTrace.exists(_ eqv expectedErrorBody("Failure acquiring handler")))
       assert(runtimeOutcome.isError)
     }
   }
@@ -95,25 +96,29 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       handler = (_: Json, _: Context[IO]) => IO.raiseError[Json](new Exception("Error"))
       runtimeFiber <- LambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       errorRequest <- eventualInvocationError.get.timeout(2.seconds)
+      errorRequestNoStackTrace = lambdaErrorBodyJsonNoStackTrace(errorRequest)
       _ <- runtimeFiber.cancel
-    } yield assert(errorRequest eqv expectedErrorBody())
+    } yield assert(errorRequestNoStackTrace.exists(_ eqv expectedErrorBody()))
   }
 
   test(
-    "The runtime will call the invocation error url when a needed environment variable is not available") {
+    "The runtime will call the initialization error url when a needed environment variable is not available") {
     implicit val env: LambdaRuntimeEnv[IO] =
-      createTestEnv(funcName = IO.raiseError(new Exception("Error")))
+      createTestEnv(funcName = IO.raiseError(new Exception("Cannot acquire lambda function name")))
     for {
-      invocationQuota <- Ref[IO].of(1)
-      eventualInvocationError <- Deferred[IO, Json]
+      invocationQuota <- Ref[IO].of(0)
+      eventualInitError <- Deferred[IO, Json]
       client = Client.fromHttpApp(
-        (testInvocationErrorRoute(eventualInvocationError) <+> defaultRoutes(
-          invocationQuota)).orNotFound)
+        (testInitErrorRoute(eventualInitError) <+> defaultRoutes(invocationQuota)).orNotFound)
       handler = (_: Json, _: Context[IO]) => Json.obj().pure[IO]
       runtimeFiber <- LambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
-      errorRequest <- eventualInvocationError.get.timeout(2.seconds)
-      _ <- runtimeFiber.cancel
-    } yield assert(errorRequest eqv expectedErrorBody())
+      errorRequest <- eventualInitError.get.timeout(2.seconds)
+      errorRequestNoStackTrace = lambdaErrorBodyJsonNoStackTrace(errorRequest)
+      runtimeOutcome <- runtimeFiber.join.timeout(2.seconds)
+    } yield {
+      assert(errorRequestNoStackTrace.exists(_ eqv expectedErrorBody("Cannot acquire lambda function name")))
+      assert(runtimeOutcome.isError)
+    }
   }
 
   test(
@@ -137,10 +142,11 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
         } yield resp
       runtimeFiber <- LambdaRuntime(client)(Resource.eval(handler.pure[IO])).start
       invocationError <- eventualInvocationError.get.timeout(2.seconds)
+      invocationErrorNoStackTrace = lambdaErrorBodyJsonNoStackTrace(invocationError)
       secondInvocationResponse <- eventualResponse.get.timeout(2.seconds)
       _ <- runtimeFiber.cancel
     } yield {
-      assert(invocationError eqv expectedErrorBody("First invocation error"))
+      assert(invocationErrorNoStackTrace.exists(_ eqv expectedErrorBody("First invocation error")))
       assert(secondInvocationResponse eqv "testId")
     }
   }
