@@ -35,23 +35,28 @@ object LambdaRuntime {
   def apply[F[_]](client: Client[F])(
       handlerResource: Resource[F, (Json, Context[F]) => F[Json]])(
       implicit F: Temporal[F],
-      env: LambdaRuntimeEnv[F]): F[Nothing] =
-    handlerResource.attempt.use[Nothing] { handlerOrError =>
-      env.lambdaRuntimeApi.flatMap[Nothing] { api =>
+      env: LambdaRuntimeEnv[F]): F[Unit] =
+    handlerResource.attempt.use[Unit] { handlerOrError =>
+      env.lambdaRuntimeApi.flatMap[Unit] { api =>
         val runtimeUri = api / ApiVersion / "runtime"
-        handlerOrError.fold(
-          handleInitError(runtimeUri, client, _),
-          processEvents(runtimeUri, client, _)
-        )
+        LambdaSettings.fromLambdaEnvironment.attempt.flatMap {
+          (handlerOrError, _)
+            .tupled
+            .fold(
+              handleInitError(runtimeUri, client, _),
+              {
+                case (handler, settings) =>
+                  processEvents(runtimeUri, client, handler, settings)
+              }
+            )
+        }
       }
     }
-
   private[this] def processEvents[F[_]](
       runtimeUri: Uri,
       client: Client[F],
-      handler: (Json, Context[F]) => F[Json])(
-      implicit F: Temporal[F],
-      env: LambdaRuntimeEnv[F]): F[Nothing] = {
+      handler: (Json, Context[F]) => F[Json],
+      settings: LambdaSettings)(implicit F: Temporal[F]): F[Unit] = {
 
     implicit val jsonEncoder: EntityEncoder[F, Json] =
       jsonEncoderWithPrinter[F](Printer.noSpaces.copy(dropNullValues = true))
@@ -61,8 +66,8 @@ object LambdaRuntime {
     client
       .get(nextInvocationUri)(LambdaRequest.fromResponse[F])
       .flatMap { request =>
+        val context = createContext(request, settings)
         val respond = for {
-          context <- createContext(request)
           handlerFiber <- handler(request.body, context).start
           result <- handlerFiber.join.flatMap(_.embedError)
           invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
@@ -79,34 +84,27 @@ object LambdaRuntime {
   }
 
   private[this] def handleInitError[F[_]](runtimeUri: Uri, client: Client[F], ex: Throwable)(
-      implicit F: Temporal[F]): F[Nothing] = {
+      implicit F: Temporal[F]): F[Unit] = {
     val initErrorUri = runtimeUri / "init" / "error"
     val error = LambdaErrorBody.fromThrowable(ex)
     client
       .expect[Unit](Request[F](POST, initErrorUri).withEntity(error))
-      .productR[Nothing](F.raiseError[Nothing](ex))
+      .productR[Unit](F.raiseError[Unit](ex))
   }
 
-  private[this] def createContext[F[_]](request: LambdaRequest)(
-      implicit F: Temporal[F],
-      env: LambdaRuntimeEnv[F]): F[Context[F]] = for {
-    functionName <- env.lambdaFunctionName
-    functionVersion <- env.lambdaFunctionVersion
-    functionMemorySize <- env.lambdaFunctionMemorySize
-    logGroupName <- env.lambdaLogGroupName
-    logStreamName <- env.lambdaLogStreamName
-  } yield {
+  private[this] def createContext[F[_]](request: LambdaRequest, settings: LambdaSettings)(
+      implicit F: Temporal[F]): Context[F] =
     new Context[F](
-      functionName,
-      functionVersion,
+      settings.functionName,
+      settings.functionVersion,
       request.invokedFunctionArn,
-      functionMemorySize,
+      settings.functionMemorySize,
       request.id,
-      logGroupName,
-      logStreamName,
+      settings.logGroupName,
+      settings.logStreamName,
       request.identity,
       request.clientContext,
       F.realTime.map(curTime => request.deadlineTime - curTime)
     )
-  }
+
 }
