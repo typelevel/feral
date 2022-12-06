@@ -27,9 +27,6 @@ import org.http4s.client.Client
 import org.http4s.circe._
 import org.http4s._
 import io.circe._
-import cats.effect.kernel.Outcome._
-
-import scala.concurrent.CancellationException
 
 object LambdaRuntime {
 
@@ -67,11 +64,7 @@ object LambdaRuntime {
         val respond = for {
           context <- createContext(request)
           handlerFiber <- handler(request.body, context).start
-          result <- handlerFiber.join.flatMap {
-            case Succeeded(result) => result
-            case Errored(e) => F.raiseError[Json](e)
-            case Canceled() => F.raiseError[Json](new CancellationException)
-          }
+          result <- handlerFiber.join.flatMap(_.embedError)
           invocationResponseUri = runtimeUri / "invocation" / request.id / "response"
           _ <- client.expect[Unit](Request[F](POST, invocationResponseUri).withEntity(result))
         } yield ()
