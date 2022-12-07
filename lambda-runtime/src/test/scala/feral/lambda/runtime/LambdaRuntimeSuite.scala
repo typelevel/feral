@@ -79,7 +79,8 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       errorRequestNoStackTrace = lambdaErrorBodyJsonNoStackTrace(errorRequest)
       runtimeOutcome <- runtimeFiber.join.timeout(2.seconds)
     } yield {
-      assert(errorRequestNoStackTrace.exists(_ eqv expectedErrorBody("Failure acquiring handler")))
+      assert(
+        errorRequestNoStackTrace.exists(_ eqv expectedErrorBody("Failure acquiring handler")))
       assert(runtimeOutcome.isError)
     }
   }
@@ -103,8 +104,10 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
 
   test(
     "The runtime will call the initialization error url when a needed environment variable is not available") {
+    val lambdaFunctionNameEnvVar = LambdaRuntimeEnv.AWS_LAMBDA_FUNCTION_NAME
     implicit val env: LambdaRuntimeEnv[IO] =
-      createTestEnv(funcName = IO.raiseError(new Exception("Cannot acquire lambda function name")))
+      createTestEnv(funcName =
+        IO.raiseError(new NoSuchElementException(lambdaFunctionNameEnvVar)))
     for {
       invocationQuota <- Ref[IO].of(0)
       eventualInitError <- Deferred[IO, Json]
@@ -116,7 +119,9 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       errorRequestNoStackTrace = lambdaErrorBodyJsonNoStackTrace(errorRequest)
       runtimeOutcome <- runtimeFiber.join.timeout(2.seconds)
     } yield {
-      assert(errorRequestNoStackTrace.exists(_ eqv expectedErrorBody("Cannot acquire lambda function name")))
+      assert(
+        errorRequestNoStackTrace.exists(
+          _ eqv expectedErrorBody(lambdaFunctionNameEnvVar, "NoSuchElementException")))
       assert(runtimeOutcome.isError)
     }
   }
@@ -146,7 +151,8 @@ class LambdaRuntimeSuite extends BaseRuntimeSuite {
       secondInvocationResponse <- eventualResponse.get.timeout(2.seconds)
       _ <- runtimeFiber.cancel
     } yield {
-      assert(invocationErrorNoStackTrace.exists(_ eqv expectedErrorBody("First invocation error")))
+      assert(
+        invocationErrorNoStackTrace.exists(_ eqv expectedErrorBody("First invocation error")))
       assert(secondInvocationResponse eqv "testId")
     }
   }
