@@ -67,6 +67,6 @@ object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
    *   in this example, the skunk session we setup above
    */
   def apply(event: KinesisStreamEvent, context: Context[IO], init: Init) =
-    IO.println(s"Received event with ${event.records.size} records").as(None)
+    IO.println(s"Received event with \${event.records.size} records").as(None)
 
 }
