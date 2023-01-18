@@ -24,11 +24,22 @@ Next, implement your Lambda. Please refer to the [examples](examples/src/main/sc
 There are several options to deploy your Lambda. For example you can use the [Lambda console](https://docs.aws.amazon.com/lambda/latest/dg/foundation-console.html), the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
 
 To deploy a Scala.js Lambda, you will need to know the following:
+
 1. The runtime for your Lambda is Node.js 16.
-2. The handler for your Lambda is `index.yourLambdaName`.
-    - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
-    - `yourLambdaName` is the name of the Scala `object` you created that extends from `IOLambda`.
-3. Run `sbt npmPackage` to package your Lambda for deployment. Note that you can currently only have one Lambda per sbt (sub-)project. If you have multiple, you will need to select the one to deploy using `Compile / mainClass := Some("my.lambda.handler")`.
+2. Add a `@JSExportTopLevel` inside your lambda object:
+
+   ```scala
+   @JSExportTopLevel("yourLambdaName")
+   val impl: HandlerFn = handlerFn
+   ```
+
+   - The type `HandlerFn` is important so Scala.js will emit your lambda as a JavaScript function.
+   - `val` is important so your lambda function is emitted as a value containing a function, instead of a function returning another function.
+   - The handler for your Lambda is `index.yourLambdaName`
+   - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
+   - `yourLambdaName` is the name of the export and can be changed if desired.
+
+3. Run `sbt npmPackage` to package your Lambda for deployment. You can have multiple lambda's per sbt project by exporting multiple handler functions.
 4. For the tooling of your choice, follow their instructions for deploying a Node.js Lambda using the contents of the `target/scala-2.13/npm-package/` directory.
 
 As the feral project develops, one of the goals is to provide an sbt plugin that simplifies and automates the deployment process. If this appeals to you, please contribute feature requests, ideas, and/or code!
@@ -37,13 +48,13 @@ As the feral project develops, one of the goals is to provide an sbt plugin that
 
 The premise that you can (and should!) write production-ready serverless functions in Scala targeting JavaScript may be a surprising one. This project—and the rapid maturity of the Typelevel.js ecosystem—is motivated by three ideas.
 
-1. **JavaScript is the ideal compile target for serverless functions.** 
-  
-    There are a lot of reasons for this, cold-start being one of them, but more generally it's important to remember what the JVM is and is not good at. In particular, the JVM excels at long-lived multithreaded applications which are relatively memory-heavy and rely on medium-lifespan heap allocations. So in other words, persistent microservices.
+1. **JavaScript is the ideal compile target for serverless functions.**
 
-    Serverless functions are, by definition, not this. They are not persistent, they are (generally) single-threaded, and they need to start very quickly with minimal warming. They do often apply moderate-to-significant heap pressure, but this factor is more than outweighed by the others.
+   There are a lot of reasons for this, cold-start being one of them, but more generally it's important to remember what the JVM is and is not good at. In particular, the JVM excels at long-lived multithreaded applications which are relatively memory-heavy and rely on medium-lifespan heap allocations. So in other words, persistent microservices.
 
-    V8 (the JavaScript engine in Node.js) is a very good runtime for these kinds of use-cases. Realistically, it may be the best-optimized runtime in existence for these requirements, similar to how the JVM is likely the best-optimized runtime in existence for the persistent microservices case.
+   Serverless functions are, by definition, not this. They are not persistent, they are (generally) single-threaded, and they need to start very quickly with minimal warming. They do often apply moderate-to-significant heap pressure, but this factor is more than outweighed by the others.
+
+   V8 (the JavaScript engine in Node.js) is a very good runtime for these kinds of use-cases. Realistically, it may be the best-optimized runtime in existence for these requirements, similar to how the JVM is likely the best-optimized runtime in existence for the persistent microservices case.
 
 2. **Scala.js and Cats Effect work together to provide powerful, well-defined semantics for writing JavaScript applications.**
 

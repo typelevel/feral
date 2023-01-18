@@ -1,0 +1,4 @@
+> npmPackage
+$ exists target/scala-2.13/npm-package/index.js
+$ exists target/scala-2.13/npm-package/package.json
+$ exec node test-export.mjs

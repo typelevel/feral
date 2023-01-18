@@ -38,7 +38,7 @@ object LambdaJSPlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] = Seq(
     libraryDependencies +=
       BuildInfo.organization %%% BuildInfo.name.drop(4) % BuildInfo.version,
-    scalaJSUseMainModuleInitializer := true,
+    scalaJSUseMainModuleInitializer := false,
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
     npmPackageOutputFilename := "index.js",
     npmPackageStage := Stage.FullOpt
