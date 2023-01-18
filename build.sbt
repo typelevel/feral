@@ -16,7 +16,7 @@
 
 name := "feral"
 
-ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / tlBaseVersion := "0.2"
 ThisBuild / startYear := Some(2021)
 
 ThisBuild / developers := List(
@@ -60,7 +60,7 @@ val catsEffectVersion = "3.4.5"
 val circeVersion = "0.14.3"
 val fs2Version = "3.5.0"
 val http4sVersion = "0.23.18"
-val natchezVersion = "0.1.6"
+val natchezVersion = "0.3.0"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
@@ -109,7 +109,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
     )
   )
   .jvmSettings(
@@ -182,8 +182,8 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
-      "org.tpolecat" %%% "natchez-http4s" % "0.3.2",
-      "org.tpolecat" %%% "skunk-core" % "0.3.2"
+      "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
+      "org.tpolecat" %%% "skunk-core" % "0.5.0"
     )
   )
   .settings(commonSettings)

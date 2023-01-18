@@ -19,6 +19,7 @@ package events
 
 import io.circe.Decoder
 import natchez.Kernel
+import org.typelevel.ci.CIString
 
 final case class Http(method: String)
 object Http {
@@ -52,5 +53,6 @@ object ApiGatewayProxyEventV2 {
     "isBase64Encoded"
   )(ApiGatewayProxyEventV2.apply)
 
-  implicit def kernelSource: KernelSource[ApiGatewayProxyEventV2] = e => Kernel(e.headers)
+  implicit def kernelSource: KernelSource[ApiGatewayProxyEventV2] =
+    e => Kernel(e.headers.map { case (name, value) => CIString(name) -> value })
 }
