@@ -20,6 +20,7 @@ package events
 import io.circe.Decoder
 import io.circe.scodec._
 import natchez.Kernel
+import org.typelevel.ci._
 import scodec.bits.ByteVector
 
 import java.time.Instant
@@ -109,7 +110,9 @@ object SqsRecordAttributes {
     ))
 
   implicit def kernelSource: KernelSource[SqsRecordAttributes] = a =>
-    Kernel(a.awsTraceHeader.map("X-Amzn-Trace-Id" -> _).toMap)
+    Kernel(a.awsTraceHeader.map(`X-Amzn-Trace-Id` -> _).toMap)
+
+  private[this] val `X-Amzn-Trace-Id` = ci"X-Amzn-Trace-Id"
 }
 
 sealed abstract class SqsMessageAttribute
