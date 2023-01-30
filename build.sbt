@@ -116,7 +116,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.2",
       "co.fs2" %%% "fs2-io" % fs2Version,
-      "io.circe" %%% "circe-fs2" % "0.14.0"
+      "io.circe" %%% "circe-fs2" % "0.14.1"
     )
   )
   .dependsOn(core)
