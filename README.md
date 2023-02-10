@@ -64,5 +64,5 @@ The premise that you can (and should!) write production-ready serverless functio
     * [natchez](https://github.com/tpolecat/natchez) and [natchez-http4s](https://github.com/tpolecat/natchez-http4s) for tracing
     * [skunk](https://github.com/tpolecat/skunk) for Postgres/Redshift and [rediculous](https://github.com/davenverse/rediculous) for Redis
     * [circe](https://github.com/circe/circe), [scodec](https://github.com/scodec/scodec) and [scodec-bits](https://github.com/scodec/scodec-bits) for encoders/decoders
-    * [smithy4s](https://github.com/disneystreaming/smithy4s) for AWS clients
+    * [smithy4s](https://disneystreaming.github.io/smithy4s/docs/protocols/aws/aws/) for AWS clients
     * and more ...
