@@ -34,10 +34,15 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
   private lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
     (event: js.Any, context: facade.Context) =>
-      (for {
-        lambda <- setupMemo
-        event <- IO.fromEither(decodeJs[Event](event))
-        result <- lambda(event, Context.fromJS(context))
-      } yield result.map(_.asJsAny).orUndefined).unsafeToPromise()(runtime)
+      setupMemo.toJSPromise(scala.concurrent.ExecutionContext.parasitic).`then`[js.Any] {
+        case (dispatcher, lambda) =>
+          val io =
+            for {
+              event <- IO.fromEither(decodeJs[Event](event))
+              result <- lambda(event, Context.fromJS(context))
+            } yield result.map(_.asJsAny).orUndefined
+
+          dispatcher.unsafeToPromise(io)
+      }
   }
 }
