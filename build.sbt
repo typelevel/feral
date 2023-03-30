@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import com.typesafe.tools.mima.core._
+
 name := "feral"
 
 ThisBuild / tlBaseVersion := "0.2"
@@ -87,6 +89,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "feral-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
     )
   )
   .settings(commonSettings)
