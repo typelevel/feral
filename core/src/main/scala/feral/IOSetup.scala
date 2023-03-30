@@ -16,10 +16,13 @@
 
 package feral
 
+import scala.concurrent.Future
+
 import cats.effect.unsafe.IORuntime
 import cats.effect.kernel.Resource
 import cats.effect.IO
-import cats.effect.kernel.Deferred
+import cats.effect.std.Dispatcher
+import cats.syntax.all._
 
 private[feral] trait IOSetup {
 
@@ -28,17 +31,11 @@ private[feral] trait IOSetup {
   protected type Setup
   protected def setup: Resource[IO, Setup] = Resource.pure(null.asInstanceOf[Setup])
 
-  private[feral] final lazy val setupMemo: IO[Setup] = {
-    val deferred = Deferred.unsafe[IO, Either[Throwable, Setup]]
-    setup
-      .attempt
+  private[feral] final lazy val setupMemo: Future[(Dispatcher[IO], Setup)] =
+    (Dispatcher.parallel[IO](await = false), setup)
+      .tupled
       .allocated
-      .flatTap {
-        case (setup, _) =>
-          deferred.complete(setup)
-      }
-      .unsafeRunAndForget()(runtime)
-    deferred.get.rethrow
-  }
+      .map(_._1) // drop unused finalizer
+      .unsafeToFuture()(runtime)
 
 }

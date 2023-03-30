@@ -34,7 +34,9 @@ class IOLambdaSuite extends CatsEffectSuite {
             .as(_.event.map(Some(_)) <* invokeCounter.getAndUpdate(_ + 1))
         }
       }
-      handler <- lambda.setupMemo
+
+      handler <- IO.fromFuture(IO(lambda.setupMemo)).map(_._2)
+
       _ <- ('0' to 'z')
         .map(_.toString)
         .toList

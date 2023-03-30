@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import com.typesafe.tools.mima.core._
+
 name := "feral"
 
 ThisBuild / tlBaseVersion := "0.2"
@@ -103,6 +105,9 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
     )
   )
   .settings(commonSettings)
