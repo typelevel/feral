@@ -89,9 +89,6 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "feral-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion
-    ),
-    mimaBinaryIssueFilters ++= Seq(
-      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
     )
   )
   .settings(commonSettings)
@@ -108,6 +105,9 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
     )
   )
   .settings(commonSettings)
