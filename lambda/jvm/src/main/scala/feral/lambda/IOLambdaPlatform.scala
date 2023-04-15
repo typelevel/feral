@@ -16,6 +16,9 @@
 
 package feral.lambda
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -34,29 +37,33 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
   final def handleRequest(
       input: InputStream,
       output: OutputStream,
-      context: lambdaRuntime.Context): Unit =
-    Resource
-      .eval {
-        for {
-          lambda <- setupMemo
-          event <- fs2
-            .io
-            .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
-            .through(circe.fs2.byteStreamParser)
-            .through(circe.fs2.decoder[IO, Event])
-            .head
-            .compile
-            .lastOrError
-          context <- IO(Context.fromJava[IO](context))
-          _ <- OptionT(lambda(event, context)).foreachF { result =>
-            Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
-              IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
+      context: lambdaRuntime.Context): Unit = {
+    val (dispatcher, lambda) =
+      Await.result(setupMemo, Duration.Inf)
+
+    dispatcher.unsafeRunSync {
+      Resource
+        .eval {
+          for {
+            event <- fs2
+              .io
+              .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
+              .through(circe.fs2.byteStreamParser)
+              .through(circe.fs2.decoder[IO, Event])
+              .head
+              .compile
+              .lastOrError
+            context <- IO(Context.fromJava[IO](context))
+            _ <- OptionT(lambda(event, context)).foreachF { result =>
+              Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
+                IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
+              }
             }
-          }
-        } yield ()
-      }
-      .onFinalize(IO.blocking(input.close()) &> IO.blocking(output.close()))
-      .use_
-      .unsafeRunSync()(runtime)
+          } yield ()
+        }
+        .onFinalize(IO.blocking(input.close()) &> IO.blocking(output.close()))
+        .use_
+    }
+  }
 
 }

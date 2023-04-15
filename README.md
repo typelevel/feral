@@ -1,22 +1,22 @@
-# feral [![feral-core Scala version support](https://index.scala-lang.org/typelevel/feral/feral-core/latest.svg?color=red)](https://index.scala-lang.org/typelevel/feral/feral-core) [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/AJASeCq8gN)
+# feral [![feral-core Scala version support](https://index.scala-lang.org/typelevel/feral/feral-lambda/latest.svg?color=red)](https://index.scala-lang.org/typelevel/feral/feral-lambda) [![javadoc](https://javadoc.io/badge2/org.typelevel/feral-docs_2.13/javadoc.svg?color=red)](https://javadoc.io/doc/org.typelevel/feral-docs_2.13) [![Discord](https://img.shields.io/discord/632277896739946517.svg?label=&logo=discord&logoColor=ffffff&color=404244&labelColor=6A7EC2)](https://discord.gg/AJASeCq8gN)
 
 feral is a framework for writing serverless functions in Scala with [Cats Effect](https://github.com/typelevel/cats-effect) and deploying them to the cloud, targeting both JVM and JavaScript runtimes. By providing an idiomatic, purely functional interface, feral is both composable—integrations with [natchez](https://github.com/tpolecat/natchez) and [http4s](https://github.com/http4s/http4s) are provided out-of-the-box—and also highly customizable. The initial focus has been on supporting [AWS Lambda](https://aws.amazon.com/lambda/) and will expand to other serverless providers.
 
 ## Getting started
 
-Feral is published for Scala 2.13 and 3.1+ with artifacts for both JVM and Scala.js 1.8+.
+Feral is published for Scala 2.13 and 3.2+ with artifacts for both JVM and Scala.js 1.12+.
 
 ```scala
 // Scala.js setup
-addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.1.0-M1") // in plugins.sbt
+addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.2.0") // in plugins.sbt
 enablePlugins(LambdaJSPlugin) // in build.sbt
 
 // JVM setup
-libraryDependencies += "org.typelevel" %% "feral-lambda" % "0.1.0-M1"
+libraryDependencies += "org.typelevel" %% "feral-lambda" % "0.2.0"
 
 // Optional, specialized integrations, available for both JS and JVM
-libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.1.0-M1"
-libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.1.0-M1"
+libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.0"
+libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.2.0"
 ```
 
 Next, implement your Lambda. Please refer to the [examples](examples/src/main/scala/feral/examples) for a tutorial.
@@ -24,7 +24,7 @@ Next, implement your Lambda. Please refer to the [examples](examples/src/main/sc
 There are several options to deploy your Lambda. For example you can use the [Lambda console](https://docs.aws.amazon.com/lambda/latest/dg/foundation-console.html), the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), or the [serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/deploying).
 
 To deploy a Scala.js Lambda, you will need to know the following:
-1. The runtime for your Lambda is Node.js 16.
+1. The runtime for your Lambda is Node.js 18.
 2. The handler for your Lambda is `index.yourLambdaName`.
     - `index` refers to the `index.js` file containing the JavaScript sources for your Lambda.
     - `yourLambdaName` is the name of the Scala `object` you created that extends from `IOLambda`.
@@ -64,5 +64,5 @@ The premise that you can (and should!) write production-ready serverless functio
     * [natchez](https://github.com/tpolecat/natchez) and [natchez-http4s](https://github.com/tpolecat/natchez-http4s) for tracing
     * [skunk](https://github.com/tpolecat/skunk) for Postgres/Redshift and [rediculous](https://github.com/davenverse/rediculous) for Redis
     * [circe](https://github.com/circe/circe), [scodec](https://github.com/scodec/scodec) and [scodec-bits](https://github.com/scodec/scodec-bits) for encoders/decoders
-    * [smithy4s](https://github.com/disneystreaming/smithy4s) for AWS clients
+    * [smithy4s](https://disneystreaming.github.io/smithy4s/docs/protocols/aws/aws/) for AWS clients
     * and more ...
