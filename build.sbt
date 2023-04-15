@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import com.typesafe.tools.mima.core._
+
 name := "feral"
 
 ThisBuild / tlBaseVersion := "1.0"
@@ -51,16 +53,16 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
-val Scala212 = "2.12.16"
-val Scala213 = "2.13.8"
-val Scala3 = "3.1.3"
+val Scala212 = "2.12.17"
+val Scala213 = "2.13.10"
+val Scala3 = "3.2.2"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.3.14"
-val circeVersion = "0.14.2"
-val fs2Version = "3.2.12"
-val http4sVersion = "1.0.0-M36"
-val natchezVersion = "0.1.6"
+val catsEffectVersion = "3.4.8"
+val circeVersion = "0.14.5"
+val fs2Version = "3.6.1"
+val http4sVersion = "1.0.0-M39"
+val natchezVersion = "0.3.1"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
@@ -99,24 +101,27 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "org.scodec" %%% "scodec-bits" % "1.1.34",
+      "org.scodec" %%% "scodec-bits" % "1.1.37",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
     )
   )
   .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.4.0"
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
     )
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.1",
+      "com.amazonaws" % "aws-lambda-java-core" % "1.2.2",
       "co.fs2" %%% "fs2-io" % fs2Version,
-      "io.circe" %%% "circe-fs2" % "0.14.0"
+      "io.circe" %%% "circe-fs2" % "0.14.1"
     )
   )
   .dependsOn(core)
@@ -128,7 +133,7 @@ lazy val sbtLambda = project
     name := "sbt-feral-lambda",
     crossScalaVersions := Seq(Scala212),
     addSbtPlugin("org.scala-js" % "sbt-scalajs" % scalaJSVersion),
-    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.1"),
+    addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.1.2"),
     buildInfoPackage := "feral.lambda.sbt",
     buildInfoKeys += organization,
     scriptedLaunchOpts := {
@@ -167,7 +172,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
       "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
-      "com.eed3si9n.expecty" %%% "expecty" % "0.15.4" % Test,
+      "com.eed3si9n.expecty" %%% "expecty" % "0.16.0" % Test,
       "io.circe" %%% "circe-testing" % circeVersion % Test
     )
   )
@@ -182,7 +187,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
-      "org.tpolecat" %%% "skunk-core" % "0.3.1"
+      "org.tpolecat" %%% "skunk-core" % "0.5.1"
     )
   )
   .settings(commonSettings)
