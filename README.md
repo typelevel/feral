@@ -12,11 +12,11 @@ addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.2.0") // in plugins.sbt
 enablePlugins(LambdaJSPlugin) // in build.sbt
 
 // JVM setup
-libraryDependencies += "org.typelevel" %% "feral-lambda" % "0.2.0"
+libraryDependencies += "org.typelevel" %% "feral-lambda" % "0.2.1"
 
 // Optional, specialized integrations, available for both JS and JVM
-libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.0"
-libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.2.0"
+libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.1"
+libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.2.1"
 ```
 
 Next, implement your Lambda. Please refer to the [examples](examples/src/main/scala/feral/examples) for a tutorial.
