@@ -20,7 +20,6 @@ package lambda
 import cats.effect.IO
 import cats.effect.IOLocal
 import cats.effect.kernel.Resource
-import cats.effect.syntax.all._
 import io.circe.Decoder
 import io.circe.Encoder
 
