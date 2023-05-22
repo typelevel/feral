@@ -4,19 +4,19 @@ feral is a framework for writing serverless functions in Scala with [Cats Effect
 
 ## Getting started
 
-Feral is published for Scala 2.13 and 3.2+ with artifacts for both JVM and Scala.js 1.12+.
+Feral is published for Scala 2.13 and 3.2+ with artifacts for both JVM and Scala.js 1.13+.
 
 ```scala
 // Scala.js setup
-addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.2.0") // in plugins.sbt
+addSbtPlugin("org.typelevel" %% "sbt-feral-lambda" % "0.2.2") // in plugins.sbt
 enablePlugins(LambdaJSPlugin) // in build.sbt
 
 // JVM setup
-libraryDependencies += "org.typelevel" %% "feral-lambda" % "0.2.1"
+libraryDependencies += "org.typelevel" %% "feral-lambda" % "0.2.2"
 
 // Optional, specialized integrations, available for both JS and JVM
-libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.1"
-libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.2.1"
+libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.2"
+libraryDependencies += "org.typelevel" %%% "feral-lambda-cloudformation-custom-resource" % "0.2.2"
 ```
 
 Next, implement your Lambda. Please refer to the [examples](examples/src/main/scala/feral/examples) for a tutorial.
