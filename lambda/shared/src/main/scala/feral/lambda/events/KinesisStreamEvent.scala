@@ -32,6 +32,7 @@ final case class KinesisStreamRecordPayload(
 )
 
 object KinesisStreamRecordPayload {
+  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
   implicit val decoder: Decoder[KinesisStreamRecordPayload] = Decoder.forProduct5(
     "approximateArrivalTimestamp",
     "data",

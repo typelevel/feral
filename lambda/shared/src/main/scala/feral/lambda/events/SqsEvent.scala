@@ -88,6 +88,8 @@ final case class SqsRecordAttributes(
 
 object SqsRecordAttributes {
 
+  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
+
   implicit val decoder: Decoder[SqsRecordAttributes] = Decoder.instance(i =>
     for {
       awsTraceHeader <- i.get[Option[String]]("AWSTraceHeader")
