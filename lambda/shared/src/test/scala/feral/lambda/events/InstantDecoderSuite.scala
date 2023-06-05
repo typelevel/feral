@@ -26,7 +26,7 @@ import java.time.Instant
 
 class InstantDecoderSuite extends ScalaCheckSuite {
 
-  implicit private val instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
+  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
 
   implicit val arbitraryInstant: Arbitrary[Instant] = Arbitrary(
     Gen.long.map(Instant.ofEpochMilli(_)))

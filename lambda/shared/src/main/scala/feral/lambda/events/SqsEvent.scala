@@ -88,7 +88,7 @@ final case class SqsRecordAttributes(
 
 object SqsRecordAttributes {
 
-  implicit private val instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
+  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
 
   implicit val decoder: Decoder[SqsRecordAttributes] = Decoder.instance(i =>
     for {
