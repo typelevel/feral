@@ -23,7 +23,7 @@ import scala.util.Try
 
 package object events {
 
-  implicit lazy val instantDecoder: Decoder[Instant] =
+  lazy val instantDecoder: Decoder[Instant] =
     Decoder.decodeBigDecimal.emapTry { millis =>
       def round(x: BigDecimal) = x.setScale(0, BigDecimal.RoundingMode.DOWN)
       Try {
