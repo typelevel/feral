@@ -21,7 +21,6 @@ import io.circe.scalajs._
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.|
 
 private[lambda] trait IOLambdaPlatform[Event, Result] {
   this: IOLambda[Event, Result] =>
@@ -32,7 +31,7 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
   protected def handlerName: String = getClass.getSimpleName.init
 
   private lazy val handlerFn
-      : js.Function2[js.Any, facade.Context, js.Promise[js.Any | Unit]] = {
+      : js.Function2[js.Any, facade.Context, js.Promise[js.UndefOr[js.Any]]] = {
     (event: js.Any, context: facade.Context) =>
       setupMemo.toJSPromise(scala.concurrent.ExecutionContext.parasitic).`then`[js.Any] {
         case (dispatcher, lambda) =>
