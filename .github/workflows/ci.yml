@@ -92,7 +92,12 @@ jobs:
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' Test/scalaJSLinkerResult
 
       - name: Test
+        if: matrix.scala != '2.12'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
+
+      - name: Scripted
+        if: matrix.scala == '2.12'
+        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' scripted
 
       - name: Check binary compatibility
         if: matrix.java == 'corretto@8' && matrix.os == 'ubuntu-latest'

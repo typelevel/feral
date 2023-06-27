@@ -31,6 +31,20 @@ ThisBuild / githubWorkflowJavaVersions := Seq("8", "11").map(JavaSpec.corretto(_
 ThisBuild / githubWorkflowBuildMatrixExclusions +=
   MatrixExclude(Map("project" -> "rootJS", "scala" -> "2.12"))
 
+ThisBuild / githubWorkflowBuild ~= { steps =>
+  val scriptedStep = WorkflowStep.Sbt(
+    List(s"scripted"),
+    name = Some("Scripted"),
+    cond = Some(s"matrix.scala == '2.12'")
+  )
+  steps.flatMap {
+    case step if step.name.contains("Test") =>
+      val ciStep = step.withCond(cond = Some(s"matrix.scala != '2.12'"))
+      List(ciStep, scriptedStep)
+    case step => List(step)
+  }
+}
+
 ThisBuild / githubWorkflowBuildPreamble +=
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2"),
@@ -125,10 +139,7 @@ lazy val sbtLambda = project
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
-    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated,
-    Test / test := {
-      scripted.toTask("").value
-    }
+    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
