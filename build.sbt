@@ -53,7 +53,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
-val Scala212 = "2.12.17"
+val Scala212 = "2.12.18"
 val Scala213 = "2.13.11"
 val Scala3 = "3.3.0"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
