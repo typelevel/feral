@@ -1,3 +1,3 @@
-addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.4.22")
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.1")
+addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.5.0-RC3")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.2")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")

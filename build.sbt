@@ -27,19 +27,19 @@ ThisBuild / developers := List(
   tlGitHubDev("djspiewak", "Daniel Spiewak")
 )
 
-ThisBuild / githubWorkflowJavaVersions := Seq("8", "11").map(JavaSpec.corretto(_))
+ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corretto(_))
 ThisBuild / githubWorkflowBuildMatrixExclusions +=
-  MatrixExclude(Map("project" -> "rootJS", "scala" -> Scala212))
+  MatrixExclude(Map("project" -> "rootJS", "scala" -> "2.12"))
 
 ThisBuild / githubWorkflowBuild ~= { steps =>
   val scriptedStep = WorkflowStep.Sbt(
     List(s"scripted"),
     name = Some("Scripted"),
-    cond = Some(s"matrix.scala == '$Scala212'")
+    cond = Some(s"matrix.scala == '2.12'")
   )
   steps.flatMap {
-    case step @ WorkflowStep.Sbt(List("test"), _, _, _, _, _) =>
-      val ciStep = step.copy(cond = Some(s"matrix.scala != '$Scala212'"))
+    case step if step.name.contains("Test") =>
+      val ciStep = step.withCond(cond = Some(s"matrix.scala != '2.12'"))
       List(ciStep, scriptedStep)
     case step => List(step)
   }
@@ -58,10 +58,10 @@ val Scala213 = "2.13.10"
 val Scala3 = "3.3.0"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.5.0"
+val catsEffectVersion = "3.5.1"
 val circeVersion = "0.14.5"
 val fs2Version = "3.7.0"
-val http4sVersion = "0.23.19"
+val http4sVersion = "0.23.21"
 val natchezVersion = "0.3.2"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
