@@ -20,7 +20,6 @@ import cats.data.Kleisli
 import cats.effect.IO
 import cats.effect.kernel.MonadCancelThrow
 import cats.syntax.all._
-import feral.lambda.LambdaEnv
 import natchez.EntryPoint
 import natchez.Span
 import natchez.Trace
