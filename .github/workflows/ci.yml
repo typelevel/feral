@@ -325,5 +325,5 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: root rootJS examplesJS rootJVM rootNative examplesJVM
-          configs-ignore: test scala-tool scala-doc-tool
+          modules-ignore: rootJS_2.12 rootJS_3 rootJS_2.13 examplesJS_sjs1_3 examplesJS_sjs1_2.13 rootJVM_2.12 rootJVM_3 rootJVM_2.13 rootNative_2.12 rootNative_3 rootNative_2.13 examplesJVM_3 examplesJVM_2.13
+          configs-ignore: test scala-tool scala-doc-tool test-internal
