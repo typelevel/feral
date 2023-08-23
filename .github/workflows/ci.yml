@@ -65,7 +65,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@8' && steps.setup-java-corretto-8.outputs.cache-hit == 'false'
-        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Setup Java (corretto@11)
         id: setup-java-corretto-11
@@ -78,7 +78,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@11' && steps.setup-java-corretto-11.outputs.cache-hit == 'false'
-        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Setup Java (corretto@17)
         id: setup-java-corretto-17
@@ -91,7 +91,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@17' && steps.setup-java-corretto-17.outputs.cache-hit == 'false'
-        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Setup NodeJS v16 LTS
         if: matrix.project == 'rootJS'
@@ -167,7 +167,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@8' && steps.setup-java-corretto-8.outputs.cache-hit == 'false'
-        run: sbt reload +update
+        run: sbt +update
 
       - name: Setup Java (corretto@11)
         id: setup-java-corretto-11
@@ -180,7 +180,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@11' && steps.setup-java-corretto-11.outputs.cache-hit == 'false'
-        run: sbt reload +update
+        run: sbt +update
 
       - name: Setup Java (corretto@17)
         id: setup-java-corretto-17
@@ -193,7 +193,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@17' && steps.setup-java-corretto-17.outputs.cache-hit == 'false'
-        run: sbt reload +update
+        run: sbt +update
 
       - name: Download target directories (2.12, rootJVM)
         uses: actions/download-artifact@v3
@@ -294,7 +294,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@8' && steps.setup-java-corretto-8.outputs.cache-hit == 'false'
-        run: sbt reload +update
+        run: sbt +update
 
       - name: Setup Java (corretto@11)
         id: setup-java-corretto-11
@@ -307,7 +307,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@11' && steps.setup-java-corretto-11.outputs.cache-hit == 'false'
-        run: sbt reload +update
+        run: sbt +update
 
       - name: Setup Java (corretto@17)
         id: setup-java-corretto-17
@@ -320,7 +320,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'corretto@17' && steps.setup-java-corretto-17.outputs.cache-hit == 'false'
-        run: sbt reload +update
+        run: sbt +update
 
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
