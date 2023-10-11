@@ -188,7 +188,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
-      "org.tpolecat" %%% "skunk-core" % "0.6.0"
+      "org.tpolecat" %%% "skunk-core" % "0.6.1"
     )
   )
   .settings(commonSettings)
