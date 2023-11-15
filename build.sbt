@@ -58,11 +58,11 @@ val Scala213 = "2.13.12"
 val Scala3 = "3.3.1"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.5.1"
+val catsEffectVersion = "3.5.2"
 val circeVersion = "0.14.6"
-val fs2Version = "3.9.2"
-val http4sVersion = "0.23.23"
-val natchezVersion = "0.3.3"
+val fs2Version = "3.9.3"
+val http4sVersion = "0.23.24"
+val natchezVersion = "0.3.4"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
@@ -101,7 +101,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "org.scodec" %%% "scodec-bits" % "1.1.37",
+      "org.scodec" %%% "scodec-bits" % "1.1.38",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
@@ -188,7 +188,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
-      "org.tpolecat" %%% "skunk-core" % "0.6.0"
+      "org.tpolecat" %%% "skunk-core" % "0.6.1"
     )
   )
   .settings(commonSettings)
