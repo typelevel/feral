@@ -19,10 +19,12 @@ package events
 
 import io.circe.Decoder
 import io.circe.Json
+import io.circe.scodec.decodeByteVector
+import scodec.bits.ByteVector
 
 final case class AttributeValue(
-    b: Option[String],
-    bs: Option[String],
+    b: Option[ByteVector],
+    bs: Option[List[ByteVector]],
     bool: Option[Boolean],
     l: Option[List[AttributeValue]],
     m: Option[Map[String, AttributeValue]],
@@ -35,8 +37,8 @@ final case class AttributeValue(
 
 object AttributeValue {
   implicit val decoder: Decoder[AttributeValue] = for {
-    b <- Decoder[Option[String]].at("B")
-    bs <- Decoder[Option[String]].at("BS")
+    b <- Decoder[Option[ByteVector]].at("B")
+    bs <- Decoder[Option[List[ByteVector]]].at("BS")
     bool <- Decoder[Option[Boolean]].at("BOOL")
     l <- Decoder[Option[List[AttributeValue]]].at("L")
     m <- Decoder[Option[Map[String, AttributeValue]]].at("M")

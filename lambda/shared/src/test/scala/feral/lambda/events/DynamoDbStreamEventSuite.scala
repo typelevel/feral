@@ -16,13 +16,48 @@
 
 package feral.lambda.events
 
+import cats.syntax.option._
 import io.circe.literal._
 import munit.FunSuite
+import java.nio.charset.StandardCharsets
+import scodec.bits.ByteVector
 
 class DynamoDbStreamEventSuite extends FunSuite {
 
   test("decoder") {
     event.as[DynamoDbStreamEvent].toTry.get
+  }
+
+  test("AttributeValue should decod a B") {
+
+    val vector = ByteVector.view("foo".getBytes(StandardCharsets.UTF_8))
+
+    val source = json"""
+      {
+        "B": ${vector.toBase64}
+      }
+    """
+
+    val decoded = source.as[AttributeValue].toOption.flatMap(_.b)
+
+    assertEquals(decoded, vector.some)
+  }
+
+  test("AttributeValue should decod a BS") {
+
+    val vector = ByteVector.view("foo".getBytes(StandardCharsets.UTF_8))
+
+    val source = json"""
+      {
+        "BS": [
+          ${vector.toBase64}
+        ]
+      }
+    """
+
+    val decoded = source.as[AttributeValue].toOption.flatMap(_.bs)
+
+    assertEquals(decoded, List(vector).some)
   }
 
   def event = json"""
@@ -43,6 +78,9 @@ class DynamoDbStreamEventSuite extends FunSuite {
             },
             "Id": {
               "N": "101"
+            },
+            "Image": {
+              "B": ""
             }
           },
           "StreamViewType": "NEW_AND_OLD_IMAGES",
