@@ -19,8 +19,7 @@ package feral.lambda.events
 import cats.syntax.option._
 import io.circe.literal._
 import munit.FunSuite
-import java.nio.charset.StandardCharsets
-import scodec.bits.ByteVector
+import scodec.bits._
 
 class DynamoDbStreamEventSuite extends FunSuite {
 
