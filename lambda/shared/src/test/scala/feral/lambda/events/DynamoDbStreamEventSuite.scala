@@ -28,7 +28,7 @@ class DynamoDbStreamEventSuite extends FunSuite {
     event.as[DynamoDbStreamEvent].toTry.get
   }
 
-  test("AttributeValue should decod a B") {
+  test("AttributeValue should decode a B") {
 
     val vector = ByteVector.view("foo".getBytes(StandardCharsets.UTF_8))
 
