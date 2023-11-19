@@ -43,7 +43,7 @@ class DynamoDbStreamEventSuite extends FunSuite {
     assertEquals(decoded, vector.some)
   }
 
-  test("AttributeValue should decod a BS") {
+  test("AttributeValue should decode a BS") {
 
     val vector = ByteVector.view("foo".getBytes(StandardCharsets.UTF_8))
 
