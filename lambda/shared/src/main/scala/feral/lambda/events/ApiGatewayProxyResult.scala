@@ -26,10 +26,7 @@ sealed abstract class ApiGatewayProxyResult {
 
 object ApiGatewayProxyResult {
 
-  def apply(
-      statusCode: Int,
-      body: String,
-      isBase64Encoded: Boolean): ApiGatewayProxyResult =
+  def apply(statusCode: Int, body: String, isBase64Encoded: Boolean): ApiGatewayProxyResult =
     new Impl(statusCode, body, isBase64Encoded)
 
   implicit def encoder: Encoder[ApiGatewayProxyResult] = Encoder.forProduct3(
