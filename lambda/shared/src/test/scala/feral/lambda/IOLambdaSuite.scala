@@ -46,6 +46,6 @@ class IOLambdaSuite extends CatsEffectSuite {
     } yield ()
   }
 
-  def mockContext = new Context[IO]("", "", "", 0, "", "", "", None, None, IO.never)
+  def mockContext = Context[IO]("", "", "", 0, "", "", "", None, None, IO.stub)
 
 }

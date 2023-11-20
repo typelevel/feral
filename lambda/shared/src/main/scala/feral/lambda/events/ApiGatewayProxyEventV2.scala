@@ -21,28 +21,61 @@ import io.circe.Decoder
 import natchez.Kernel
 import org.typelevel.ci.CIString
 
-final case class Http(method: String)
-object Http {
-  implicit val decoder: Decoder[Http] = Decoder.forProduct1("method")(Http.apply)
+sealed abstract class Http {
+  def method: String
 }
-final case class RequestContext(http: Http)
+
+object Http {
+  def apply(method: String): Http =
+    new Impl(method)
+
+  private[events] implicit val decoder: Decoder[Http] =
+    Decoder.forProduct1("method")(Http.apply)
+
+  private final case class Impl(method: String) extends Http {
+    override def productPrefix = "Http"
+  }
+}
+
+sealed abstract class RequestContext {
+  def http: Http
+}
 
 object RequestContext {
-  implicit val decoder: Decoder[RequestContext] =
+  def apply(http: Http): RequestContext =
+    new Impl(http)
+
+  private[events] implicit val decoder: Decoder[RequestContext] =
     Decoder.forProduct1("http")(RequestContext.apply)
+
+  final case class Impl(http: Http) extends RequestContext {
+    override def productPrefix = "RequestContext"
+  }
 }
 
-final case class ApiGatewayProxyEventV2(
-    rawPath: String,
-    rawQueryString: String,
-    cookies: Option[List[String]],
-    headers: Map[String, String],
-    requestContext: RequestContext,
-    body: Option[String],
-    isBase64Encoded: Boolean
-)
+sealed abstract class ApiGatewayProxyEventV2 {
+  def rawPath: String
+  def rawQueryString: String
+  def cookies: Option[List[String]]
+  def headers: Map[CIString, String]
+  def requestContext: RequestContext
+  def body: Option[String]
+  def isBase64Encoded: Boolean
+}
 
 object ApiGatewayProxyEventV2 {
+  def apply(
+      rawPath: String,
+      rawQueryString: String,
+      cookies: Option[List[String]],
+      headers: Map[CIString, String],
+      requestContext: RequestContext,
+      body: Option[String],
+      isBase64Encoded: Boolean
+  ): ApiGatewayProxyEventV2 =
+    new Impl(rawPath, rawQueryString, cookies, headers, requestContext, body, isBase64Encoded)
+
+  import codecs.decodeKeyCIString
   implicit def decoder: Decoder[ApiGatewayProxyEventV2] = Decoder.forProduct7(
     "rawPath",
     "rawQueryString",
@@ -54,5 +87,17 @@ object ApiGatewayProxyEventV2 {
   )(ApiGatewayProxyEventV2.apply)
 
   implicit def kernelSource: KernelSource[ApiGatewayProxyEventV2] =
-    e => Kernel(e.headers.map { case (name, value) => CIString(name) -> value })
+    e => Kernel(e.headers)
+
+  private final case class Impl(
+      rawPath: String,
+      rawQueryString: String,
+      cookies: Option[List[String]],
+      headers: Map[CIString, String],
+      requestContext: RequestContext,
+      body: Option[String],
+      isBase64Encoded: Boolean
+  ) extends ApiGatewayProxyEventV2 {
+    override def productPrefix = "ApiGatewayProxyEventV2"
+  }
 }

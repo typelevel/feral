@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.events
 
+import com.comcast.ip4s.IpAddress
 import io.circe.Decoder
+import io.circe.KeyDecoder
+import io.circe.KeyEncoder
+import org.typelevel.ci.CIString
 
 import java.time.Instant
 import scala.util.Try
 
-package object events {
+private object codecs {
 
-  lazy val instantDecoder: Decoder[Instant] =
+  implicit def decodeInstant: Decoder[Instant] =
     Decoder.decodeBigDecimal.emapTry { millis =>
       def round(x: BigDecimal) = x.setScale(0, BigDecimal.RoundingMode.DOWN)
       Try {
@@ -32,5 +36,14 @@ package object events {
         Instant.ofEpochSecond(seconds, nanos)
       }
     }
+
+  implicit def decodeIpAddress: Decoder[IpAddress] =
+    Decoder.decodeString.emap(IpAddress.fromString(_).toRight("Cannot parse IP address"))
+
+  implicit def decodeKeyCIString: KeyDecoder[CIString] =
+    KeyDecoder.decodeKeyString.map(CIString(_))
+
+  implicit def encodeKeyCIString: KeyEncoder[CIString] =
+    KeyEncoder.encodeKeyString.contramap(_.toString)
 
 }

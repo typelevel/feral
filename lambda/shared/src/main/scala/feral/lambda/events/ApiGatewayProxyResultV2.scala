@@ -17,16 +17,27 @@
 package feral.lambda.events
 
 import io.circe.Encoder
+import org.typelevel.ci.CIString
 
-final case class ApiGatewayProxyStructuredResultV2(
-    statusCode: Int,
-    headers: Map[String, String],
-    body: String,
-    isBase64Encoded: Boolean,
-    cookies: List[String]
-)
+sealed abstract class ApiGatewayProxyStructuredResultV2 {
+  def statusCode: Int
+  def headers: Map[CIString, String]
+  def body: String
+  def isBase64Encoded: Boolean
+  def cookies: List[String]
+}
 
 object ApiGatewayProxyStructuredResultV2 {
+  def apply(
+      statusCode: Int,
+      headers: Map[CIString, String],
+      body: String,
+      isBase64Encoded: Boolean,
+      cookies: List[String]
+  ): ApiGatewayProxyStructuredResultV2 =
+    new Impl(statusCode, headers, body, isBase64Encoded, cookies)
+
+  import codecs.encodeKeyCIString
   implicit def encoder: Encoder[ApiGatewayProxyStructuredResultV2] = Encoder.forProduct5(
     "statusCode",
     "headers",
@@ -34,4 +45,14 @@ object ApiGatewayProxyStructuredResultV2 {
     "isBase64Encoded",
     "cookies"
   )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded, r.cookies))
+
+  private final case class Impl(
+      statusCode: Int,
+      headers: Map[CIString, String],
+      body: String,
+      isBase64Encoded: Boolean,
+      cookies: List[String]
+  ) extends ApiGatewayProxyStructuredResultV2 {
+    override def productPrefix = "ApiGatewayProxyStructuredResultV2"
+  }
 }

@@ -23,38 +23,85 @@ import scodec.bits.ByteVector
 
 import java.time.Instant
 
-final case class KinesisStreamRecordPayload(
-    approximateArrivalTimestamp: Instant,
-    data: ByteVector,
-    kinesisSchemaVersion: String,
-    partitionKey: String,
-    sequenceNumber: String
-)
-
-object KinesisStreamRecordPayload {
-  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
-  implicit val decoder: Decoder[KinesisStreamRecordPayload] = Decoder.forProduct5(
-    "approximateArrivalTimestamp",
-    "data",
-    "kinesisSchemaVersion",
-    "partitionKey",
-    "sequenceNumber"
-  )(KinesisStreamRecordPayload.apply)
+sealed abstract class KinesisStreamRecordPayload {
+  def approximateArrivalTimestamp: Instant
+  def data: ByteVector
+  def kinesisSchemaVersion: String
+  def partitionKey: String
+  def sequenceNumber: String
 }
 
-final case class KinesisStreamRecord(
-    awsRegion: String,
-    eventID: String,
-    eventName: String,
-    eventSource: String,
-    eventSourceArn: String,
-    eventVersion: String,
-    invokeIdentityArn: String,
-    kinesis: KinesisStreamRecordPayload
-)
+object KinesisStreamRecordPayload {
+  def apply(
+      approximateArrivalTimestamp: Instant,
+      data: ByteVector,
+      kinesisSchemaVersion: String,
+      partitionKey: String,
+      sequenceNumber: String
+  ): KinesisStreamRecordPayload =
+    new Impl(
+      approximateArrivalTimestamp,
+      data,
+      kinesisSchemaVersion,
+      partitionKey,
+      sequenceNumber
+    )
+
+  import codecs.decodeInstant
+  private[events] implicit val decoder: Decoder[KinesisStreamRecordPayload] =
+    Decoder.forProduct5(
+      "approximateArrivalTimestamp",
+      "data",
+      "kinesisSchemaVersion",
+      "partitionKey",
+      "sequenceNumber"
+    )(KinesisStreamRecordPayload.apply)
+
+  private final case class Impl(
+      approximateArrivalTimestamp: Instant,
+      data: ByteVector,
+      kinesisSchemaVersion: String,
+      partitionKey: String,
+      sequenceNumber: String
+  ) extends KinesisStreamRecordPayload {
+    override def productPrefix = "KinesisStreamRecordPayload"
+  }
+}
+
+sealed abstract class KinesisStreamRecord {
+  def awsRegion: String
+  def eventId: String
+  def eventName: String
+  def eventSource: String
+  def eventSourceArn: String
+  def eventVersion: String
+  def invokeIdentityArn: String
+  def kinesis: KinesisStreamRecordPayload
+}
 
 object KinesisStreamRecord {
-  implicit val decoder: Decoder[KinesisStreamRecord] = Decoder.forProduct8(
+  def apply(
+      awsRegion: String,
+      eventId: String,
+      eventName: String,
+      eventSource: String,
+      eventSourceArn: String,
+      eventVersion: String,
+      invokeIdentityArn: String,
+      kinesis: KinesisStreamRecordPayload
+  ): KinesisStreamRecord =
+    new Impl(
+      awsRegion,
+      eventId,
+      eventName,
+      eventSource,
+      eventSourceArn,
+      eventVersion,
+      invokeIdentityArn,
+      kinesis
+    )
+
+  private[events] implicit val decoder: Decoder[KinesisStreamRecord] = Decoder.forProduct8(
     "awsRegion",
     "eventID",
     "eventName",
@@ -64,15 +111,37 @@ object KinesisStreamRecord {
     "invokeIdentityArn",
     "kinesis"
   )(KinesisStreamRecord.apply)
+
+  private final case class Impl(
+      awsRegion: String,
+      eventId: String,
+      eventName: String,
+      eventSource: String,
+      eventSourceArn: String,
+      eventVersion: String,
+      invokeIdentityArn: String,
+      kinesis: KinesisStreamRecordPayload
+  ) extends KinesisStreamRecord {
+    override def productPrefix = "KinesisStreamRecord"
+  }
 }
 
-final case class KinesisStreamEvent(
-    records: List[KinesisStreamRecord]
-)
+sealed abstract class KinesisStreamEvent {
+  def records: List[KinesisStreamRecord]
+}
 
 object KinesisStreamEvent {
+  def apply(records: List[KinesisStreamRecord]): KinesisStreamEvent =
+    new Impl(records)
+
   implicit val decoder: Decoder[KinesisStreamEvent] =
     Decoder.forProduct1("Records")(KinesisStreamEvent.apply)
 
   implicit def kernelSource: KernelSource[KinesisStreamEvent] = KernelSource.emptyKernelSource
+
+  private final case class Impl(
+      records: List[KinesisStreamRecord]
+  ) extends KinesisStreamEvent {
+    override def productPrefix = "KinesisStreamEvent"
+  }
 }

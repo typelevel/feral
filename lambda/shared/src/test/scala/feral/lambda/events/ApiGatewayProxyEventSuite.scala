@@ -19,17 +19,17 @@ package feral.lambda.events
 import io.circe.literal._
 import munit.FunSuite
 
-class APIGatewayProxyEventSuite extends FunSuite {
+class ApiGatewayProxyEventSuite extends FunSuite {
 
-  import APIGatewayProxyEventSuite._
+  import ApiGatewayProxyEventSuite._
 
   test("decoder") {
-    event.as[APIGatewayProxyRequestEvent].toTry.get
+    event.as[ApiGatewayProxyEvent].toTry.get
   }
 
 }
 
-object APIGatewayProxyEventSuite {
+object ApiGatewayProxyEventSuite {
 
   def event = json"""
   {

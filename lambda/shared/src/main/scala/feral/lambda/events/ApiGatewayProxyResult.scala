@@ -18,18 +18,31 @@ package feral.lambda.events
 
 import io.circe.Encoder
 
-final case class APIGatewayProxyResponseEvent(
-    statusCode: Int,
-    body: String,
-    isBase64Encoded: Boolean
-)
+sealed abstract class ApiGatewayProxyResult {
+  def statusCode: Int
+  def body: String
+  def isBase64Encoded: Boolean
+}
 
-object APIGatewayProxyResponseEvent {
+object ApiGatewayProxyResult {
 
-  implicit def encoder: Encoder[APIGatewayProxyResponseEvent] = Encoder.forProduct3(
+  def apply(
+      statusCode: Int,
+      body: String,
+      isBase64Encoded: Boolean): ApiGatewayProxyResult =
+    new Impl(statusCode, body, isBase64Encoded)
+
+  implicit def encoder: Encoder[ApiGatewayProxyResult] = Encoder.forProduct3(
     "statusCode",
     "body",
     "isBase64Encoded"
   )(r => (r.statusCode, r.body, r.isBase64Encoded))
 
+  private final case class Impl(
+      statusCode: Int,
+      body: String,
+      isBase64Encoded: Boolean
+  ) extends ApiGatewayProxyResult {
+    override def productPrefix = "ApiGatewayProxyResult"
+  }
 }

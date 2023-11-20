@@ -16,7 +16,7 @@
 
 package feral.lambda.events
 
-import io.circe.{Decoder, Json}
+import io.circe.Json
 import munit.ScalaCheckSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
@@ -26,7 +26,7 @@ import java.time.Instant
 
 class InstantDecoderSuite extends ScalaCheckSuite {
 
-  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
+  import codecs.decodeInstant
 
   implicit val arbitraryInstant: Arbitrary[Instant] = Arbitrary(
     Gen.long.map(Instant.ofEpochMilli(_)))

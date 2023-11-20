@@ -25,7 +25,7 @@ import scala.concurrent.duration._
 private[lambda] trait ContextCompanionPlatform {
 
   private[lambda] def fromJS[F[_]: Sync](context: facade.Context): Context[F] =
-    new Context(
+    Context(
       context.functionName,
       context.functionVersion,
       context.invokedFunctionArn,
@@ -34,21 +34,21 @@ private[lambda] trait ContextCompanionPlatform {
       context.logGroupName,
       context.logStreamName,
       context.identity.toOption.map { identity =>
-        new CognitoIdentity(identity.cognitoIdentityId, identity.cognitoIdentityPoolId)
+        CognitoIdentity(identity.cognitoIdentityId, identity.cognitoIdentityPoolId)
       },
       context
         .clientContext
         .toOption
         .map { clientContext =>
-          new ClientContext(
-            new ClientContextClient(
+          ClientContext(
+            ClientContextClient(
               clientContext.client.installationId,
               clientContext.client.appTitle,
               clientContext.client.appVersionName,
               clientContext.client.appVersionCode,
               clientContext.client.appPackageName
             ),
-            new ClientContextEnv(
+            ClientContextEnv(
               clientContext.env.platformVersion,
               clientContext.env.platform,
               clientContext.env.make,

@@ -51,26 +51,24 @@ class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
   }
 
   def expectedHeaders = Headers(
-    ("cookie", "s_fid=7AABXMPL1AFD9BBF-0643XMPL09956DE2; regStatus=pre-register"),
-    ("x-forwarded-port", "443"),
-    (
-      "accept",
-      "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"),
-    ("sec-fetch-site", "cross-site"),
-    ("x-amzn-trace-id", "Root=1-5e6722a7-cc56xmpl46db7ae02d4da47e"),
-    ("sec-fetch-mode", "navigate"),
-    ("sec-fetch-user", "?1"),
-    ("accept-encoding", "gzip, deflate, br"),
-    ("x-forwarded-for", "205.255.255.176"),
-    ("upgrade-insecure-requests", "1"),
-    (
-      "user-agent",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"),
-    ("accept-language", "en-US,en;q=0.9"),
-    ("x-forwarded-proto", "https"),
-    ("host", "r3pmxmplak.execute-api.us-east-2.amazonaws.com"),
-    ("content-length", "0"),
-    ("sec-fetch-dest", "document")
+    "content-length" -> "0",
+    "accept-language" -> "en-US,en;q=0.9",
+    "sec-fetch-dest" -> "document",
+    "sec-fetch-user" -> "?1",
+    "x-amzn-trace-id" -> "Root=1-5e6722a7-cc56xmpl46db7ae02d4da47e",
+    "host" -> "r3pmxmplak.execute-api.us-east-2.amazonaws.com",
+    "sec-fetch-mode" -> "navigate",
+    "accept-encoding" -> "gzip, deflate, br",
+    "accept" ->
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "sec-fetch-site" -> "cross-site",
+    "x-forwarded-port" -> "443",
+    "x-forwarded-proto" -> "https",
+    "upgrade-insecure-requests" -> "1",
+    "user-agent" ->
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+    "x-forwarded-for" -> "205.255.255.176",
+    "cookie" -> "s_fid=7AABXMPL1AFD9BBF-0643XMPL09956DE2; regStatus=pre-register"
   )
 
 }

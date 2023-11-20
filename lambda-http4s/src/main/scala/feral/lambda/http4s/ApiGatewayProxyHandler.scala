@@ -23,6 +23,7 @@ import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
 import fs2.Stream
 import org.http4s.Charset
+import org.http4s.Header
 import org.http4s.Headers
 import org.http4s.{HttpApp, HttpRoutes}
 import org.http4s.Method
@@ -60,7 +61,7 @@ object ApiGatewayProxyHandler {
           response.status.code,
           (headers - `Set-Cookie`.name).map {
             case (name, values) =>
-              name.toString -> values.mkString(",")
+              name -> values.mkString(",")
           },
           responseBody,
           isBase64Encoded,
@@ -73,8 +74,16 @@ object ApiGatewayProxyHandler {
       event: ApiGatewayProxyEventV2): F[Request[F]] = for {
     method <- Method.fromString(event.requestContext.http.method).liftTo[F]
     uri <- Uri.fromString(event.rawPath + "?" + event.rawQueryString).liftTo[F]
-    cookies = event.cookies.filter(_.nonEmpty).map(Cookie.name.toString -> _.mkString("; "))
-    headers = Headers(cookies.toList ::: event.headers.toList)
+    headers = {
+      val builder = List.newBuilder[Header.Raw]
+
+      event.headers.foreachEntry(builder += Header.Raw(_, _))
+      event.cookies.filter(_.nonEmpty).foreach { cs =>
+        builder += Header.Raw(Cookie.name, cs.mkString("; "))
+      }
+
+      Headers(builder.result())
+    }
     readBody =
       if (event.isBase64Encoded)
         fs2.text.base64.decode[F]

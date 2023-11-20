@@ -17,60 +17,173 @@
 package feral.lambda
 
 import cats.~>
+import cats.Applicative
 import io.circe.JsonObject
 
 import scala.concurrent.duration.FiniteDuration
 
-final class Context[F[_]] private[lambda] (
-    val functionName: String,
-    val functionVersion: String,
-    val invokedFunctionArn: String,
-    val memoryLimitInMB: Int,
-    val awsRequestId: String,
-    val logGroupName: String,
-    val logStreamName: String,
-    val identity: Option[CognitoIdentity],
-    val clientContext: Option[ClientContext],
-    val remainingTime: F[FiniteDuration]
-) {
-  def mapK[G[_]](f: F ~> G): Context[G] = new Context(
-    functionName,
-    functionVersion,
-    invokedFunctionArn,
-    memoryLimitInMB,
-    awsRequestId,
-    logGroupName,
-    logStreamName,
-    identity,
-    clientContext,
-    f(remainingTime))
+sealed abstract class Context[F[_]] {
+  def functionName: String
+  def functionVersion: String
+  def invokedFunctionArn: String
+  def memoryLimitInMB: Int
+  def awsRequestId: String
+  def logGroupName: String
+  def logStreamName: String
+  def identity: Option[CognitoIdentity]
+  def clientContext: Option[ClientContext]
+  def remainingTime: F[FiniteDuration]
+
+  final def mapK[G[_]](f: F ~> G): Context[G] =
+    new Context.Impl(
+      functionName,
+      functionVersion,
+      invokedFunctionArn,
+      memoryLimitInMB,
+      awsRequestId,
+      logGroupName,
+      logStreamName,
+      identity,
+      clientContext,
+      f(remainingTime)
+    )
+
 }
 
-object Context extends ContextCompanionPlatform
+object Context extends ContextCompanionPlatform {
+  def apply[F[_]](
+      functionName: String,
+      functionVersion: String,
+      invokedFunctionArn: String,
+      memoryLimitInMB: Int,
+      awsRequestId: String,
+      logGroupName: String,
+      logStreamName: String,
+      identity: Option[CognitoIdentity],
+      clientContext: Option[ClientContext],
+      remainingTime: F[FiniteDuration]
+  )(implicit F: Applicative[F]): Context[F] = {
+    val _ = F // might be useful for future compatibility
+    new Impl(
+      functionName,
+      functionVersion,
+      invokedFunctionArn,
+      memoryLimitInMB,
+      awsRequestId,
+      logGroupName,
+      logStreamName,
+      identity,
+      clientContext,
+      remainingTime)
+  }
 
-final class CognitoIdentity(
-    val identityId: String,
-    val identityPoolId: String
-)
+  private final case class Impl[F[_]](
+      functionName: String,
+      functionVersion: String,
+      invokedFunctionArn: String,
+      memoryLimitInMB: Int,
+      awsRequestId: String,
+      logGroupName: String,
+      logStreamName: String,
+      identity: Option[CognitoIdentity],
+      clientContext: Option[ClientContext],
+      remainingTime: F[FiniteDuration]
+  ) extends Context[F] {
+    override def productPrefix = "Context"
+  }
+}
 
-final class ClientContext(
-    val client: ClientContextClient,
-    val env: ClientContextEnv,
-    val custom: JsonObject
-)
+sealed abstract class CognitoIdentity {
+  def identityId: String
+  def identityPoolId: String
+}
 
-final class ClientContextClient(
-    val installationId: String,
-    val appTitle: String,
-    val appVersionName: String,
-    val appVersionCode: String,
-    val appPackageName: String
-)
+object CognitoIdentity {
+  def apply(identityId: String, identityPoolId: String): CognitoIdentity =
+    new Impl(identityId, identityPoolId)
 
-final class ClientContextEnv(
-    val platformVersion: String,
-    val platform: String,
-    val make: String,
-    val model: String,
-    val locale: String
-)
+  private final case class Impl(
+      val identityId: String,
+      val identityPoolId: String
+  ) extends CognitoIdentity {
+    override def productPrefix = "CognitoIdentity"
+  }
+}
+
+sealed abstract class ClientContext {
+  def client: ClientContextClient
+  def env: ClientContextEnv
+  def custom: JsonObject
+}
+
+object ClientContext {
+  def apply(
+      client: ClientContextClient,
+      env: ClientContextEnv,
+      custom: JsonObject
+  ): ClientContext =
+    new Impl(client, env, custom)
+
+  private final case class Impl(
+      client: ClientContextClient,
+      env: ClientContextEnv,
+      custom: JsonObject
+  ) extends ClientContext
+}
+
+sealed abstract class ClientContextClient {
+  def installationId: String
+  def appTitle: String
+  def appVersionName: String
+  def appVersionCode: String
+  def appPackageName: String
+}
+
+object ClientContextClient {
+  def apply(
+      installationId: String,
+      appTitle: String,
+      appVersionName: String,
+      appVersionCode: String,
+      appPackageName: String
+  ): ClientContextClient =
+    new Impl(installationId, appTitle, appVersionName, appVersionCode, appPackageName)
+
+  private final case class Impl(
+      installationId: String,
+      appTitle: String,
+      appVersionName: String,
+      appVersionCode: String,
+      appPackageName: String
+  ) extends ClientContextClient {
+    override def productPrefix = "ClientContextClient"
+  }
+}
+
+sealed abstract class ClientContextEnv {
+  def platformVersion: String
+  def platform: String
+  def make: String
+  def model: String
+  def locale: String
+}
+
+object ClientContextEnv {
+  def apply(
+      platformVersion: String,
+      platform: String,
+      make: String,
+      model: String,
+      locale: String): ClientContextEnv =
+    new Impl(platformVersion, platform, make, model, locale)
+
+  private final case class Impl(
+      platformVersion: String,
+      platform: String,
+      make: String,
+      model: String,
+      locale: String
+  ) extends ClientContextEnv {
+    override def productPrefix = "ClientContextEnv"
+  }
+}

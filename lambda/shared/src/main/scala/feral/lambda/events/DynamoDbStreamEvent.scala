@@ -22,21 +22,35 @@ import io.circe.Json
 import io.circe.scodec.decodeByteVector
 import scodec.bits.ByteVector
 
-final case class AttributeValue(
-    b: Option[ByteVector],
-    bs: Option[List[ByteVector]],
-    bool: Option[Boolean],
-    l: Option[List[AttributeValue]],
-    m: Option[Map[String, AttributeValue]],
-    n: Option[String],
-    ns: Option[List[String]],
-    nul: Boolean,
-    s: Option[String],
-    ss: Option[List[String]]
-)
+sealed abstract class AttributeValue {
+  def b: Option[ByteVector]
+  def bs: Option[List[ByteVector]]
+  def bool: Option[Boolean]
+  def l: Option[List[AttributeValue]]
+  def m: Option[Map[String, AttributeValue]]
+  def n: Option[String]
+  def ns: Option[List[String]]
+  def nul: Boolean
+  def s: Option[String]
+  def ss: Option[List[String]]
+}
 
 object AttributeValue {
-  implicit val decoder: Decoder[AttributeValue] = for {
+  def apply(
+      b: Option[ByteVector],
+      bs: Option[List[ByteVector]],
+      bool: Option[Boolean],
+      l: Option[List[AttributeValue]],
+      m: Option[Map[String, AttributeValue]],
+      n: Option[String],
+      ns: Option[List[String]],
+      nul: Boolean,
+      s: Option[String],
+      ss: Option[List[String]]
+  ): AttributeValue =
+    new Impl(b, bs, bool, l, m, n, ns, nul, s, ss)
+
+  private[events] implicit val decoder: Decoder[AttributeValue] = for {
     b <- Decoder[Option[ByteVector]].at("B")
     bs <- Decoder[Option[List[ByteVector]]].at("BS")
     bool <- Decoder[Option[Boolean]].at("BOOL")
@@ -59,20 +73,54 @@ object AttributeValue {
     s = s,
     ss = ss
   )
+
+  private final case class Impl(
+      b: Option[ByteVector],
+      bs: Option[List[ByteVector]],
+      bool: Option[Boolean],
+      l: Option[List[AttributeValue]],
+      m: Option[Map[String, AttributeValue]],
+      n: Option[String],
+      ns: Option[List[String]],
+      nul: Boolean,
+      s: Option[String],
+      ss: Option[List[String]]
+  ) extends AttributeValue {
+    override def productPrefix = "AttributeValue"
+  }
 }
 
-final case class StreamRecord(
-    approximateCreationDateTime: Option[Double],
-    keys: Option[Map[String, AttributeValue]],
-    newImage: Option[Map[String, AttributeValue]],
-    oldImage: Option[Map[String, AttributeValue]],
-    sequenceNumber: Option[String],
-    sizeBytes: Option[Double],
-    streamViewType: Option[String]
-)
+sealed abstract class StreamRecord {
+  def approximateCreationDateTime: Option[Double]
+  def keys: Option[Map[String, AttributeValue]]
+  def newImage: Option[Map[String, AttributeValue]]
+  def oldImage: Option[Map[String, AttributeValue]]
+  def sequenceNumber: Option[String]
+  def sizeBytes: Option[Double]
+  def streamViewType: Option[String]
+}
 
 object StreamRecord {
-  implicit val decoder: Decoder[StreamRecord] = Decoder.forProduct7(
+  def apply(
+      approximateCreationDateTime: Option[Double],
+      keys: Option[Map[String, AttributeValue]],
+      newImage: Option[Map[String, AttributeValue]],
+      oldImage: Option[Map[String, AttributeValue]],
+      sequenceNumber: Option[String],
+      sizeBytes: Option[Double],
+      streamViewType: Option[String]
+  ): StreamRecord =
+    new Impl(
+      approximateCreationDateTime,
+      keys,
+      newImage,
+      oldImage,
+      sequenceNumber,
+      sizeBytes,
+      streamViewType
+    )
+
+  private[events] implicit val decoder: Decoder[StreamRecord] = Decoder.forProduct7(
     "ApproximateCreationDateTime",
     "Keys",
     "NewImage",
@@ -81,21 +129,54 @@ object StreamRecord {
     "SizeBytes",
     "StreamViewType"
   )(StreamRecord.apply)
+
+  final case class Impl(
+      approximateCreationDateTime: Option[Double],
+      keys: Option[Map[String, AttributeValue]],
+      newImage: Option[Map[String, AttributeValue]],
+      oldImage: Option[Map[String, AttributeValue]],
+      sequenceNumber: Option[String],
+      sizeBytes: Option[Double],
+      streamViewType: Option[String]
+  ) extends StreamRecord {
+    override def productPrefix = "StreamRecord"
+  }
 }
 
-final case class DynamoDbRecord(
-    awsRegion: Option[String],
-    dynamodb: Option[StreamRecord],
-    eventID: Option[String],
-    eventName: Option[String],
-    eventSource: Option[String],
-    eventSourceArn: Option[String],
-    eventVersion: Option[String],
-    userIdentity: Option[Json]
-)
+sealed abstract class DynamoDbRecord {
+  def awsRegion: Option[String]
+  def dynamodb: Option[StreamRecord]
+  def eventId: Option[String]
+  def eventName: Option[String]
+  def eventSource: Option[String]
+  def eventSourceArn: Option[String]
+  def eventVersion: Option[String]
+  def userIdentity: Option[Json]
+}
 
 object DynamoDbRecord {
-  implicit val decoder: Decoder[DynamoDbRecord] = Decoder.forProduct8(
+  def apply(
+      awsRegion: Option[String],
+      dynamodb: Option[StreamRecord],
+      eventId: Option[String],
+      eventName: Option[String],
+      eventSource: Option[String],
+      eventSourceArn: Option[String],
+      eventVersion: Option[String],
+      userIdentity: Option[Json]
+  ): DynamoDbRecord =
+    new Impl(
+      awsRegion,
+      dynamodb,
+      eventId,
+      eventName,
+      eventSource,
+      eventSourceArn,
+      eventVersion,
+      userIdentity
+    )
+
+  private[events] implicit val decoder: Decoder[DynamoDbRecord] = Decoder.forProduct8(
     "awsRegion",
     "dynamodb",
     "eventID",
@@ -105,15 +186,37 @@ object DynamoDbRecord {
     "eventVersion",
     "userIdentity"
   )(DynamoDbRecord.apply)
+
+  private final case class Impl(
+      awsRegion: Option[String],
+      dynamodb: Option[StreamRecord],
+      eventId: Option[String],
+      eventName: Option[String],
+      eventSource: Option[String],
+      eventSourceArn: Option[String],
+      eventVersion: Option[String],
+      userIdentity: Option[Json]
+  ) extends DynamoDbRecord {
+    override def productPrefix = "DynamoDbRecord"
+  }
 }
 
-final case class DynamoDbStreamEvent(
-    records: List[DynamoDbRecord]
-)
+sealed abstract class DynamoDbStreamEvent {
+  def records: List[DynamoDbRecord]
+}
 
 object DynamoDbStreamEvent {
+  def apply(records: List[DynamoDbRecord]): DynamoDbStreamEvent =
+    new Impl(records)
+
   implicit val decoder: Decoder[DynamoDbStreamEvent] =
     Decoder.forProduct1("Records")(DynamoDbStreamEvent.apply)
 
   implicit def kernelSource: KernelSource[DynamoDbStreamEvent] = KernelSource.emptyKernelSource
+
+  private final case class Impl(
+      records: List[DynamoDbRecord]
+  ) extends DynamoDbStreamEvent {
+    override def productPrefix = "DynamoDbStreamEvent"
+  }
 }
