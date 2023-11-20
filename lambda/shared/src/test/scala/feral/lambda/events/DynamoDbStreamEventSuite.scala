@@ -16,13 +16,47 @@
 
 package feral.lambda.events
 
+import cats.syntax.option._
 import io.circe.literal._
 import munit.FunSuite
+import scodec.bits._
 
 class DynamoDbStreamEventSuite extends FunSuite {
 
   test("decoder") {
     event.as[DynamoDbStreamEvent].toTry.get
+  }
+
+  test("AttributeValue should decode a B") {
+
+    val vector = utf8Bytes"foo"
+
+    val source = json"""
+      {
+        "B": ${vector.toBase64}
+      }
+    """
+
+    val decoded = source.as[AttributeValue].toOption.flatMap(_.b)
+
+    assertEquals(decoded, vector.some)
+  }
+
+  test("AttributeValue should decode a BS") {
+
+    val vector = utf8Bytes"foo"
+
+    val source = json"""
+      {
+        "BS": [
+          ${vector.toBase64}
+        ]
+      }
+    """
+
+    val decoded = source.as[AttributeValue].toOption.flatMap(_.bs)
+
+    assertEquals(decoded, List(vector).some)
   }
 
   def event = json"""
@@ -43,6 +77,16 @@ class DynamoDbStreamEventSuite extends FunSuite {
             },
             "Id": {
               "N": "101"
+            },
+            "Image": {
+              "B": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII"
+            },
+            "Images": {
+              "BS": [
+                "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8z8BQz0AEYBxVSF+FABJADveWkH6oAAAAAElFTkSuQmCC",
+                "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9Qz0AEYBxVSF+FAAhKDveksOjmAAAAAElFTkSuQmCC",
+                "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkYPhfz0AEYBxVSF+FAP5FDvcfRYWgAAAAAElFTkSuQmCC"
+              ]
             }
           },
           "StreamViewType": "NEW_AND_OLD_IMAGES",

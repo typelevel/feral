@@ -18,7 +18,7 @@ import com.typesafe.tools.mima.core._
 
 name := "feral"
 
-ThisBuild / tlBaseVersion := "0.2"
+ThisBuild / tlBaseVersion := "0.3"
 ThisBuild / startYear := Some(2021)
 
 ThisBuild / developers := List(
