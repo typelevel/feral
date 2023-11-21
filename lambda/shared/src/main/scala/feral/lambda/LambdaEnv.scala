@@ -29,15 +29,11 @@ import cats.kernel.Monoid
 import cats.syntax.all._
 import cats.~>
 
-sealed trait LambdaEnv[F[_], Event] { outer =>
+sealed trait LambdaEnv[F[_], Event] {
   def event: F[Event]
   def context: F[Context[F]]
 
-  final def mapK[G[_]: Functor](f: F ~> G): LambdaEnv[G, Event] =
-    new LambdaEnv[G, Event] {
-      def event = f(outer.event)
-      def context = f(outer.context).map(_.mapK(f))
-    }
+  def mapK[G[_]](fk: F ~> G): LambdaEnv[G, Event]
 }
 
 object LambdaEnv {
@@ -48,11 +44,12 @@ object LambdaEnv {
 
   def pure[F[_]: Applicative, Event](e: Event, c: Context[F]): LambdaEnv[F, Event] =
     new LambdaEnv[F, Event] {
-      override def event: F[Event] = e.pure[F]
-      override def context: F[Context[F]] = c.pure[F]
+      def event = e.pure[F]
+      def context = c.pure[F]
+      def mapK[G[_]](fk: F ~> G) = new MapK(this, fk)
     }
 
-  implicit def kleisliLambdaEnv[F[_]: Functor, A, B](
+  implicit def kleisliLambdaEnv[F[_], A, B](
       implicit env: LambdaEnv[F, A]): LambdaEnv[Kleisli[F, B, *], A] =
     env.mapK(Kleisli.liftK)
 
@@ -78,5 +75,15 @@ object LambdaEnv {
     new LambdaEnv[IO, Event] {
       def event = localEvent.get
       def context = localContext.get
+      def mapK[F[_]](fk: IO ~> F) = new MapK(this, fk)
     }
+
+  private final class MapK[F[_]: Functor, G[_], Event](
+      underlying: LambdaEnv[F, Event],
+      fk: F ~> G
+  ) extends LambdaEnv[G, Event] {
+    def event = fk(underlying.event)
+    def context = fk(underlying.context.map(_.mapK(fk)))
+    def mapK[H[_]](gk: G ~> H) = new MapK(underlying, fk.andThen(gk))
+  }
 }
