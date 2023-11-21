@@ -128,7 +128,9 @@ object ClientContext {
       client: ClientContextClient,
       env: ClientContextEnv,
       custom: JsonObject
-  ) extends ClientContext
+  ) extends ClientContext {
+    override def productPrefix = "ClientContext"
+  }
 }
 
 sealed abstract class ClientContextClient {

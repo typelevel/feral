@@ -48,7 +48,7 @@ object RequestContext {
   private[events] implicit val decoder: Decoder[RequestContext] =
     Decoder.forProduct1("http")(RequestContext.apply)
 
-  final case class Impl(http: Http) extends RequestContext {
+  private final case class Impl(http: Http) extends RequestContext {
     override def productPrefix = "RequestContext"
   }
 }

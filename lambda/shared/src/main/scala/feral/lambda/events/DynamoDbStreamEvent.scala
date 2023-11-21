@@ -130,7 +130,7 @@ object StreamRecord {
     "StreamViewType"
   )(StreamRecord.apply)
 
-  final case class Impl(
+  private final case class Impl(
       approximateCreationDateTime: Option[Double],
       keys: Option[Map[String, AttributeValue]],
       newImage: Option[Map[String, AttributeValue]],
