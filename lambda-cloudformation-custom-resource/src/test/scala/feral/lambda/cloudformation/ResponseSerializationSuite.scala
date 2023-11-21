@@ -55,7 +55,7 @@ class ResponseSerializationSuite
 
   test("CloudFormationCustomResource should PUT the response to the given URI") {
     PropF.forAllF {
-      implicit lambdaEnv: LambdaEnv[IO, CloudFormationCustomResourceRequest[String]] =>
+      implicit lambdaEnv: Invocation[IO, CloudFormationCustomResourceRequest[String]] =>
         for {
           eventualRequest <- Deferred[IO, (Request[IO], Json)]
           client = Client.fromHttpApp(captureRequestsAndRespondWithOk(eventualRequest))

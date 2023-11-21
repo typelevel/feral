@@ -18,9 +18,14 @@ package feral.lambda
 
 import events._
 
-type ApiGatewayProxyLambdaEnv[F[_]] = LambdaEnv[F, ApiGatewayProxyEventV2]
-type DynamoDbStreamLambdaEnv[F[_]] = LambdaEnv[F, DynamoDbStreamEvent]
-type KinesisStreamLambdaEnv[F[_]] = LambdaEnv[F, KinesisStreamEvent]
-type S3BatchLambdaEnv[F[_]] = LambdaEnv[F, S3BatchEvent]
-type SnsLambdaEnv[F[_]] = LambdaEnv[F, SnsEvent]
-type SqsLambdaEnv[F[_]] = LambdaEnv[F, SqsEvent]
+@deprecated("0.3.0", "Renamed to Invocation")
+type LambdaEnv[F[_], Event] = Invocation[F, Event]
+@deprecated("0.3.0", "Renamed to Invocation")
+val LambdaEnv = Invocation
+
+type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
+type DynamoDbStreamInvocation[F[_]] = Invocation[F, DynamoDbStreamEvent]
+type KinesisStreamInvocation[F[_]] = Invocation[F, KinesisStreamEvent]
+type S3BatchInvocation[F[_]] = Invocation[F, S3BatchEvent]
+type SnsInvocation[F[_]] = Invocation[F, SnsEvent]
+type SqsInvocation[F[_]] = Invocation[F, SqsEvent]

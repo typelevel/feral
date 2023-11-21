@@ -30,7 +30,7 @@ class TracedLambdaSuite {
   @nowarn
   def syntaxTest = { // Checking for compilation, nothing more
 
-    implicit def env: LambdaEnv[IO, KinesisStreamEvent] = ???
+    implicit def inv: Invocation[IO, KinesisStreamEvent] = ???
     def ioEntryPoint: EntryPoint[IO] = ???
     def needsTrace[F[_]: Trace]: F[Option[INothing]] = ???
 

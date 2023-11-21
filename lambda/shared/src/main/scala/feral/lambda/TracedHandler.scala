@@ -28,10 +28,10 @@ object TracedHandler {
 
   def apply[Event, Result](entryPoint: EntryPoint[IO])(
       handler: Trace[IO] => IO[Option[Result]])(
-      implicit env: LambdaEnv[IO, Event],
+      implicit inv: Invocation[IO, Event],
       KS: KernelSource[Event]): IO[Option[Result]] = for {
-    event <- env.event
-    context <- env.context
+    event <- inv.event
+    context <- inv.context
     kernel = KS.extract(event)
     result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
       span.put(
@@ -44,11 +44,11 @@ object TracedHandler {
   def apply[F[_]: MonadCancelThrow, Event, Result](
       entryPoint: EntryPoint[F],
       handler: Kleisli[F, Span[F], Option[Result]])(
-      // env first helps bind Event for KernelSource. h/t @bpholt
-      implicit env: LambdaEnv[F, Event],
+      // inv first helps bind Event for KernelSource. h/t @bpholt
+      implicit inv: Invocation[F, Event],
       KS: KernelSource[Event]): F[Option[Result]] = for {
-    event <- env.event
-    context <- env.context
+    event <- inv.event
+    context <- inv.context
     kernel = KS.extract(event)
     result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
       span.put(

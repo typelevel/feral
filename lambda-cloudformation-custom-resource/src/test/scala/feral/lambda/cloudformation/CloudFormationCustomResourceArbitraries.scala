@@ -184,16 +184,16 @@ trait CloudFormationCustomResourceArbitraries {
       : Arbitrary[CloudFormationCustomResourceRequest[A]] = Arbitrary(
     genCloudFormationCustomResourceRequest[A])
 
-  def genLambdaEnv[F[_]: Applicative, A: Arbitrary]
-      : Gen[LambdaEnv[F, CloudFormationCustomResourceRequest[A]]] =
+  def genInvocation[F[_]: Applicative, A: Arbitrary]
+      : Gen[Invocation[F, CloudFormationCustomResourceRequest[A]]] =
     for {
       e <- arbitrary[CloudFormationCustomResourceRequest[A]]
       c <- arbitrary[Context[F]]
-    } yield LambdaEnv.pure(e, c)
+    } yield Invocation.pure(e, c)
 
-  implicit def arbLambdaEnv[F[_]: Applicative, A: Arbitrary]
-      : Arbitrary[LambdaEnv[F, CloudFormationCustomResourceRequest[A]]] =
-    Arbitrary(genLambdaEnv[F, A])
+  implicit def arbInvocation[F[_]: Applicative, A: Arbitrary]
+      : Arbitrary[Invocation[F, CloudFormationCustomResourceRequest[A]]] =
+    Arbitrary(genInvocation[F, A])
 
   def genHandlerResponse[A: Arbitrary]: Gen[HandlerResponse[A]] =
     for {

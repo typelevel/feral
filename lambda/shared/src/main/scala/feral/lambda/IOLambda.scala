@@ -34,11 +34,11 @@ abstract class IOLambda[Event, Result](
     handler <- handler
     localEvent <- IOLocal[Event](null.asInstanceOf[Event]).toResource
     localContext <- IOLocal[Context[IO]](null).toResource
-    env = LambdaEnv.ioLambdaEnv(localEvent, localContext)
-    result = handler(env)
+    inv = Invocation.ioInvocation(localEvent, localContext)
+    result = handler(inv)
   } yield { localEvent.set(_) *> localContext.set(_) *> result }
 
-  def handler: Resource[IO, LambdaEnv[IO, Event] => IO[Option[Result]]]
+  def handler: Resource[IO, Invocation[IO, Event] => IO[Option[Result]]]
 
 }
 
@@ -52,10 +52,10 @@ object IOLambda {
     type Init
     def init: Resource[IO, Init] = Resource.pure(null.asInstanceOf[Init])
 
-    final def handler = init.map { init => env =>
+    final def handler = init.map { init => inv =>
       for {
-        event <- env.event
-        ctx <- env.context
+        event <- inv.event
+        ctx <- inv.context
         result <- apply(event, ctx, init)
       } yield result
     }
