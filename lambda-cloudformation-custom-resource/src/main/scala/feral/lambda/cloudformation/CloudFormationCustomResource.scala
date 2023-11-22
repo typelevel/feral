@@ -46,11 +46,11 @@ object CloudFormationCustomResource {
       client: Client[F],
       handler: CloudFormationCustomResource[F, Input, Output])(
       implicit
-      env: LambdaEnv[F, CloudFormationCustomResourceRequest[Input]]): F[Option[INothing]] = {
+      inv: Invocation[F, CloudFormationCustomResourceRequest[Input]]): F[Option[INothing]] = {
     val http4sClientDsl = new Http4sClientDsl[F] {}
     import http4sClientDsl._
 
-    env.event.flatMap { event =>
+    inv.event.flatMap { event =>
       ((event.RequestType, event.PhysicalResourceId) match {
         case (CreateRequest, None) => handler.createResource(event.ResourceProperties)
         case (UpdateRequest, Some(id)) => handler.updateResource(event.ResourceProperties, id)

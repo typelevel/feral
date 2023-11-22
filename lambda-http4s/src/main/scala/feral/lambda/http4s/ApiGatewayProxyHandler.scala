@@ -33,17 +33,17 @@ import org.http4s.headers.Cookie
 import org.http4s.headers.`Set-Cookie`
 
 object ApiGatewayProxyHandler {
-  def apply[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
+  def apply[F[_]: Concurrent: ApiGatewayProxyInvocation](
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpRoutes(routes)
 
-  def httpRoutes[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
+  def httpRoutes[F[_]: Concurrent: ApiGatewayProxyInvocation](
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpApp(
     routes.orNotFound)
 
-  def httpApp[F[_]: Concurrent: ApiGatewayProxyLambdaEnv](
+  def httpApp[F[_]: Concurrent: ApiGatewayProxyInvocation](
       app: HttpApp[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
-      event <- LambdaEnv.event
+      event <- Invocation.event
       request <- decodeEvent(event)
       response <- app(request)
       isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
