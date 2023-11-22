@@ -27,7 +27,7 @@ import scala.jdk.CollectionConverters._
 private[lambda] trait ContextCompanionPlatform {
 
   private[lambda] def fromJava[F[_]: Sync](context: runtime.Context): Context[F] =
-    new Context(
+    Context(
       context.getFunctionName(),
       context.getFunctionVersion(),
       context.getInvokedFunctionArn(),
@@ -36,18 +36,18 @@ private[lambda] trait ContextCompanionPlatform {
       context.getLogGroupName(),
       context.getLogStreamName(),
       Option(context.getIdentity()).map { identity =>
-        new CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
+        CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
       },
       Option(context.getClientContext()).map { clientContext =>
-        new ClientContext(
-          new ClientContextClient(
+        ClientContext(
+          ClientContextClient(
             clientContext.getClient().getInstallationId(),
             clientContext.getClient().getAppTitle(),
             clientContext.getClient().getAppVersionName(),
             clientContext.getClient().getAppVersionCode(),
             clientContext.getClient().getAppPackageName()
           ),
-          new ClientContextEnv(
+          ClientContextEnv(
             clientContext.getEnvironment().get("platformVersion"),
             clientContext.getEnvironment().get("platform"),
             clientContext.getEnvironment().get("make"),

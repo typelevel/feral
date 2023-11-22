@@ -16,6 +16,7 @@
 
 package feral.lambda.events
 
+import com.comcast.ip4s._
 import io.circe.literal._
 import munit.FunSuite
 
@@ -77,7 +78,7 @@ class S3EventSuite extends FunSuite {
       eventTime = Instant.ofEpochSecond(0),
       eventName = "ObjectCreated:Put",
       userIdentity = S3UserIdentity("AIDAJDPLRKLG7UEXAMPLE"),
-      requestParameters = S3RequestParameters("127.0.0.1"),
+      requestParameters = S3RequestParameters(ip"127.0.0.1"),
       responseElements = S3ResponseElements(
         "C3D13FE58DE4C810",
         "FMyUVURIY8/IgAtTv8xRjskZQpcIZ9KG4V5Wp6S7S/JRWeUWerMUE5JgHvANOjpD"

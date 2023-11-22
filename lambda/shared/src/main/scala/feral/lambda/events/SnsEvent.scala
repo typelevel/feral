@@ -26,49 +26,101 @@ import scodec.bits.ByteVector
 import java.time.Instant
 import java.util.UUID
 
-final case class SnsEvent(
-    records: List[SnsEventRecord]
-)
-
-object SnsEvent {
-  implicit val decoder: Decoder[SnsEvent] =
-    Decoder.forProduct1("Records")(SnsEvent.apply)
+sealed abstract class SnsEvent {
+  def records: List[SnsEventRecord]
 }
 
-final case class SnsEventRecord(
-    eventVersion: String,
-    eventSubscriptionArn: String,
-    eventSource: String,
-    sns: SnsMessage
-)
+object SnsEvent {
+  def apply(records: List[SnsEventRecord]): SnsEvent =
+    new Impl(records)
+
+  implicit val decoder: Decoder[SnsEvent] =
+    Decoder.forProduct1("Records")(SnsEvent.apply)
+
+  private final case class Impl(
+      records: List[SnsEventRecord]
+  ) extends SnsEvent {
+    override def productPrefix = "SnsEvent"
+  }
+}
+
+sealed abstract class SnsEventRecord {
+  def eventVersion: String
+  def eventSubscriptionArn: String
+  def eventSource: String
+  def sns: SnsMessage
+}
 
 object SnsEventRecord {
-  implicit val decoder: Decoder[SnsEventRecord] = Decoder.forProduct4(
+  def apply(
+      eventVersion: String,
+      eventSubscriptionArn: String,
+      eventSource: String,
+      sns: SnsMessage
+  ): SnsEventRecord =
+    new Impl(eventVersion, eventSubscriptionArn, eventSource, sns)
+
+  private[events] implicit val decoder: Decoder[SnsEventRecord] = Decoder.forProduct4(
     "EventVersion",
     "EventSubscriptionArn",
     "EventSource",
     "Sns"
   )(SnsEventRecord.apply)
+
+  private final case class Impl(
+      eventVersion: String,
+      eventSubscriptionArn: String,
+      eventSource: String,
+      sns: SnsMessage
+  ) extends SnsEventRecord {
+    override def productPrefix = "SnsEventRecord"
+  }
 }
 
-final case class SnsMessage(
-    signature: String,
-    messageId: UUID,
-    `type`: String,
-    topicArn: String,
-    messageAttributes: Map[String, SnsMessageAttribute],
-    signatureVersion: String,
-    timestamp: Instant,
-    signingCertUrl: String,
-    message: String,
-    unsubscribeUrl: String,
-    subject: Option[String]
-)
+sealed abstract class SnsMessage {
+  def signature: String
+  def messageId: UUID
+  def `type`: String
+  def topicArn: String
+  def messageAttributes: Map[String, SnsMessageAttribute]
+  def signatureVersion: String
+  def timestamp: Instant
+  def signingCertUrl: String
+  def message: String
+  def unsubscribeUrl: String
+  def subject: Option[String]
+}
 
 object SnsMessage {
-  private[this] implicit val instantDecoder: Decoder[Instant] = Decoder.decodeInstant
 
-  implicit val decoder: Decoder[SnsMessage] = Decoder.forProduct11(
+  def apply(
+      signature: String,
+      messageId: UUID,
+      `type`: String,
+      topicArn: String,
+      messageAttributes: Map[String, SnsMessageAttribute],
+      signatureVersion: String,
+      timestamp: Instant,
+      signingCertUrl: String,
+      message: String,
+      unsubscribeUrl: String,
+      subject: Option[String]
+  ): SnsMessage =
+    new Impl(
+      signature,
+      messageId,
+      `type`,
+      topicArn,
+      messageAttributes,
+      signatureVersion,
+      timestamp,
+      signingCertUrl,
+      message,
+      unsubscribeUrl,
+      subject
+    )
+
+  private[events] implicit val decoder: Decoder[SnsMessage] = Decoder.forProduct11(
     "Signature",
     "MessageId",
     "Type",
@@ -81,6 +133,22 @@ object SnsMessage {
     "UnsubscribeUrl",
     "Subject"
   )(SnsMessage.apply)
+
+  private final case class Impl(
+      signature: String,
+      messageId: UUID,
+      `type`: String,
+      topicArn: String,
+      messageAttributes: Map[String, SnsMessageAttribute],
+      signatureVersion: String,
+      timestamp: Instant,
+      signingCertUrl: String,
+      message: String,
+      unsubscribeUrl: String,
+      subject: Option[String]
+  ) extends SnsMessage {
+    override def productPrefix = "SnsMessage"
+  }
 }
 
 sealed abstract class SnsMessageAttribute
@@ -96,7 +164,7 @@ object SnsMessageAttribute {
       value: Option[Predef.String]
   ) extends SnsMessageAttribute
 
-  implicit val decoder: Decoder[SnsMessageAttribute] = {
+  private[events] implicit val decoder: Decoder[SnsMessageAttribute] = {
     val getString: Decoder[Predef.String] = Decoder.instance(_.get[Predef.String]("Value"))
     val getByteVector: Decoder[ByteVector] = Decoder.instance(_.get[ByteVector]("Value"))
     val getNumber: Decoder[BigDecimal] = Decoder.instance(_.get[BigDecimal]("Value"))
@@ -134,7 +202,7 @@ object SnsMessageAttributeArrayMember {
   final case class Number(value: BigDecimal) extends SnsMessageAttributeArrayMember
   final case class Boolean(value: scala.Boolean) extends SnsMessageAttributeArrayMember
 
-  implicit val decoder: Decoder[SnsMessageAttributeArrayMember] = {
+  private[events] implicit val decoder: Decoder[SnsMessageAttributeArrayMember] = {
     val bool: Decoder[SnsMessageAttributeArrayMember.Boolean] =
       Decoder.decodeBoolean.map(SnsMessageAttributeArrayMember.Boolean.apply)
 

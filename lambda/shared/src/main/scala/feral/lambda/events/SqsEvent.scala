@@ -29,29 +29,59 @@ import scala.util.Try
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/Sqs.d.ts
 // https://docs.aws.amazon.com/lambda/latest/dg/invoking-lambda-function.html#supported-event-source-Sqs
 
-final case class SqsEvent(
-    records: List[SqsRecord]
-)
-
-object SqsEvent {
-  implicit val decoder: Decoder[SqsEvent] =
-    Decoder.instance(_.get[List[SqsRecord]]("Records")).map(SqsEvent(_))
+sealed abstract class SqsEvent {
+  def records: List[SqsRecord]
 }
 
-final case class SqsRecord(
-    messageId: String,
-    receiptHandle: String,
-    body: String,
-    attributes: SqsRecordAttributes,
-    messageAttributes: Map[String, SqsMessageAttribute],
-    md5OfBody: String,
-    eventSource: String,
-    eventSourceArn: String,
-    awsRegion: String
-)
+object SqsEvent {
+  def apply(records: List[SqsRecord]): SqsEvent =
+    new Impl(records)
+
+  implicit val decoder: Decoder[SqsEvent] =
+    Decoder.instance(_.get[List[SqsRecord]]("Records")).map(SqsEvent(_))
+
+  private final case class Impl(records: List[SqsRecord]) extends SqsEvent {
+    override def productPrefix = "SqsEvent"
+  }
+}
+
+sealed abstract class SqsRecord {
+  def messageId: String
+  def receiptHandle: String
+  def body: String
+  def attributes: SqsRecordAttributes
+  def messageAttributes: Map[String, SqsMessageAttribute]
+  def md5OfBody: String
+  def eventSource: String
+  def eventSourceArn: String
+  def awsRegion: String
+}
 
 object SqsRecord {
-  implicit val decoder: Decoder[SqsRecord] = Decoder.instance(i =>
+  def apply(
+      messageId: String,
+      receiptHandle: String,
+      body: String,
+      attributes: SqsRecordAttributes,
+      messageAttributes: Map[String, SqsMessageAttribute],
+      md5OfBody: String,
+      eventSource: String,
+      eventSourceArn: String,
+      awsRegion: String
+  ): SqsRecord =
+    new Impl(
+      messageId,
+      receiptHandle,
+      body,
+      attributes,
+      messageAttributes,
+      md5OfBody,
+      eventSource,
+      eventSourceArn,
+      awsRegion
+    )
+
+  private[events] implicit val decoder: Decoder[SqsRecord] = Decoder.instance(i =>
     for {
       messageId <- i.get[String]("messageId")
       receiptHandle <- i.get[String]("receiptHandle")
@@ -73,24 +103,58 @@ object SqsRecord {
       eventSourceArn,
       awsRegion
     ))
+
+  private final case class Impl(
+      messageId: String,
+      receiptHandle: String,
+      body: String,
+      attributes: SqsRecordAttributes,
+      messageAttributes: Map[String, SqsMessageAttribute],
+      md5OfBody: String,
+      eventSource: String,
+      eventSourceArn: String,
+      awsRegion: String
+  ) extends SqsRecord {
+    override def productPrefix = "SqsRecord"
+  }
 }
 
-final case class SqsRecordAttributes(
-    awsTraceHeader: Option[String],
-    approximateReceiveCount: String,
-    sentTimestamp: Instant,
-    senderId: String,
-    approximateFirstReceiveTimestamp: Instant,
-    sequenceNumber: Option[String],
-    messageGroupId: Option[String],
-    messageDeduplicationId: Option[String]
-)
+sealed abstract class SqsRecordAttributes {
+  def awsTraceHeader: Option[String]
+  def approximateReceiveCount: String
+  def sentTimestamp: Instant
+  def senderId: String
+  def approximateFirstReceiveTimestamp: Instant
+  def sequenceNumber: Option[String]
+  def messageGroupId: Option[String]
+  def messageDeduplicationId: Option[String]
+}
 
 object SqsRecordAttributes {
 
-  implicit private def instantDecoder: Decoder[Instant] = feral.lambda.events.instantDecoder
+  def apply(
+      awsTraceHeader: Option[String],
+      approximateReceiveCount: String,
+      sentTimestamp: Instant,
+      senderId: String,
+      approximateFirstReceiveTimestamp: Instant,
+      sequenceNumber: Option[String],
+      messageGroupId: Option[String],
+      messageDeduplicationId: Option[String]
+  ): SqsRecordAttributes =
+    new Impl(
+      awsTraceHeader,
+      approximateReceiveCount,
+      sentTimestamp,
+      senderId,
+      approximateFirstReceiveTimestamp,
+      sequenceNumber,
+      messageGroupId,
+      messageDeduplicationId
+    )
 
-  implicit val decoder: Decoder[SqsRecordAttributes] = Decoder.instance(i =>
+  private[events] implicit val decoder: Decoder[SqsRecordAttributes] = Decoder.instance { i =>
+    import codecs.decodeInstant
     for {
       awsTraceHeader <- i.get[Option[String]]("AWSTraceHeader")
       approximateReceiveCount <- i.get[String]("ApproximateReceiveCount")
@@ -109,10 +173,24 @@ object SqsRecordAttributes {
       sequenceNumber,
       messageGroupId,
       messageDeduplicationId
-    ))
+    )
+  }
 
   implicit def kernelSource: KernelSource[SqsRecordAttributes] = a =>
     Kernel(a.awsTraceHeader.map(`X-Amzn-Trace-Id` -> _).toMap)
+
+  private final case class Impl(
+      awsTraceHeader: Option[String],
+      approximateReceiveCount: String,
+      sentTimestamp: Instant,
+      senderId: String,
+      approximateFirstReceiveTimestamp: Instant,
+      sequenceNumber: Option[String],
+      messageGroupId: Option[String],
+      messageDeduplicationId: Option[String]
+  ) extends SqsRecordAttributes {
+    override def productPrefix = "SqsRecordAttributes"
+  }
 
   private[this] val `X-Amzn-Trace-Id` = ci"X-Amzn-Trace-Id"
 }
@@ -129,7 +207,7 @@ object SqsMessageAttribute {
       dataType: Predef.String
   ) extends SqsMessageAttribute
 
-  implicit val decoder: Decoder[SqsMessageAttribute] = {
+  private[events] implicit val decoder: Decoder[SqsMessageAttribute] = {
     val strValue =
       Decoder.instance(_.get[Predef.String]("stringValue"))
 

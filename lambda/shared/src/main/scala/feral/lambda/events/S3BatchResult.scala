@@ -20,14 +20,22 @@ import io.circe.Encoder
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/s3-batch.d.ts
 
-final case class S3BatchResult(
-    invocationSchemaVersion: String,
-    treatMissingKeysAs: S3BatchResultResultCode,
-    invocationId: String,
-    results: List[S3BatchResultResult]
-)
+sealed abstract class S3BatchResult {
+  def invocationSchemaVersion: String
+  def treatMissingKeysAs: S3BatchResultResultCode
+  def invocationId: String
+  def results: List[S3BatchResultResult]
+}
 
 object S3BatchResult {
+  def apply(
+      invocationSchemaVersion: String,
+      treatMissingKeysAs: S3BatchResultResultCode,
+      invocationId: String,
+      results: List[S3BatchResultResult]
+  ): S3BatchResult =
+    new Impl(invocationSchemaVersion, treatMissingKeysAs, invocationId, results)
+
   implicit val encoder: Encoder[S3BatchResult] =
     Encoder.forProduct4(
       "invocationSchemaVersion",
@@ -35,6 +43,15 @@ object S3BatchResult {
       "invocationId",
       "results")(r =>
       (r.invocationSchemaVersion, r.treatMissingKeysAs, r.invocationId, r.results))
+
+  private final case class Impl(
+      invocationSchemaVersion: String,
+      treatMissingKeysAs: S3BatchResultResultCode,
+      invocationId: String,
+      results: List[S3BatchResultResult]
+  ) extends S3BatchResult {
+    override def productPrefix = "S3BatchResult"
+  }
 }
 
 sealed abstract class S3BatchResultResultCode
@@ -44,20 +61,37 @@ object S3BatchResultResultCode {
   case object TemporaryFailure extends S3BatchResultResultCode
   case object PermanentFailure extends S3BatchResultResultCode
 
-  implicit val encoder: Encoder[S3BatchResultResultCode] = Encoder.encodeString.contramap {
-    case Succeeded => "Succeeded"
-    case TemporaryFailure => "TemporaryFailure"
-    case PermanentFailure => "PermanentFailure"
-  }
+  private[events] implicit val encoder: Encoder[S3BatchResultResultCode] =
+    Encoder.encodeString.contramap {
+      case Succeeded => "Succeeded"
+      case TemporaryFailure => "TemporaryFailure"
+      case PermanentFailure => "PermanentFailure"
+    }
 }
 
-final case class S3BatchResultResult(
-    taskId: String,
-    resultCode: S3BatchResultResultCode,
-    resultString: String)
+sealed abstract class S3BatchResultResult {
+  def taskId: String
+  def resultCode: S3BatchResultResultCode
+  def resultString: String
+}
 
 object S3BatchResultResult {
-  implicit val encoder: Encoder[S3BatchResultResult] =
+  def apply(
+      taskId: String,
+      resultCode: S3BatchResultResultCode,
+      resultString: String
+  ): S3BatchResultResult =
+    new Impl(taskId, resultCode, resultString)
+
+  private[events] implicit val encoder: Encoder[S3BatchResultResult] =
     Encoder.forProduct3("taskId", "resultCode", "resultString")(r =>
       (r.taskId, r.resultCode, r.resultString))
+
+  private final case class Impl(
+      taskId: String,
+      resultCode: S3BatchResultResultCode,
+      resultString: String)
+      extends S3BatchResultResult {
+    override def productPrefix = "S3BatchResultResult"
+  }
 }

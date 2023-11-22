@@ -40,7 +40,7 @@ trait CloudFormationCustomResourceArbitraries {
       appVersionName <- arbitrary[String]
       appVersionCode <- arbitrary[String]
       appPackageName <- arbitrary[String]
-    } yield new ClientContextClient(
+    } yield ClientContextClient(
       installationId,
       appTitle,
       appVersionName,
@@ -56,14 +56,14 @@ trait CloudFormationCustomResourceArbitraries {
       make <- arbitrary[String]
       model <- arbitrary[String]
       locale <- arbitrary[String]
-    } yield new ClientContextEnv(platformVersion, platform, make, model, locale)
+    } yield ClientContextEnv(platformVersion, platform, make, model, locale)
   implicit val arbClientContextEnv: Arbitrary[ClientContextEnv] = Arbitrary(genClientContextEnv)
 
   val genCognitoIdentity: Gen[CognitoIdentity] =
     for {
       identityId <- arbitrary[String]
       identityPoolId <- arbitrary[String]
-    } yield new CognitoIdentity(identityId, identityPoolId)
+    } yield CognitoIdentity(identityId, identityPoolId)
   implicit val arbCognitoIdentity: Arbitrary[CognitoIdentity] = Arbitrary(genCognitoIdentity)
 
   val genClientContext: Gen[ClientContext] =
@@ -71,7 +71,7 @@ trait CloudFormationCustomResourceArbitraries {
       client <- arbitrary[ClientContextClient]
       env <- arbitrary[ClientContextEnv]
       custom <- arbitrary[JsonObject]
-    } yield new ClientContext(client, env, custom)
+    } yield ClientContext(client, env, custom)
   implicit val arbClientContext: Arbitrary[ClientContext] = Arbitrary(genClientContext)
 
   def genContext[F[_]: Applicative]: Gen[Context[F]] =
@@ -86,7 +86,7 @@ trait CloudFormationCustomResourceArbitraries {
       identity <- arbitrary[Option[CognitoIdentity]]
       clientContext <- arbitrary[Option[ClientContext]]
       remainingTime <- arbitrary[FiniteDuration]
-    } yield new Context(
+    } yield Context(
       functionName,
       functionVersion,
       invokedFunctionArn,
