@@ -25,7 +25,8 @@ import fs2.Stream
 import org.http4s.Charset
 import org.http4s.Header
 import org.http4s.Headers
-import org.http4s.{HttpApp, HttpRoutes}
+import org.http4s.HttpApp
+import org.http4s.HttpRoutes
 import org.http4s.Method
 import org.http4s.Request
 import org.http4s.Uri

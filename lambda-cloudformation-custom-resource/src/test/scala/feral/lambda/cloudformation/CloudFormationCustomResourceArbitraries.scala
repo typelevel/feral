@@ -20,12 +20,15 @@ package cloudformation
 import cats._
 import cats.syntax.all._
 import feral.lambda.cloudformation.CloudFormationRequestType._
-import io.circe.{Json, JsonObject}
-import io.circe.testing.instances.{arbitraryJson, arbitraryJsonObject}
-import org.http4s.{Charset => _, _}
+import io.circe.Json
+import io.circe.JsonObject
+import io.circe.testing.instances.arbitraryJson
+import io.circe.testing.instances.arbitraryJsonObject
 import org.http4s.syntax.all._
+import org.http4s.{Charset => _, _}
+import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Gen
 
 import java.nio.charset.Charset
 import java.util.UUID

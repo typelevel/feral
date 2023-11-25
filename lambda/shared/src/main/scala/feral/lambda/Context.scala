@@ -16,8 +16,8 @@
 
 package feral.lambda
 
-import cats.~>
 import cats.Applicative
+import cats.~>
 import io.circe.JsonObject
 
 import scala.concurrent.duration.FiniteDuration
