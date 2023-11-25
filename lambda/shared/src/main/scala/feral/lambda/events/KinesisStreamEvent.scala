@@ -78,7 +78,7 @@ sealed abstract class KinesisStreamRecord {
   def invokeIdentityArn: String
   def kinesis: KinesisStreamRecordPayload
 
-  @deprecated("0.3.0", "Renamed to eventId")
+  @deprecated("Renamed to eventId", "0.3.0")
   final def eventID: String = eventId
 }
 

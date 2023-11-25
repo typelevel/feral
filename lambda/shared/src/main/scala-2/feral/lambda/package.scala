@@ -38,9 +38,9 @@ package object lambda {
   @nowarn("msg=dead code following this construct")
   implicit val nothingEncoder: Encoder[INothing] = identity(_)
 
-  @deprecated("0.3.0", "Renamed to Invocation")
+  @deprecated("Renamed to Invocation", "0.3.0")
   type LambdaEnv[F[_], Event] = Invocation[F, Event]
-  @deprecated("0.3.0", "Renamed to Invocation")
+  @deprecated("Renamed to Invocation", "0.3.0")
   val LambdaEnv = Invocation
 
   type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]

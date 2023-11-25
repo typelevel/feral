@@ -18,14 +18,14 @@ package feral.lambda
 
 package object events {
 
-  @deprecated("0.3.0", "Renamed to ApiGatewayProxyEvent")
+  @deprecated("Renamed to ApiGatewayProxyEvent", "0.3.0")
   type APIGatewayProxyRequestEvent = ApiGatewayProxyEvent
-  @deprecated("0.3.0", "Renamed to ApiGatewayProxyEvent")
+  @deprecated("Renamed to ApiGatewayProxyEvent", "0.3.0")
   val APIGatewayProxyRequestEvent = ApiGatewayProxyEvent
 
-  @deprecated("0.3.0", "Renamed to ApiGatewayProxyResult")
+  @deprecated("Renamed to ApiGatewayProxyResult", "0.3.0")
   type APIGatewayProxyResponseEvent = ApiGatewayProxyResult
-  @deprecated("0.3.0", "Renamed to ApiGatewayProxyResult")
+  @deprecated("Renamed to ApiGatewayProxyResult", "0.3.0")
   val APIGatewayProxyResponseEvent = ApiGatewayProxyResult
 
 }
