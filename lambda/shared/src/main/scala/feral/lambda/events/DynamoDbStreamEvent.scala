@@ -153,7 +153,7 @@ sealed abstract class DynamoDbRecord {
   def eventVersion: Option[String]
   def userIdentity: Option[Json]
 
-  @deprecated("0.3.0", "Renamed to eventId")
+  @deprecated("Renamed to eventId", "0.3.0")
   final def eventID: Option[String] = eventId
 }
 
