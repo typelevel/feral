@@ -28,8 +28,14 @@ ThisBuild / developers := List(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corretto(_))
-ThisBuild / githubWorkflowBuildMatrixExclusions +=
-  MatrixExclude(Map("project" -> "rootJS", "scala" -> "2.12"))
+
+ThisBuild / githubWorkflowBuildMatrixExclusions ++=
+  List("rootJS", "rootJVM").map(p => MatrixExclude(Map("project" -> p, "scala" -> "2.12"))) ++
+    List("2.13", "3").map(s => MatrixExclude(Map("project" -> "rootSbtScalafix", "scala" -> s)))
+
+ThisBuild / githubWorkflowBuildMatrixAdditions ~= { matrix =>
+  matrix + ("project" -> (matrix("project") :+ "rootSbtScalafix"))
+}
 
 ThisBuild / githubWorkflowBuildPreamble +=
   WorkflowStep.Use(
@@ -58,16 +64,24 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root =
-  tlCrossRootProject.aggregate(
-    core,
-    lambda,
-    sbtLambda,
-    lambdaHttp4s,
-    lambdaCloudFormationCustomResource,
-    examples,
-    unidocs,
-    scalafix
-  )
+  tlCrossRootProject
+    .aggregate(
+      core,
+      lambda,
+      lambdaHttp4s,
+      lambdaCloudFormationCustomResource,
+      examples,
+      unidocs
+    )
+    .configureRoot(
+      _.aggregate(sbtLambda).aggregate(scalafix.componentProjectReferences: _*)
+    )
+
+lazy val rootSbtScalafix = project
+  .in(file(".rootSbtScalafix"))
+  .aggregate(sbtLambda)
+  .aggregate(scalafix.componentProjectReferences: _*)
+  .enablePlugins(NoPublishPlugin)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -209,12 +223,12 @@ lazy val scalafix = tlScalafixProject
     crossScalaVersions := Seq(Scala212)
   )
   .inputSettings(
-    commonSettings,
+    crossScalaVersions := Seq(Scala213),
     libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
     headerSources / excludeFilter := AllPassFilter
   )
   .outputSettings(
-    commonSettings,
+    crossScalaVersions := Seq(Scala213),
     headerSources / excludeFilter := AllPassFilter
   )
   .outputConfigure(_.dependsOn(lambdaHttp4s.jvm))
