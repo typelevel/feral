@@ -21,9 +21,9 @@ import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.ApiGatewayProxyEventV2Suite
 import munit.CatsEffectSuite
+import org.http4s.Headers
 import org.http4s.Method
 import org.http4s.syntax.all._
-import org.http4s.Headers
 
 class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
 

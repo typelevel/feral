@@ -16,9 +16,6 @@
 
 package feral.lambda
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
 import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -30,6 +27,8 @@ import io.circe.syntax._
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>

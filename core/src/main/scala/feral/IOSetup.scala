@@ -16,13 +16,13 @@
 
 package feral
 
-import scala.concurrent.Future
-
-import cats.effect.unsafe.IORuntime
-import cats.effect.kernel.Resource
 import cats.effect.IO
+import cats.effect.kernel.Resource
 import cats.effect.std.Dispatcher
+import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
+
+import scala.concurrent.Future
 
 private[feral] trait IOSetup {
 
