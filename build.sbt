@@ -31,20 +31,6 @@ ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corr
 ThisBuild / githubWorkflowBuildMatrixExclusions +=
   MatrixExclude(Map("project" -> "rootJS", "scala" -> "2.12"))
 
-ThisBuild / githubWorkflowBuild ~= { steps =>
-  val scriptedStep = WorkflowStep.Sbt(
-    List(s"scripted"),
-    name = Some("Scripted"),
-    cond = Some(s"matrix.scala == '2.12'")
-  )
-  steps.flatMap {
-    case step if step.name.contains("Test") =>
-      val ciStep = step.withCond(cond = Some(s"matrix.scala != '2.12'"))
-      List(ciStep, scriptedStep)
-    case step => List(step)
-  }
-}
-
 ThisBuild / githubWorkflowBuildPreamble +=
   WorkflowStep.Use(
     UseRef.Public("actions", "setup-node", "v2"),
@@ -79,7 +65,8 @@ lazy val root =
     lambdaHttp4s,
     lambdaCloudFormationCustomResource,
     examples,
-    unidocs
+    unidocs,
+    scalafix
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
@@ -140,7 +127,8 @@ lazy val sbtLambda = project
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
-    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated
+    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated,
+    Test / test := scripted.toTask("").value
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
@@ -212,4 +200,25 @@ lazy val unidocs = project
           lambdaCloudFormationCustomResource.jvm
         )
     }
+  )
+
+lazy val scalafix = tlScalafixProject
+  .rulesSettings(
+    name := "feral-scalafix",
+    startYear := Some(2023),
+    crossScalaVersions := Seq(Scala212)
+  )
+  .inputSettings(
+    crossScalaVersions := Seq(Scala213),
+    libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
+    headerSources / excludeFilter := AllPassFilter
+  )
+  .outputSettings(
+    crossScalaVersions := Seq(Scala213),
+    headerSources / excludeFilter := AllPassFilter
+  )
+  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm))
+  .testsSettings(
+    startYear := Some(2023),
+    crossScalaVersions := Seq(Scala212)
   )
