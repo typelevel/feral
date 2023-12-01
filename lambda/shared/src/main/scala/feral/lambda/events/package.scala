@@ -16,16 +16,16 @@
 
 package feral.lambda
 
-import events._
+package object events {
 
-@deprecated("Renamed to Invocation", "0.3.0")
-type LambdaEnv[F[_], Event] = Invocation[F, Event]
-@deprecated("Renamed to Invocation", "0.3.0")
-val LambdaEnv = Invocation
+  @deprecated("Renamed to ApiGatewayProxyEvent", "0.3.0")
+  type APIGatewayProxyRequestEvent = ApiGatewayProxyEvent
+  @deprecated("Renamed to ApiGatewayProxyEvent", "0.3.0")
+  val APIGatewayProxyRequestEvent = ApiGatewayProxyEvent
 
-type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
-type DynamoDbStreamInvocation[F[_]] = Invocation[F, DynamoDbStreamEvent]
-type KinesisStreamInvocation[F[_]] = Invocation[F, KinesisStreamEvent]
-type S3BatchInvocation[F[_]] = Invocation[F, S3BatchEvent]
-type SnsInvocation[F[_]] = Invocation[F, SnsEvent]
-type SqsInvocation[F[_]] = Invocation[F, SqsEvent]
+  @deprecated("Renamed to ApiGatewayProxyResult", "0.3.0")
+  type APIGatewayProxyResponseEvent = ApiGatewayProxyResult
+  @deprecated("Renamed to ApiGatewayProxyResult", "0.3.0")
+  val APIGatewayProxyResponseEvent = ApiGatewayProxyResult
+
+}
