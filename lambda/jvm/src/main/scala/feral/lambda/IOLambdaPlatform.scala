@@ -20,13 +20,14 @@ import cats.data.OptionT
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
-import io.circe
 import io.circe.Printer
+import io.circe.jawn
 import io.circe.syntax._
 
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import java.nio.channels.Channels
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
@@ -41,27 +42,16 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
       Await.result(setupMemo, Duration.Inf)
 
     dispatcher.unsafeRunSync {
-      Resource
-        .eval {
-          for {
-            event <- fs2
-              .io
-              .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
-              .through(circe.fs2.byteStreamParser)
-              .through(circe.fs2.decoder[IO, Event])
-              .head
-              .compile
-              .lastOrError
-            context <- IO(Context.fromJava[IO](context))
-            _ <- OptionT(lambda(event, context)).foreachF { result =>
-              Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
-                IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
-              }
-            }
-          } yield ()
+      for {
+        event <-
+          IO(jawn.decodeChannel[Event](Channels.newChannel(input))).flatMap(IO.fromEither)
+        context <- IO(Context.fromJava[IO](context))
+        _ <- OptionT(lambda(event, context)).foreachF { result =>
+          Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
+            IO(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
+          }
         }
-        .onFinalize(IO.blocking(input.close()) &> IO.blocking(output.close()))
-        .use_
+      } yield ()
     }
   }
 
