@@ -19,10 +19,10 @@ package feral.examples
 import cats.effect._
 import cats.effect.std.Random
 import feral.lambda._
+import feral.lambda.events.SqsEvent
 import natchez.Trace
 import natchez.xray.XRay
 import skunk.Session
-import feral.lambda.events.SqsEvent
 
 /**
  * On Scala.js, implement your Lambda as an `object`. This will be the name your JavaScript
