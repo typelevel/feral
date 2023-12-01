@@ -16,9 +16,8 @@
 
 package feral.lambda
 
-import cats.data.OptionT
 import cats.effect.IO
-import cats.effect.kernel.Resource
+import cats.syntax.all._
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
 import io.circe.Printer
 import io.circe.jawn
@@ -37,21 +36,25 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
   final def handleRequest(
       input: InputStream,
       output: OutputStream,
-      context: lambdaRuntime.Context): Unit = {
+      runtimeContext: lambdaRuntime.Context): Unit = {
     val (dispatcher, lambda) =
       Await.result(setupMemo, Duration.Inf)
 
     dispatcher.unsafeRunSync {
-      for {
-        event <-
-          IO(jawn.decodeChannel[Event](Channels.newChannel(input))).flatMap(IO.fromEither)
-        context <- IO(Context.fromJava[IO](context))
-        _ <- OptionT(lambda(event, context)).foreachF { result =>
-          Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
-            IO(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
+      val event =
+        IO(jawn.decodeChannel[Event](Channels.newChannel(input))).flatMap(IO.fromEither)
+
+      val context = IO(Context.fromJava[IO](runtimeContext))
+
+      (event, context).flatMapN(lambda(_, _)).flatMap {
+        _.traverse_ { result =>
+          IO {
+            val writer = new OutputStreamWriter(output)
+            Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
+            writer.flush()
           }
         }
-      } yield ()
+      }
     }
   }
 
