@@ -19,6 +19,9 @@ package feral.lambda.events
 import io.circe.literal._
 import munit.FunSuite
 
+@deprecated(
+  "Moved to kinesis4cats. See https://etspaceman.github.io/kinesis4cats/feral/getting-started.html.",
+  since = "0.3.0")
 class KinesisStreamEventSuite extends FunSuite {
 
   test("decoder") {

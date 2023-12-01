@@ -19,7 +19,7 @@ package feral.examples
 import cats.effect._
 import cats.effect.std.Random
 import feral.lambda._
-import feral.lambda.events.KinesisStreamEvent
+import feral.lambda.events.SqsEvent
 import natchez.Trace
 import natchez.xray.XRay
 import skunk.Session
@@ -38,7 +38,7 @@ import skunk.Session
  *
  * For a more advanced example, see the `Http4sLambda` next.
  */
-object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
+object sqsHandler extends IOLambda.Simple[SqsEvent, INothing] {
 
   /**
    * Optional initialization section. This is a resource that will be acquired exactly once when
@@ -66,7 +66,7 @@ object kinesisHandler extends IOLambda.Simple[KinesisStreamEvent, INothing] {
    * @param init
    *   in this example, the skunk session we setup above
    */
-  def apply(event: KinesisStreamEvent, context: Context[IO], init: Init) =
+  def apply(event: SqsEvent, context: Context[IO], init: Init) =
     IO.println(s"Received event with ${event.records.size} records").as(None)
 
 }

@@ -25,6 +25,9 @@ val LambdaEnv = Invocation
 
 type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
 type DynamoDbStreamInvocation[F[_]] = Invocation[F, DynamoDbStreamEvent]
+@deprecated(
+  "Moved to kinesis4cats. See https://etspaceman.github.io/kinesis4cats/feral/getting-started.html.",
+  since = "0.3.0")
 type KinesisStreamInvocation[F[_]] = Invocation[F, KinesisStreamEvent]
 type S3BatchInvocation[F[_]] = Invocation[F, S3BatchEvent]
 type SnsInvocation[F[_]] = Invocation[F, SnsEvent]
