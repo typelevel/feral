@@ -22,12 +22,15 @@ class V0_3_0Rewrites extends SemanticRule("V0_3_0Rewrites") {
   override def fix(implicit doc: SemanticDocument): Patch =
     Patch.replaceSymbols(
       "feral.lambda.LambdaEnv" -> "feral.lambda.Invocation",
-      "feral.lambda.ApiGatewayProxyLambdaEnv" -> "feral.lambda.ApiGatewayProxyV2Invocation",
+      "feral.lambda.ApiGatewayProxyLambdaEnv" -> "feral.lambda.ApiGatewayProxyInvocationV2",
       "feral.lambda.DynamoDbStreamLambdaEnv" -> "feral.lambda.DynamoDbStreamInvocation",
       "feral.lambda.S3BatchLambdaEnv" -> "feral.lambda.S3BatchInvocation",
       "feral.lambda.SnsLambdaEnv" -> "feral.lambda.SnsInvocation",
       "feral.lambda.SqsLambdaEnv" -> "feral.lambda.SqsInvocation",
       "feral.lambda.events.APIGatewayProxyRequestEvent" -> "feral.lambda.events.ApiGatewayProxyEvent",
-      "feral.lambda.events.APIGatewayProxyResponseEvent" -> "feral.lambda.events.ApiGatewayProxyResult"
-    )
+      "feral.lambda.events.APIGatewayProxyResponseEvent" -> "feral.lambda.events.ApiGatewayProxyResult",
+      "feral.lambda.http4s.ApiGatewayProxyHandler.httpApp" -> "feral.lambda.http4s.ApiGatewayProxyHandlerV2.apply",
+      "feral.lambda.http4s.ApiGatewayProxyHandler.apply" -> "feral.lambda.http4s.ApiGatewayProxyHandlerV2.httpRoutes",
+      "feral.lambda.http4s.ApiGatewayProxyHandler.httpRoutes" -> "feral.lambda.http4s.ApiGatewayProxyHandlerV2.httpRoutes"
+    ) + Patch.removeGlobalImport(Symbol("feral/lambda/http4s/ApiGatewayProxyHandler."))
 }

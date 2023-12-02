@@ -39,7 +39,7 @@ package object lambda {
   implicit val nothingEncoder: Encoder[INothing] = identity(_)
 
   type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEvent]
-  type ApiGatewayProxyV2Invocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
+  type ApiGatewayProxyInvocationV2[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
   type DynamoDbStreamInvocation[F[_]] = Invocation[F, DynamoDbStreamEvent]
   type S3Invocation[F[_]] = Invocation[F, S3Event]
   type S3BatchInvocation[F[_]] = Invocation[F, S3BatchEvent]
@@ -51,8 +51,8 @@ package object lambda {
   @deprecated("Renamed to Invocation", "0.3.0")
   val LambdaEnv = Invocation
 
-  @deprecated("Renamed to ApiGatewayProxyV2Invocation", "0.3.0")
-  type ApiGatewayProxyLambdaEnv[F[_]] = ApiGatewayProxyV2Invocation[F]
+  @deprecated("Renamed to ApiGatewayProxyInvocationV2", "0.3.0")
+  type ApiGatewayProxyLambdaEnv[F[_]] = ApiGatewayProxyInvocationV2[F]
   @deprecated("Renamed to DynamoDbStreamInvocation", "0.3.0")
   type DynamoDbStreamLambdaEnv[F[_]] = DynamoDbStreamInvocation[F]
   @deprecated(

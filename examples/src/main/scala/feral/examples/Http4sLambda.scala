@@ -24,6 +24,7 @@ import feral.lambda.http4s._
 import natchez.Trace
 import natchez.http4s.NatchezMiddleware
 import natchez.xray.XRay
+import org.http4s.HttpApp
 import org.http4s.HttpRoutes
 import org.http4s.client.Client
 import org.http4s.dsl.Http4sDsl
@@ -63,15 +64,15 @@ object http4sHandler
     TracedHandler(entrypoint) { implicit trace =>
       val tracedClient = NatchezMiddleware.client(client)
 
-      // a "middleware" that converts an HttpRoutes into a ApiGatewayProxyHandler
-      ApiGatewayProxyHandler(myRoutes[IO](tracedClient))
+      // a "middleware" that converts an HttpApp into a ApiGatewayProxyHandler
+      ApiGatewayProxyHandlerV2(myApp[IO](tracedClient))
     }
   }
 
   /**
    * Nothing special about this method, including its existence, just an example :)
    */
-  def myRoutes[F[_]: Concurrent: Trace](client: Client[F]): HttpRoutes[F] = {
+  def myApp[F[_]: Concurrent: Trace](client: Client[F]): HttpApp[F] = {
     implicit val dsl = Http4sDsl[F]
     import dsl._
 
@@ -80,7 +81,7 @@ object http4sHandler
       case GET -> Root / "joke" => Ok(client.expect[String](uri"icanhazdadjoke.com"))
     }
 
-    NatchezMiddleware.server(routes)
+    NatchezMiddleware.server(routes).orNotFound
   }
 
 }
