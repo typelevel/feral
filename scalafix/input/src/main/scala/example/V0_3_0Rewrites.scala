@@ -2,6 +2,7 @@
 
 package example
 
+// format: off
 import feral.lambda.LambdaEnv
 import feral.lambda.ApiGatewayProxyLambdaEnv
 import feral.lambda.DynamoDbStreamLambdaEnv
@@ -10,6 +11,7 @@ import feral.lambda.SnsLambdaEnv
 import feral.lambda.SqsLambdaEnv
 import feral.lambda.events.APIGatewayProxyRequestEvent
 import feral.lambda.events.APIGatewayProxyResponseEvent
+// format: on
 
 class Foo[F[_], E] {
 

@@ -1,7 +1,9 @@
 package example
 
+// format: off
 import feral.lambda.{ ApiGatewayProxyV2Invocation, DynamoDbStreamInvocation, Invocation, S3BatchInvocation, SnsInvocation, SqsInvocation }
 import feral.lambda.events.{ ApiGatewayProxyEvent, ApiGatewayProxyResult }
+// format: on
 
 class Foo[F[_], E] {
 
