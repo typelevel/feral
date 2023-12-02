@@ -17,7 +17,6 @@
 package feral.lambda
 
 import cats.effect.IO
-import cats.syntax.all._
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
 import io.circe.Printer
 import io.circe.jawn
@@ -40,21 +39,12 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
     val (dispatcher, lambda) =
       Await.result(setupMemo, Duration.Inf)
 
-    dispatcher.unsafeRunSync {
-      val event =
-        IO(jawn.decodeChannel[Event](Channels.newChannel(input))).flatMap(IO.fromEither)
-
-      val context = IO(Context.fromJava[IO](runtimeContext))
-
-      (event, context).flatMapN(lambda(_, _)).flatMap {
-        case Some(result) =>
-          IO {
-            val writer = new OutputStreamWriter(output)
-            Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
-            writer.flush()
-          }
-        case None => IO.unit
-      }
+    val event = jawn.decodeChannel[Event](Channels.newChannel(input)).fold(throw _, identity(_))
+    val context = Context.fromJava[IO](runtimeContext)
+    dispatcher.unsafeRunSync(lambda(event, context)).foreach { result =>
+      val writer = new OutputStreamWriter(output)
+      Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
+      writer.flush()
     }
   }
 
