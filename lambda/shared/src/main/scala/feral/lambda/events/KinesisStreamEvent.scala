@@ -129,10 +129,16 @@ object KinesisStreamRecord {
   }
 }
 
+@deprecated(
+  "Moved to kinesis4cats. See https://etspaceman.github.io/kinesis4cats/feral/getting-started.html.",
+  since = "0.3.0")
 sealed abstract class KinesisStreamEvent {
   def records: List[KinesisStreamRecord]
 }
 
+@deprecated(
+  "Moved to kinesis4cats. See https://etspaceman.github.io/kinesis4cats/feral/getting-started.html.",
+  since = "0.3.0")
 object KinesisStreamEvent {
   def apply(records: List[KinesisStreamRecord]): KinesisStreamEvent =
     new Impl(records)

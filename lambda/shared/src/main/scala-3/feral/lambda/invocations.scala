@@ -18,14 +18,30 @@ package feral.lambda
 
 import events._
 
+type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEvent]
+type ApiGatewayProxyV2Invocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
+type DynamoDbStreamInvocation[F[_]] = Invocation[F, DynamoDbStreamEvent]
+type S3Invocation[F[_]] = Invocation[F, S3Event]
+type S3BatchInvocation[F[_]] = Invocation[F, S3BatchEvent]
+type SnsInvocation[F[_]] = Invocation[F, SnsEvent]
+type SqsInvocation[F[_]] = Invocation[F, SqsEvent]
+
 @deprecated("Renamed to Invocation", "0.3.0")
 type LambdaEnv[F[_], Event] = Invocation[F, Event]
 @deprecated("Renamed to Invocation", "0.3.0")
 val LambdaEnv = Invocation
 
-type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
-type DynamoDbStreamInvocation[F[_]] = Invocation[F, DynamoDbStreamEvent]
-type KinesisStreamInvocation[F[_]] = Invocation[F, KinesisStreamEvent]
-type S3BatchInvocation[F[_]] = Invocation[F, S3BatchEvent]
-type SnsInvocation[F[_]] = Invocation[F, SnsEvent]
-type SqsInvocation[F[_]] = Invocation[F, SqsEvent]
+@deprecated("Renamed to ApiGatewayProxyV2Invocation", "0.3.0")
+type ApiGatewayProxyLambdaEnv[F[_]] = ApiGatewayProxyV2Invocation[F]
+@deprecated("Renamed to DynamoDbStreamInvocation", "0.3.0")
+type DynamoDbStreamLambdaEnv[F[_]] = DynamoDbStreamInvocation[F]
+@deprecated(
+  "Moved to kinesis4cats. See https://etspaceman.github.io/kinesis4cats/feral/getting-started.html.",
+  since = "0.3.0")
+type KinesisStreamLambdaEnv[F[_]] = Invocation[F, KinesisStreamEvent]
+@deprecated("Renamed to S3BatchInvocation", "0.3.0")
+type S3BatchLambdaEnv[F[_]] = S3BatchInvocation[F]
+@deprecated("Renamed to SnsInvocation", "0.3.0")
+type SnsLambdaEnv[F[_]] = SnsInvocation[F]
+@deprecated("Renamed to SqsInvocation", "0.3.0")
+type SqsLambdaEnv[F[_]] = SqsInvocation[F]

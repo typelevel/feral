@@ -34,14 +34,14 @@ import org.http4s.headers.Cookie
 import org.http4s.headers.`Set-Cookie`
 
 object ApiGatewayProxyHandler {
-  def apply[F[_]: Concurrent: ApiGatewayProxyInvocation](
+  def apply[F[_]: Concurrent: ApiGatewayProxyV2Invocation](
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpRoutes(routes)
 
-  def httpRoutes[F[_]: Concurrent: ApiGatewayProxyInvocation](
+  def httpRoutes[F[_]: Concurrent: ApiGatewayProxyV2Invocation](
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpApp(
     routes.orNotFound)
 
-  def httpApp[F[_]: Concurrent: ApiGatewayProxyInvocation](
+  def httpApp[F[_]: Concurrent: ApiGatewayProxyV2Invocation](
       app: HttpApp[F]): F[Option[ApiGatewayProxyStructuredResultV2]] =
     for {
       event <- Invocation.event
