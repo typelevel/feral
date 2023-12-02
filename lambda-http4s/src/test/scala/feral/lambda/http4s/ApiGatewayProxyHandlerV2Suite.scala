@@ -25,14 +25,14 @@ import org.http4s.Headers
 import org.http4s.Method
 import org.http4s.syntax.all._
 
-class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
+class ApiGatewayProxyHandlerV2Suite extends CatsEffectSuite {
 
   import ApiGatewayProxyEventV2Suite._
 
   test("decode event") {
     for {
       event <- event.as[ApiGatewayProxyEventV2].liftTo[IO]
-      request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
+      request <- ApiGatewayProxyHandlerV2.decodeEvent[IO](event)
       _ <- IO(assertEquals(request.method, Method.GET))
       _ <- IO(assertEquals(request.uri, uri"/default/nodejs-apig-function-1G3XMPLZXVXYI?"))
       _ <- IO(assert(request.cookies.nonEmpty))
@@ -44,7 +44,7 @@ class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
   test("decode event with no cookies") {
     for {
       event <- eventNoCookies.as[ApiGatewayProxyEventV2].liftTo[IO]
-      request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
+      request <- ApiGatewayProxyHandlerV2.decodeEvent[IO](event)
       _ <- IO(assert(request.cookies.isEmpty))
       _ <- request.body.compile.count.assertEquals(0L)
     } yield ()
