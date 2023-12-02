@@ -32,5 +32,5 @@ class V0_3_0Rewrites extends SemanticRule("V0_3_0Rewrites") {
       "feral.lambda.http4s.ApiGatewayProxyHandler.httpApp" -> "feral.lambda.http4s.ApiGatewayProxyHandlerV2.apply",
       "feral.lambda.http4s.ApiGatewayProxyHandler.apply" -> "feral.lambda.http4s.ApiGatewayProxyHandlerV2.httpRoutes",
       "feral.lambda.http4s.ApiGatewayProxyHandler.httpRoutes" -> "feral.lambda.http4s.ApiGatewayProxyHandlerV2.httpRoutes"
-    )
+    ) + Patch.removeGlobalImport(Symbol("feral/lambda/http4s/ApiGatewayProxyHandler."))
 }

@@ -3,7 +3,6 @@ package example
 // format: off
 import cats.effect.Concurrent
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
-import feral.lambda.http4s.ApiGatewayProxyHandler
 import org.http4s.HttpApp
 import feral.lambda.{ ApiGatewayProxyInvocationV2, DynamoDbStreamInvocation, Invocation, S3BatchInvocation, SnsInvocation, SqsInvocation }
 import feral.lambda.events.{ ApiGatewayProxyEvent, ApiGatewayProxyResult }
