@@ -227,11 +227,12 @@ lazy val scalafix = tlScalafixProject
     libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
     headerSources / excludeFilter := AllPassFilter
   )
+  .inputConfigure(_.disablePlugins(ScalafixPlugin))
   .outputSettings(
     crossScalaVersions := Seq(Scala213),
     headerSources / excludeFilter := AllPassFilter
   )
-  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm))
+  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm).disablePlugins(ScalafixPlugin))
   .testsSettings(
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
