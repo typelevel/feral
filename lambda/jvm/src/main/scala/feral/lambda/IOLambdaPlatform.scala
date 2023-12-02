@@ -27,7 +27,7 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.nio.channels.Channels
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
@@ -37,15 +37,20 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
       output: OutputStream,
       runtimeContext: lambdaRuntime.Context): Unit = {
     val (dispatcher, lambda) =
-      Await.result(setupMemo, Duration.Inf)
+      Await.result(setupMemo, runtimeContext.getRemainingTimeInMillis().millis)
 
     val event = jawn.decodeChannel[Event](Channels.newChannel(input)).fold(throw _, identity(_))
     val context = Context.fromJava[IO](runtimeContext)
-    dispatcher.unsafeRunSync(lambda(event, context)).foreach { result =>
-      val writer = new OutputStreamWriter(output)
-      Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
-      writer.flush()
-    }
+    dispatcher
+      .unsafeRunTimed(
+        lambda(event, context),
+        runtimeContext.getRemainingTimeInMillis().millis
+      )
+      .foreach { result =>
+        val writer = new OutputStreamWriter(output)
+        Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
+        writer.flush()
+      }
   }
 
 }
