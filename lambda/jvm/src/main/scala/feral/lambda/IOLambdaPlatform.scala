@@ -47,13 +47,13 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
       val context = IO(Context.fromJava[IO](runtimeContext))
 
       (event, context).flatMapN(lambda(_, _)).flatMap {
-        _.traverse_ { result =>
+        case Some(result) =>
           IO {
             val writer = new OutputStreamWriter(output)
             Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
             writer.flush()
           }
-        }
+        case None => IO.unit
       }
     }
   }
