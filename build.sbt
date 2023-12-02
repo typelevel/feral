@@ -28,21 +28,13 @@ ThisBuild / developers := List(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corretto(_))
-ThisBuild / githubWorkflowBuildMatrixExclusions +=
-  MatrixExclude(Map("project" -> "rootJS", "scala" -> "2.12"))
 
-ThisBuild / githubWorkflowBuild ~= { steps =>
-  val scriptedStep = WorkflowStep.Sbt(
-    List(s"scripted"),
-    name = Some("Scripted"),
-    cond = Some(s"matrix.scala == '2.12'")
-  )
-  steps.flatMap {
-    case step if step.name.contains("Test") =>
-      val ciStep = step.withCond(cond = Some(s"matrix.scala != '2.12'"))
-      List(ciStep, scriptedStep)
-    case step => List(step)
-  }
+ThisBuild / githubWorkflowBuildMatrixExclusions ++=
+  List("rootJS", "rootJVM").map(p => MatrixExclude(Map("project" -> p, "scala" -> "2.12"))) ++
+    List("2.13", "3").map(s => MatrixExclude(Map("project" -> "rootSbtScalafix", "scala" -> s)))
+
+ThisBuild / githubWorkflowBuildMatrixAdditions ~= { matrix =>
+  matrix + ("project" -> (matrix("project") :+ "rootSbtScalafix"))
 }
 
 ThisBuild / githubWorkflowBuildPreamble +=
@@ -72,15 +64,24 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root =
-  tlCrossRootProject.aggregate(
-    core,
-    lambda,
-    sbtLambda,
-    lambdaHttp4s,
-    lambdaCloudFormationCustomResource,
-    examples,
-    unidocs
-  )
+  tlCrossRootProject
+    .aggregate(
+      core,
+      lambda,
+      lambdaHttp4s,
+      lambdaCloudFormationCustomResource,
+      examples,
+      unidocs
+    )
+    .configureRoot(
+      _.aggregate(sbtLambda).aggregate(scalafix.componentProjectReferences: _*)
+    )
+
+lazy val rootSbtScalafix = project
+  .in(file(".rootSbtScalafix"))
+  .aggregate(sbtLambda)
+  .aggregate(scalafix.componentProjectReferences: _*)
+  .enablePlugins(NoPublishPlugin)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -140,7 +141,8 @@ lazy val sbtLambda = project
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
-    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated
+    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated,
+    Test / test := scripted.toTask("").value
   )
 
 lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
@@ -212,4 +214,26 @@ lazy val unidocs = project
           lambdaCloudFormationCustomResource.jvm
         )
     }
+  )
+
+lazy val scalafix = tlScalafixProject
+  .rulesSettings(
+    name := "feral-scalafix",
+    startYear := Some(2023),
+    crossScalaVersions := Seq(Scala212)
+  )
+  .inputSettings(
+    crossScalaVersions := Seq(Scala213),
+    libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
+    headerSources / excludeFilter := AllPassFilter
+  )
+  .inputConfigure(_.disablePlugins(ScalafixPlugin))
+  .outputSettings(
+    crossScalaVersions := Seq(Scala213),
+    headerSources / excludeFilter := AllPassFilter
+  )
+  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm).disablePlugins(ScalafixPlugin))
+  .testsSettings(
+    startYear := Some(2023),
+    crossScalaVersions := Seq(Scala212)
   )
