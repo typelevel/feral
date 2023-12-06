@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package feral.lambda.http4s
+package feral.lambda
+package http4s
 
 import cats.effect.IO
 import cats.syntax.all._
@@ -22,10 +23,11 @@ import feral.lambda.events.ApiGatewayProxyEvent
 import feral.lambda.events.ApiGatewayProxyEventSuite.*
 import munit.CatsEffectSuite
 import org.http4s.Headers
+import org.http4s.HttpApp
 import org.http4s.Method
 import org.http4s.syntax.all._
 
-class ApiGatewayProxyHandlerV1Suite extends CatsEffectSuite {
+class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
 
   val expectedHeaders: Headers = Headers(
     "Accept-Language" -> "en-US,en;q=0.8",
@@ -53,7 +55,7 @@ class ApiGatewayProxyHandlerV1Suite extends CatsEffectSuite {
   test("decode event") {
     for {
       event <- event.as[ApiGatewayProxyEvent].liftTo[IO]
-      request <- ApiGatewayProxyHandlerV1.decodeEvent[IO](event)
+      request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
       _ <- IO(assertEquals(request.method, Method.POST))
       _ <- IO(assertEquals(request.uri, uri"/path/to/resource?foo=bar&foo=bar"))
       _ <- IO(assertEquals(request.headers, expectedHeaders))
@@ -61,5 +63,9 @@ class ApiGatewayProxyHandlerV1Suite extends CatsEffectSuite {
       _ <- IO(assertEquals(responseBody, expectedBody))
     } yield ()
   }
+
+  // compile-only test
+  def handler(implicit inv: ApiGatewayProxyInvocation[IO]) =
+    ApiGatewayProxyHandler(HttpApp.notFound[IO])
 
 }
