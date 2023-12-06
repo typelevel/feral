@@ -20,7 +20,6 @@ package http4s
 import cats.effect.kernel.Concurrent
 import cats.syntax.all._
 import feral.lambda.ApiGatewayProxyInvocation
-import feral.lambda.Invocation
 import feral.lambda.events.ApiGatewayProxyEvent
 import feral.lambda.events.ApiGatewayProxyResult
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
