@@ -18,13 +18,104 @@ package feral.lambda
 package http4s
 
 import cats.effect.kernel.Concurrent
+import cats.syntax.all._
+import feral.lambda.ApiGatewayProxyInvocation
+import feral.lambda.events.ApiGatewayProxyEvent
+import feral.lambda.events.ApiGatewayProxyResult
 import feral.lambda.events.ApiGatewayProxyStructuredResultV2
+import fs2.Stream
+import org.http4s.Charset
+import org.http4s.Header
+import org.http4s.Headers
 import org.http4s.HttpApp
 import org.http4s.HttpRoutes
+import org.http4s.Method
+import org.http4s.Request
+import org.http4s.Uri
 
 object ApiGatewayProxyHandler {
+
+  def apply[F[_]: Concurrent: ApiGatewayProxyInvocation](
+      app: HttpApp[F]): F[Option[ApiGatewayProxyResult]] =
+    for {
+      event <- Invocation.event
+      request <- decodeEvent(event)
+      response <- app(request)
+      isBase64Encoded = !response.charset.contains(Charset.`UTF-8`)
+      responseBody <- response
+        .body
+        .through(
+          if (isBase64Encoded) fs2.text.base64.encode else fs2.text.utf8.decode
+        )
+        .compile
+        .string
+    } yield {
+      Some(
+        ApiGatewayProxyResult(
+          response.status.code,
+          responseBody,
+          isBase64Encoded
+        )
+      )
+    }
+
+  private[http4s] def decodeEvent[F[_]: Concurrent](
+      event: ApiGatewayProxyEvent): F[Request[F]] = {
+    val queryString: String = List(
+      getQueryStringParameters(event.queryStringParameters),
+      getMultiValueQueryStringParameters(event.multiValueQueryStringParameters)
+    ).filter(_.nonEmpty).mkString("&")
+
+    val uriString: String = event.path + (if (queryString.nonEmpty) s"?$queryString" else "")
+
+    for {
+      method <- Method.fromString(event.httpMethod).liftTo[F]
+      uri <- Uri.fromString(uriString).liftTo[F]
+      headers = {
+        val builder = List.newBuilder[Header.Raw]
+        event.headers.foreach { h => h.foreachEntry(builder += Header.Raw(_, _)) }
+        event.multiValueHeaders.foreach { hMap =>
+          hMap.foreach {
+            case (key, values) =>
+              if (!event.headers.exists(_.contains(key))) {
+                values.foreach(value => builder += Header.Raw(key, value))
+              }
+          }
+        }
+        Headers(builder.result())
+      }
+      readBody =
+        if (event.isBase64Encoded)
+          fs2.text.base64.decode[F]
+        else
+          fs2.text.utf8.encode[F]
+    } yield Request(
+      method,
+      uri,
+      headers = headers,
+      body = Stream.fromOption[F](event.body).through(readBody)
+    )
+  }
+
+  private def getQueryStringParameters(
+      queryStringParameters: Option[Map[String, String]]): String =
+    queryStringParameters.fold("") { params =>
+      params.map { case (key, value) => s"$key=$value" }.mkString("&")
+    }
+
+  private def getMultiValueQueryStringParameters(
+      multiValueQueryStringParameters: Option[Map[String, List[String]]]): String =
+    multiValueQueryStringParameters.fold("") { params =>
+      params
+        .flatMap {
+          case (key, values) =>
+            values.map(value => s"$key=$value")
+        }
+        .mkString("&")
+    }
+
   @deprecated("Use ApiGatewayProxyHandlerV2", "0.3.0")
-  def apply[F[_]: Concurrent: ApiGatewayProxyInvocationV2](
+  def apply[F[_]: ApiGatewayProxyInvocationV2: Concurrent](
       routes: HttpRoutes[F]): F[Option[ApiGatewayProxyStructuredResultV2]] = httpRoutes(routes)
 
   @deprecated("Use ApiGatewayProxyHandlerV2", "0.3.0")
