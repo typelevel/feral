@@ -70,10 +70,12 @@ object ApiGatewayProxyHandlerV1 {
       headers = {
         val builder = List.newBuilder[Header.Raw]
         event.headers.foreach { h => h.foreachEntry(builder += Header.Raw(_, _)) }
-        event.multiValueHeaders.fold(()) { hMap =>
+        event.multiValueHeaders.foreach { hMap =>
           hMap.foreach {
             case (key, values) =>
-              values.foreach(value => builder += Header.Raw(key, value))
+              if (!event.headers.exists(_.contains(key))) {
+                values.foreach(value => builder += Header.Raw(key, value))
+              }
           }
         }
         Headers(builder.result())
