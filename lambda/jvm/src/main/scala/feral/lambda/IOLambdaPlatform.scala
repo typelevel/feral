@@ -16,19 +16,18 @@
 
 package feral.lambda
 
-import cats.data.OptionT
 import cats.effect.IO
-import cats.effect.kernel.Resource
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
-import io.circe
 import io.circe.Printer
+import io.circe.jawn
 import io.circe.syntax._
 
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import java.nio.channels.Channels
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
@@ -36,33 +35,22 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
   final def handleRequest(
       input: InputStream,
       output: OutputStream,
-      context: lambdaRuntime.Context): Unit = {
+      runtimeContext: lambdaRuntime.Context): Unit = {
     val (dispatcher, lambda) =
-      Await.result(setupMemo, Duration.Inf)
+      Await.result(setupMemo, runtimeContext.getRemainingTimeInMillis().millis)
 
-    dispatcher.unsafeRunSync {
-      Resource
-        .eval {
-          for {
-            event <- fs2
-              .io
-              .readInputStream(IO.pure(input), 8192, closeAfterUse = false)
-              .through(circe.fs2.byteStreamParser)
-              .through(circe.fs2.decoder[IO, Event])
-              .head
-              .compile
-              .lastOrError
-            context <- IO(Context.fromJava[IO](context))
-            _ <- OptionT(lambda(event, context)).foreachF { result =>
-              Resource.fromAutoCloseable(IO(new OutputStreamWriter(output))).use { writer =>
-                IO.blocking(Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer))
-              }
-            }
-          } yield ()
-        }
-        .onFinalize(IO.blocking(input.close()) &> IO.blocking(output.close()))
-        .use_
-    }
+    val event = jawn.decodeChannel[Event](Channels.newChannel(input)).fold(throw _, identity(_))
+    val context = Context.fromJava[IO](runtimeContext)
+    dispatcher
+      .unsafeRunTimed(
+        lambda(event, context),
+        runtimeContext.getRemainingTimeInMillis().millis
+      )
+      .foreach { result =>
+        val writer = new OutputStreamWriter(output)
+        Printer.noSpaces.unsafePrintToAppendable(result.asJson, writer)
+        writer.flush()
+      }
   }
 
 }

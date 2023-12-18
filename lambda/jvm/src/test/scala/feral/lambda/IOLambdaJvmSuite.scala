@@ -62,7 +62,7 @@ class IOLambdaJvmSuite extends FunSuite {
     override def getInvokedFunctionArn(): String = ""
     override def getIdentity(): runtime.CognitoIdentity = null
     override def getClientContext(): runtime.ClientContext = null
-    override def getRemainingTimeInMillis(): Int = 0
+    override def getRemainingTimeInMillis(): Int = Int.MaxValue
     override def getMemoryLimitInMB(): Int = 0
     override def getLogger(): runtime.LambdaLogger = null
   }
