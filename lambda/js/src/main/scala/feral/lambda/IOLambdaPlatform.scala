@@ -32,7 +32,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result] {
 
   protected def handlerName: String = getClass.getSimpleName.init
 
-  private lazy val handlerFn
+  private[lambda] lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.UndefOr[js.Any]]] = {
     val dispatcherHandle = {
       Dispatcher
