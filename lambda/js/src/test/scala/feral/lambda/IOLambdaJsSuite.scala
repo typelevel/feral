@@ -20,8 +20,8 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import io.circe.Json
-import io.circe.scalajs._
 import io.circe.literal._
+import io.circe.scalajs._
 import munit.CatsEffectSuite
 
 import java.util.concurrent.atomic.AtomicInteger

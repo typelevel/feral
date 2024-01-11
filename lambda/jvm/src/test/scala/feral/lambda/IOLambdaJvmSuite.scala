@@ -25,9 +25,9 @@ import io.circe.jawn
 import io.circe.literal._
 import munit.FunSuite
 
-import java.util.concurrent.atomic.AtomicInteger
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.atomic.AtomicInteger
 
 class IOLambdaJvmSuite extends FunSuite {
 
