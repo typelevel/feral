@@ -66,7 +66,6 @@ lazy val commonSettings = Seq(
 lazy val root =
   tlCrossRootProject
     .aggregate(
-      core,
       lambda,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
@@ -83,22 +82,12 @@ lazy val rootSbtScalafix = project
   .aggregate(scalafix.componentProjectReferences: _*)
   .enablePlugins(NoPublishPlugin)
 
-lazy val core = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("core"))
-  .settings(
-    name := "feral-core",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion
-    )
-  )
-  .settings(commonSettings)
-
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .in(file("lambda"))
   .settings(
     name := "feral-lambda",
     libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
@@ -125,7 +114,6 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "co.fs2" %%% "fs2-io" % fs2Version
     )
   )
-  .dependsOn(core)
 
 lazy val sbtLambda = project
   .in(file("sbt-lambda"))
@@ -140,7 +128,7 @@ lazy val sbtLambda = project
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
-    scripted := scripted.dependsOn(core.js / publishLocal, lambda.js / publishLocal).evaluated,
+    scripted := scripted.dependsOn(lambda.js / publishLocal).evaluated,
     Test / test := scripted.toTask("").value
   )
 
@@ -207,7 +195,6 @@ lazy val unidocs = project
         inProjects(sbtLambda)
       else
         inProjects(
-          core.jvm,
           lambda.jvm,
           lambdaHttp4s.jvm,
           lambdaCloudFormationCustomResource.jvm

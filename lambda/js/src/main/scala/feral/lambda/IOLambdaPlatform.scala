@@ -17,12 +17,14 @@
 package feral.lambda
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
+import cats.syntax.all._
 import io.circe.scalajs._
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 
-private[lambda] trait IOLambdaPlatform[Event, Result] {
+private[lambda] abstract class IOLambdaPlatform[Event, Result] {
   this: IOLambda[Event, Result] =>
 
   final def main(args: Array[String]): Unit =
@@ -32,13 +34,22 @@ private[lambda] trait IOLambdaPlatform[Event, Result] {
 
   private lazy val handlerFn
       : js.Function2[js.Any, facade.Context, js.Promise[js.UndefOr[js.Any]]] = {
+    val dispatcherHandle = {
+      Dispatcher
+        .parallel[IO](await = false)
+        .product(handler)
+        .allocated
+        .map(_._1) // drop unused finalizer
+        .unsafeToPromise()(runtime)
+    }
+
     (event: js.Any, context: facade.Context) =>
-      setupMemo.toJSPromise(scala.concurrent.ExecutionContext.parasitic).`then`[js.Any] {
-        case (dispatcher, lambda) =>
+      dispatcherHandle.`then`[js.Any] {
+        case (dispatcher, handle) =>
           val io =
             for {
               event <- IO.fromEither(decodeJs[Event](event))
-              result <- lambda(event, Context.fromJS(context))
+              result <- handle(Invocation.pure(event, Context.fromJS(context)))
             } yield result.map(_.asJsAny).orUndefined
 
           dispatcher.unsafeToPromise(io)
