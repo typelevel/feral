@@ -41,8 +41,7 @@ class IOLambdaJsSuite extends CatsEffectSuite {
 
     val chars = 'A' to 'Z'
     chars.toList.traverse { c =>
-      IO.fromPromise(
-        IO(lambda.handlerFn(c.toString, DummyContext.asInstanceOf[facade.Context])))
+      IO.fromPromise(IO(lambda.handlerFn(c.toString, DummyContext)))
         .assertEquals(c.toString.asInstanceOf[js.UndefOr[js.Any]])
     } *> IO {
       assertEquals(allocationCounter.get(), 1)
@@ -63,23 +62,24 @@ class IOLambdaJsSuite extends CatsEffectSuite {
       IO(
         lambda.handlerFn(
           input.asJsAny,
-          DummyContext.asInstanceOf[facade.Context]
+          DummyContext
         )
       )
     ).map(decodeJs[Json](_))
       .assertEquals(Right(output))
   }
 
-  object DummyContext extends js.Object {
-    def functionName: String = ""
-    def functionVersion: String = ""
-    def invokedFunctionArn: String = ""
-    def memoryLimitInMB: String = "0"
-    def awsRequestId: String = ""
-    def logGroupName: String = ""
-    def logStreamName: String = ""
-    def identity: js.UndefOr[CognitoIdentity] = js.undefined
-    def clientContext: js.UndefOr[ClientContext] = js.undefined
+  object DummyContext extends facade.Context {
+    def functionName = ""
+    def functionVersion = ""
+    def invokedFunctionArn = ""
+    def memoryLimitInMB = "0"
+    def awsRequestId = ""
+    def logGroupName = ""
+    def logStreamName = ""
+    def identity = js.undefined
+    def clientContext = js.undefined
+    def getRemainingTimeInMillis(): Double = 0
   }
 
 }
