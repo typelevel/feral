@@ -23,8 +23,6 @@ import cats.data.Kleisli
 import cats.data.OptionT
 import cats.data.StateT
 import cats.data.WriterT
-import cats.effect.IO
-import cats.effect.IOLocal
 import cats.kernel.Monoid
 import cats.syntax.all._
 import cats.~>
@@ -68,15 +66,6 @@ object Invocation {
   implicit def stateTInvocation[F[_]: Applicative, S, A](
       implicit inv: Invocation[F, A]): Invocation[StateT[F, S, *], A] =
     inv.mapK(StateT.liftK[F, S])
-
-  private[lambda] def ioInvocation[Event](
-      localEvent: IOLocal[Event],
-      localContext: IOLocal[Context[IO]]): Invocation[IO, Event] =
-    new Invocation[IO, Event] {
-      def event = localEvent.get
-      def context = localContext.get
-      def mapK[F[_]](fk: IO ~> F) = new MapK(this, fk)
-    }
 
   private final class MapK[F[_]: Functor, G[_], Event](
       underlying: Invocation[F, Event],

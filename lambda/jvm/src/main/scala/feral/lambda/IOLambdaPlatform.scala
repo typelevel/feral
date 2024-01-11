@@ -17,6 +17,8 @@
 package feral.lambda
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
+import cats.syntax.all._
 import com.amazonaws.services.lambda.{runtime => lambdaRuntime}
 import io.circe.Printer
 import io.circe.jawn
@@ -26,24 +28,29 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.nio.channels.Channels
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 private[lambda] abstract class IOLambdaPlatform[Event, Result]
     extends lambdaRuntime.RequestStreamHandler { this: IOLambda[Event, Result] =>
 
+  private[this] val (dispatcher, handle) = {
+    Dispatcher
+      .parallel[IO](await = false)
+      .product(handler)
+      .allocated
+      .map(_._1) // drop unused finalizer
+      .unsafeRunSync()(runtime)
+  }
+
   final def handleRequest(
       input: InputStream,
       output: OutputStream,
       runtimeContext: lambdaRuntime.Context): Unit = {
-    val (dispatcher, lambda) =
-      Await.result(setupMemo, runtimeContext.getRemainingTimeInMillis().millis)
-
     val event = jawn.decodeChannel[Event](Channels.newChannel(input)).fold(throw _, identity(_))
     val context = Context.fromJava[IO](runtimeContext)
     dispatcher
       .unsafeRunTimed(
-        lambda(event, context),
+        handle(Invocation.pure(event, context)),
         runtimeContext.getRemainingTimeInMillis().millis
       )
       .foreach { result =>

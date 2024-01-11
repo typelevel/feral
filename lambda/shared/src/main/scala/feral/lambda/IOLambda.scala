@@ -18,25 +18,17 @@ package feral
 package lambda
 
 import cats.effect.IO
-import cats.effect.IOLocal
 import cats.effect.kernel.Resource
+import cats.effect.unsafe.IORuntime
 import io.circe.Decoder
 import io.circe.Encoder
 
 abstract class IOLambda[Event, Result](
     implicit private[lambda] val decoder: Decoder[Event],
     private[lambda] val encoder: Encoder[Result]
-) extends IOLambdaPlatform[Event, Result]
-    with IOSetup {
+) extends IOLambdaPlatform[Event, Result] {
 
-  final type Setup = (Event, Context[IO]) => IO[Option[Result]]
-  final override protected def setup: Resource[IO, Setup] = for {
-    handler <- handler
-    localEvent <- IOLocal[Event](null.asInstanceOf[Event]).toResource
-    localContext <- IOLocal[Context[IO]](null).toResource
-    inv = Invocation.ioInvocation(localEvent, localContext)
-    result = handler(inv)
-  } yield { localEvent.set(_) *> localContext.set(_) *> result }
+  protected def runtime: IORuntime = IORuntime.global
 
   def handler: Resource[IO, Invocation[IO, Event] => IO[Option[Result]]]
 

@@ -18,6 +18,7 @@ package feral.lambda
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
+import cats.syntax.all._
 import com.amazonaws.services.lambda.runtime
 import io.circe.Json
 import io.circe.jawn
@@ -26,8 +27,37 @@ import munit.FunSuite
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.atomic.AtomicInteger
 
 class IOLambdaJvmSuite extends FunSuite {
+
+  test("initializes handler once") {
+
+    val allocationCounter = new AtomicInteger
+    val invokeCounter = new AtomicInteger
+    val lambda = new IOLambda[String, String] {
+      def handler = Resource
+        .eval(IO(allocationCounter.getAndIncrement()))
+        .as(_.event.map(Some(_)) <* IO(invokeCounter.getAndIncrement()))
+    }
+
+    val chars = 'A' to 'Z'
+    chars.foreach { c =>
+      val os = new ByteArrayOutputStream
+
+      val json = s""""$c""""
+      lambda.handleRequest(
+        new ByteArrayInputStream(json.getBytes()),
+        os,
+        DummyContext
+      )
+
+      assertEquals(new String(os.toByteArray()), json)
+    }
+
+    assertEquals(allocationCounter.get(), 1)
+    assertEquals(invokeCounter.get(), chars.length)
+  }
 
   test("reads input and writes output") {
 
