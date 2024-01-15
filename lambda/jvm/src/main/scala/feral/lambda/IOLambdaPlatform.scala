@@ -43,8 +43,9 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
         try this.handler
         catch { case ex if NonFatal(ex) => null }
 
-      if (h ne null) { h.map(IO.pure(_)) }
-      else {
+      if (h ne null) {
+        h.map(IO.pure(_))
+      } else {
         val lambdaName = getClass().getSimpleName()
         val msg =
           s"""|There was an error initializing `$lambdaName` during startup.
@@ -52,10 +53,7 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
               |To fix, try replacing any `val`s in `$lambdaName` with `def`s.""".stripMargin
         System.err.println(msg)
 
-        Async[Resource[IO, *]].defer(this.handler).memoize.map {
-          case Resource.Eval(ioa) => ioa
-          case _ => throw new AssertionError
-        }
+        Async[Resource[IO, *]].defer(this.handler).memoize.map(_.allocated.map(_._1))
       }
     }
 
