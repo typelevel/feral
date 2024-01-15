@@ -83,6 +83,31 @@ class IOLambdaJvmSuite extends FunSuite {
     )
   }
 
+  test("gracefully handles broken initialization due to `val`") {
+    val os = new ByteArrayOutputStream
+
+    val lambda1 = new IOLambda[Unit, Unit] {
+      val handler = Resource.pure(_ => IO(None))
+    }
+
+    lambda1.handleRequest(
+      new ByteArrayInputStream("{}".getBytes()),
+      os,
+      DummyContext
+    )
+
+    val lambda2 = new IOLambda[Unit, Unit] {
+      def handler = resource.as(_ => IO(None))
+      val resource = Resource.unit[IO]
+    }
+
+    lambda2.handleRequest(
+      new ByteArrayInputStream("{}".getBytes()),
+      os,
+      DummyContext
+    )
+  }
+
   object DummyContext extends runtime.Context {
     override def getAwsRequestId(): String = ""
     override def getLogGroupName(): String = ""
