@@ -39,9 +39,9 @@ ThisBuild / githubWorkflowBuildMatrixAdditions ~= { matrix =>
 
 ThisBuild / githubWorkflowBuildPreamble +=
   WorkflowStep.Use(
-    UseRef.Public("actions", "setup-node", "v2"),
-    name = Some("Setup NodeJS v16 LTS"),
-    params = Map("node-version" -> "16"),
+    UseRef.Public("actions", "setup-node", "v4"),
+    name = Some("Setup NodeJS v20 LTS"),
+    params = Map("node-version" -> "20"),
     cond = Some("matrix.project == 'rootJS'")
   )
 

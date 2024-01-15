@@ -99,11 +99,11 @@ jobs:
         if: matrix.java == 'corretto@17' && steps.setup-java-corretto-17.outputs.cache-hit == 'false'
         run: sbt +update
 
-      - name: Setup NodeJS v16 LTS
+      - name: Setup NodeJS v20 LTS
         if: matrix.project == 'rootJS'
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Check that workflows are up to date
         run: sbt githubWorkflowCheck
