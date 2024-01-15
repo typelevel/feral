@@ -31,7 +31,19 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class IOLambdaJvmSuite extends FunSuite {
 
-  test("initializes handler once") {
+  implicit class HandleOps[A, B](lambda: IOLambda[A, B]) {
+    def handleRequestHelper(in: String): String = {
+      val os = new ByteArrayOutputStream
+      lambda.handleRequest(
+        new ByteArrayInputStream(in.getBytes()),
+        os,
+        DummyContext
+      )
+      new String(os.toByteArray())
+    }
+  }
+
+  test("initializes handler once during construction") {
 
     val allocationCounter = new AtomicInteger
     val invokeCounter = new AtomicInteger
@@ -41,18 +53,12 @@ class IOLambdaJvmSuite extends FunSuite {
         .as(_.event.map(Some(_)) <* IO(invokeCounter.getAndIncrement()))
     }
 
+    assertEquals(allocationCounter.get(), 1)
+
     val chars = 'A' to 'Z'
     chars.foreach { c =>
-      val os = new ByteArrayOutputStream
-
       val json = s""""$c""""
-      lambda.handleRequest(
-        new ByteArrayInputStream(json.getBytes()),
-        os,
-        DummyContext
-      )
-
-      assertEquals(new String(os.toByteArray()), json)
+      assertEquals(lambda.handleRequestHelper(json), json)
     }
 
     assertEquals(allocationCounter.get(), 1)
@@ -68,44 +74,36 @@ class IOLambdaJvmSuite extends FunSuite {
       def handler = Resource.pure(_ => IO(Some(output)))
     }
 
-    val os = new ByteArrayOutputStream
-
-    lambda.handleRequest(
-      new ByteArrayInputStream(input.toString.getBytes()),
-      os,
-      DummyContext
-    )
-
     assertEquals(
-      jawn.parseByteArray(os.toByteArray()),
-      Right(output),
-      new String(os.toByteArray())
+      jawn.parse(lambda.handleRequestHelper(input.noSpaces)),
+      Right(output)
     )
   }
 
   test("gracefully handles broken initialization due to `val`") {
-    val os = new ByteArrayOutputStream
 
-    val lambda1 = new IOLambda[Unit, Unit] {
-      val handler = Resource.pure(_ => IO(None))
+    def go(mkLambda: AtomicInteger => IOLambda[Unit, Unit]): Unit = {
+      val counter = new AtomicInteger
+      val lambda = mkLambda(counter)
+      assertEquals(counter.get(), 0) // init failed
+      lambda.handleRequestHelper("{}")
+      assertEquals(counter.get(), 1) // inited
+      lambda.handleRequestHelper("{}")
+      assertEquals(counter.get(), 1) // did not re-init
     }
 
-    lambda1.handleRequest(
-      new ByteArrayInputStream("{}".getBytes()),
-      os,
-      DummyContext
-    )
-
-    val lambda2 = new IOLambda[Unit, Unit] {
-      def handler = resource.as(_ => IO(None))
-      val resource = Resource.unit[IO]
+    go { counter =>
+      new IOLambda[Unit, Unit] {
+        val handler = Resource.eval(IO(counter.getAndIncrement())).as(_ => IO(None))
+      }
     }
 
-    lambda2.handleRequest(
-      new ByteArrayInputStream("{}".getBytes()),
-      os,
-      DummyContext
-    )
+    go { counter =>
+      new IOLambda[Unit, Unit] {
+        def handler = resource.as(_ => IO(None))
+        val resource = Resource.eval(IO(counter.getAndIncrement()))
+      }
+    }
   }
 
   object DummyContext extends runtime.Context {
