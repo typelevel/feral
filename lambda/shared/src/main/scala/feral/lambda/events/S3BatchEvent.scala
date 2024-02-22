@@ -16,7 +16,6 @@
 
 package feral.lambda.events
 
-import feral.lambda.KernelSource
 import io.circe.Decoder
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/s3-batch.d.ts
@@ -40,8 +39,6 @@ object S3BatchEvent {
   implicit val decoder: Decoder[S3BatchEvent] =
     Decoder.forProduct4("invocationSchemaVersion", "invocationId", "job", "tasks")(
       S3BatchEvent.apply)
-
-  implicit def kernelSource: KernelSource[S3BatchEvent] = KernelSource.emptyKernelSource
 
   private final case class Impl(
       invocationSchemaVersion: String,

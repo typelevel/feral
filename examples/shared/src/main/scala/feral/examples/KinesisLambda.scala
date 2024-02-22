@@ -16,12 +16,13 @@
 
 package feral.examples
 
+import _root_.natchez.Trace
+import _root_.natchez.xray.XRay
 import cats.effect._
 import cats.effect.std.Random
 import feral.lambda._
 import feral.lambda.events.SqsEvent
-import natchez.Trace
-import natchez.xray.XRay
+import feral.lambda.natchez._
 import skunk.Session
 
 /**

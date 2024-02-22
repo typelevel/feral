@@ -18,7 +18,6 @@ package feral.lambda
 package events
 
 import io.circe.Decoder
-import natchez.Kernel
 import org.typelevel.ci.CIString
 
 sealed abstract class ApiGatewayProxyEvent {
@@ -77,9 +76,6 @@ object ApiGatewayProxyEvent {
     "headers",
     "multiValueHeaders"
   )(ApiGatewayProxyEvent.apply)
-
-  implicit def kernelSource: KernelSource[ApiGatewayProxyEvent] =
-    e => Kernel(e.headers.getOrElse(Map.empty))
 
   private final case class Impl(
       body: Option[String],

@@ -19,7 +19,6 @@ package events
 
 import io.circe.Decoder
 import io.circe.scodec._
-import natchez.Kernel
 import org.typelevel.ci._
 import scodec.bits.ByteVector
 
@@ -176,9 +175,6 @@ object SqsRecordAttributes {
     )
   }
 
-  implicit def kernelSource: KernelSource[SqsRecordAttributes] = a =>
-    Kernel(a.awsTraceHeader.map(`X-Amzn-Trace-Id` -> _).toMap)
-
   private final case class Impl(
       awsTraceHeader: Option[String],
       approximateReceiveCount: String,
@@ -192,7 +188,6 @@ object SqsRecordAttributes {
     override def productPrefix = "SqsRecordAttributes"
   }
 
-  private[this] val `X-Amzn-Trace-Id` = ci"X-Amzn-Trace-Id"
 }
 
 sealed abstract class SqsMessageAttribute
