@@ -73,6 +73,7 @@ lazy val root =
   tlCrossRootProject
     .aggregate(
       lambda,
+      lambdaNatchez,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       googleCloudHttp4s,
@@ -181,6 +182,19 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .settings(commonSettings)
   .dependsOn(lambda)
 
+lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-natchez"))
+  .settings(
+    name := "feral-lambda-natchez",
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .in(file("examples"))
   .settings(
@@ -193,7 +207,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s, googleCloudHttp4s)
+  .dependsOn(lambda, lambdaNatchez, lambdaHttp4s, googleCloudHttp4s)
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
     Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
