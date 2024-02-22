@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.natchez
 
 import cats.data.Kleisli
 import cats.effect.IO
+import feral.lambda.INothing
+import feral.lambda.Invocation
 import feral.lambda.events.KinesisStreamEvent
 import natchez.EntryPoint
 import natchez.Span

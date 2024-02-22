@@ -67,6 +67,7 @@ lazy val root =
   tlCrossRootProject
     .aggregate(
       lambda,
+      lambdaNatchez,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       examples,
@@ -170,6 +171,19 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .settings(commonSettings)
   .dependsOn(lambda)
 
+lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-natchez"))
+  .settings(
+    name := "feral-lambda-natchez",
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("examples"))
@@ -183,7 +197,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s)
+  .dependsOn(lambda, lambdaNatchez, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project

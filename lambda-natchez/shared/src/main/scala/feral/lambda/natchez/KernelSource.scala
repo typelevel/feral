@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.natchez
 
-import natchez.TraceValue
+import natchez.Kernel
 
-object AwsTags {
-  private[this] val prefix = "aws"
-  def arn(s: String): (String, TraceValue) = s"$prefix.arn" -> s
-  def requestId(s: String): (String, TraceValue) = s"$prefix.requestId" -> s
+trait KernelSource[Event] {
+  def extract(event: Event): Kernel
+}
+
+object KernelSource {
+  @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
+
+  def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
 }
