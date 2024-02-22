@@ -19,7 +19,6 @@ package events
 
 import io.circe.Decoder
 import io.circe.scodec._
-import org.typelevel.ci._
 import scodec.bits.ByteVector
 
 import java.time.Instant

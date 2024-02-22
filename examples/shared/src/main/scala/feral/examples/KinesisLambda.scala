@@ -22,7 +22,6 @@ import cats.effect._
 import cats.effect.std.Random
 import feral.lambda._
 import feral.lambda.events.SqsEvent
-import feral.lambda.natchez._
 import skunk.Session
 
 /**
