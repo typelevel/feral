@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.natchez
 
 import cats.data.Kleisli
 import cats.effect.IO
 import cats.effect.kernel.MonadCancelThrow
 import cats.syntax.all._
+import feral.lambda.Invocation
 import natchez.EntryPoint
 import natchez.Span
 import natchez.Trace

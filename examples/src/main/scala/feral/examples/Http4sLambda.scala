@@ -16,14 +16,15 @@
 
 package feral.examples
 
+import _root_.natchez.Trace
+import _root_.natchez.http4s.NatchezMiddleware
+import _root_.natchez.xray.XRay
 import cats.effect._
 import cats.effect.std.Random
 import feral.lambda._
 import feral.lambda.events._
 import feral.lambda.http4s._
-import natchez.Trace
-import natchez.http4s.NatchezMiddleware
-import natchez.xray.XRay
+import feral.lambda.natchez._
 import org.http4s.HttpApp
 import org.http4s.HttpRoutes
 import org.http4s.client.Client
