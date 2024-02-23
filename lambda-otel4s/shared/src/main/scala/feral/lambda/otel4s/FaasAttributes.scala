@@ -16,6 +16,8 @@
 
 package feral.lambda.otel4s
 
+import feral.lambda.Context
+import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.semconv.resource.attributes.ResourceAttributes
 import org.typelevel.otel4s.semconv.trace.attributes.SemanticAttributes
 
@@ -29,4 +31,17 @@ object LambdaContextAttributes {
   val FaasMaxMemory = ResourceAttributes.FaasMaxMemory
   val FaasName = ResourceAttributes.FaasName
   val FaasVersion = ResourceAttributes.FaasVersion
+  val CloudProvider = ResourceAttributes.CloudProvider
+
+  def apply[F[_]](context: Context[F]): List[Attribute[_]] = {
+    List(
+      CloudProvider(ResourceAttributes.CloudProviderValue.Aws.value),
+      CloudResourceId(context.invokedFunctionArn),
+      FaasInstance(context.logStreamName),
+      FaasMaxMemory(context.memoryLimitInMB.toLong),
+      FaasName(context.functionName),
+      FaasVersion(context.functionVersion)
+    )
+  }
+
 }
