@@ -64,6 +64,7 @@ val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
+val otel4sVersion = "0.5-04ec3c4-20240223T163935Z-SNAPSHOT"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -196,8 +197,8 @@ lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "feral-lambda-otel4s",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "otel4s-core-trace" % "0.5-04ec3c4-SNAPSHOT",
-      "org.typelevel" %%% "otel4s-semconv" % "0.5-04ec3c4-SNAPSHOT",
+      "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
+      "org.typelevel" %%% "otel4s-semconv" % otel4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     )
@@ -214,11 +215,12 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
-      "org.tpolecat" %%% "skunk-core" % "0.6.3"
+      "org.tpolecat" %%% "skunk-core" % "0.6.3",
+      "org.typelevel" %%% "otel4s-sdk" % otel4sVersion,
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaNatchez, lambdaHttp4s)
+  .dependsOn(lambda, lambdaNatchez, lambdaHttp4s, lambdaOtel4s)
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project

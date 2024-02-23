@@ -16,52 +16,20 @@
 
 package feral.lambda.otel4s
 
-import feral.lambda.events.SqsMessageAttribute
-import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.semconv.trace.attributes.SemanticAttributes
-import org.typelevel.otel4s.semconv.trace.attributes.SemanticAttributes.FaasTriggerValue
 import org.typelevel.otel4s.trace.SpanKind
 import feral.lambda.events.SqsEvent
 
-protected trait EventSpanAttributes[E] {
-  def contextCarrier(e: E): Map[String, String]
-  def spanKind: SpanKind
-  def attributes(e: E): List[Attribute[_]]
-}
-
-package object otel4s {
+package object implicits {
   implicit def sqsEventSpanAttributes: EventSpanAttributes[SqsEvent] =
     new EventSpanAttributes[SqsEvent] {
       def contextCarrier(e: SqsEvent): Map[String, String] =
         Map.empty
+
       def spanKind: SpanKind = SpanKind.Consumer
+
       def attributes(e: SqsEvent): List[Attribute[_]] = 
-        SqsEventAttributes()
+        SqsEventTraceAttributes()
     }
-
 }
 
-object SqsEventAttributes {
-  def apply(): List[Attribute[_]] = {
-    import SemanticAttributes._
-
-    List(
-      FaasTrigger(FaasTriggerValue.Pubsub.value),
-      MessagingSystem("aws_sqs")
-    )
-  }
-}
-
-object SqsRecordAttributes {
-  def apply(e: SqsRecord): List[Attribute[_]] = {
-    import SemanticAttributes._
-
-    List(
-      FaasTrigger(FaasTriggerValue.Pubsub.value),
-      MessagingOperation(MessagingOperationValue.Receive.value),
-      MessagingMessageId(e.messageId),
-      MessagingDestinationName(e.eventSource)
-    )
-  }
-}

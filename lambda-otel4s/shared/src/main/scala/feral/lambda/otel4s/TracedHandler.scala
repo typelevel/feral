@@ -17,32 +17,28 @@
 package feral.lambda.otel4s
 
 import cats.Monad
-import cats.data.Kleisli
 import cats.syntax.all._
-import feral.lambda.Context
 import feral.lambda.Invocation
-import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.semconv.resource.attributes.ResourceAttributes
 import org.typelevel.otel4s.trace.Tracer
 
 object TracedHandler {
 
   def apply[F[_]: Monad: Tracer, Event, Result](
-      handler: Kleisli[F, Event, Option[Result]]
+      handler: Event => F[Option[Result]]
   )(
       implicit inv: Invocation[F, Event],
-      esa: EventSpanAttributes[Event]
+      attr: EventSpanAttributes[Event]
   ): F[Option[Result]] =
     for {
       event <- inv.event
       context <- inv.context
-      res <- Tracer[F].joinOrRoot(esa.contextCarrier(event)) {
+      res <- Tracer[F].joinOrRoot(attr.contextCarrier(event)) {
         val spanR =
           Tracer[F]
             .spanBuilder(context.functionName)
-            .addAttributes(LambdaContextAttributes(context))
-            .withSpanKind(esa.spanKind)
-            .addAttributes(esa.attributes(event))
+            .addAttributes(LambdaContextTraceAttributes(context))
+            .withSpanKind(attr.spanKind)
+            .addAttributes(attr.attributes(event))
             .build
 
         spanR.surround {
