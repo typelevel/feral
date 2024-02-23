@@ -19,11 +19,6 @@ import xerial.sbt.Sonatype.sonatype01
 
 name := "feral"
 
-// TODO remove
-// ThisBuild / sonatypeCredentialHost := sonatype01
-ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
-// ThisBuild / resolvers += sonatypeStagingResolver.value
-
 ThisBuild / tlBaseVersion := "0.3"
 ThisBuild / startYear := Some(2021)
 
