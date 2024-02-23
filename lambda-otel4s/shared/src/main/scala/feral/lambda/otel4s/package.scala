@@ -16,9 +16,9 @@
 
 package feral.lambda.otel4s
 
+import feral.lambda.events.SqsEvent
 import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.trace.SpanKind
-import feral.lambda.events.SqsEvent
 
 package object implicits {
   implicit def sqsEventSpanAttributes: EventSpanAttributes[SqsEvent] =
@@ -28,8 +28,7 @@ package object implicits {
 
       def spanKind: SpanKind = SpanKind.Consumer
 
-      def attributes(e: SqsEvent): List[Attribute[_]] = 
+      def attributes(e: SqsEvent): List[Attribute[_]] =
         SqsEventTraceAttributes()
     }
 }
-
