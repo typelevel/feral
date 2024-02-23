@@ -31,19 +31,18 @@ object TracedHandler {
       handler: Kleisli[F, Event, Option[Result]]
   )(
       implicit inv: Invocation[F, Event],
-      etc: EventTraceContext[Event]
+      esa: EventSpanAttributes[Event]
   ): F[Option[Result]] =
     for {
       event <- inv.event
       context <- inv.context
-      res <- Tracer[F].joinOrRoot(etc.contextCarrier(event)) {
+      res <- Tracer[F].joinOrRoot(esa.contextCarrier(event)) {
         val spanR =
           Tracer[F]
             .spanBuilder(context.functionName)
-            .withSpanKind(etc.spanKind)
-            .addAttributes(staticAttributes)
-            .addAttributes(contextAttrs(context))
-            .addAttributes(etc.attributes(event))
+            .addAttributes(LambdaContextAttributes(context))
+            .withSpanKind(esa.spanKind)
+            .addAttributes(esa.attributes(event))
             .build
 
         spanR.surround {
@@ -53,26 +52,4 @@ object TracedHandler {
         }
       }
     } yield res
-
-  private def contextAttrs[F[_]](context: Context[F]): List[Attribute[_]] = {
-    import LambdaContextAttributes._
-
-    List(
-      CloudResourceId(context.invokedFunctionArn),
-      FaasInstance(context.logStreamName),
-      FaasMaxMemory(context.memoryLimitInMB.toLong),
-      FaasName(context.functionName),
-      FaasVersion(context.functionVersion)
-    )
-  }
-
-  private def staticAttributes: List[Attribute[_]] = {
-    import ResourceAttributes._
-
-    List(
-      CloudProvider(
-        ResourceAttributes.CloudProviderValue.Aws.value
-      )
-    )
-  }
 }
