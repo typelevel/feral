@@ -21,7 +21,7 @@ import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.semconv.resource.attributes.ResourceAttributes
 import org.typelevel.otel4s.semconv.trace.attributes.SemanticAttributes
 
-object LambdaContextAttributes {
+object LambdaContextTraceAttributes {
   val InvocationId = SemanticAttributes.FaasInvocationId
   val FaasTrigger = SemanticAttributes.FaasTrigger
   // ARN
