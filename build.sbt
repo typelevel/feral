@@ -15,8 +15,14 @@
  */
 
 import com.typesafe.tools.mima.core._
+import xerial.sbt.Sonatype.sonatype01
 
 name := "feral"
+
+// TODO remove
+// ThisBuild / sonatypeCredentialHost := sonatype01
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
+// ThisBuild / resolvers += sonatypeStagingResolver.value
 
 ThisBuild / tlBaseVersion := "0.3"
 ThisBuild / startYear := Some(2021)
@@ -68,6 +74,7 @@ lazy val root =
     .aggregate(
       lambda,
       lambdaNatchez,
+      lambdaOtel4s,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       examples,
@@ -177,6 +184,20 @@ lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda-natchez",
     libraryDependencies ++= Seq(
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
+lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-otel4s"))
+  .settings(
+    name := "feral-lambda-otel4s",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "otel4s-core-trace" % "0.5-04ec3c4-SNAPSHOT",
+      "org.typelevel" %%% "otel4s-semconv" % "0.5-04ec3c4-SNAPSHOT",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     )
