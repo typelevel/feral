@@ -212,7 +212,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
       "org.tpolecat" %%% "skunk-core" % "0.6.3",
-      "org.typelevel" %%% "otel4s-sdk" % otel4sVersion,
+      "org.typelevel" %%% "otel4s-sdk" % otel4sVersion
     )
   )
   .settings(commonSettings)
