@@ -20,6 +20,8 @@ import cats.Monad
 import cats.syntax.all._
 import feral.lambda.Invocation
 import org.typelevel.otel4s.trace.Tracer
+import org.typelevel.otel4s.trace.SpanOps
+import feral.lambda.Context
 
 object TracedHandler {
 
@@ -33,19 +35,21 @@ object TracedHandler {
       event <- inv.event
       context <- inv.context
       res <- Tracer[F].joinOrRoot(attr.contextCarrier(event)) {
-        val spanR =
-          Tracer[F]
-            .spanBuilder(context.functionName)
-            .addAttributes(LambdaContextTraceAttributes(context))
-            .withSpanKind(attr.spanKind)
-            .addAttributes(attr.attributes(event))
-            .build
-
-        spanR.surround {
+        buildSpan(event, context).surround {
           for {
             res <- handler(event)
           } yield res
         }
       }
     } yield res
+
+  def buildSpan[F[_]: Tracer, Event](event: Event, context: Context[F])(
+      implicit attr: EventSpanAttributes[Event]
+  ): SpanOps[F] =
+    Tracer[F]
+      .spanBuilder(context.functionName)
+      .addAttributes(LambdaContextTraceAttributes(context))
+      .withSpanKind(attr.spanKind)
+      .addAttributes(attr.attributes(event))
+      .build
 }
