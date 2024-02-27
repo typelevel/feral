@@ -1,3 +1,4 @@
+package feral.lambda
 /*
  * Copyright 2021 Typelevel
  *
@@ -14,21 +15,4 @@
  * limitations under the License.
  */
 
-package feral.lambda.otel4s
-
-import feral.lambda.events.SqsEvent
-import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.trace.SpanKind
-
-package object implicits {
-  implicit def sqsEventSpanAttributes: EventSpanAttributes[SqsEvent] =
-    new EventSpanAttributes[SqsEvent] {
-      def contextCarrier(e: SqsEvent): Map[String, String] =
-        Map.empty
-
-      def spanKind: SpanKind = SpanKind.Consumer
-
-      def attributes(e: SqsEvent): List[Attribute[_]] =
-        SqsEventTraceAttributes()
-    }
-}
+package object otel4s extends EventAttributeSources
