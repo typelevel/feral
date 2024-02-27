@@ -19,8 +19,20 @@ package feral.lambda.otel4s
 import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.trace.SpanKind
 
+// TODO better name
 protected trait EventSpanAttributes[E] {
   def contextCarrier(e: E): Map[String, String]
   def spanKind: SpanKind
   def attributes(e: E): List[Attribute[_]]
+}
+
+object EventSpanAttributes {
+  def empty[E](sk: SpanKind): EventSpanAttributes[E] =
+    new EventSpanAttributes[E] {
+      def contextCarrier(e: E): Map[String, String] =
+        Map.empty
+      def spanKind: SpanKind = sk
+      def attributes(e: E): List[Attribute[_]] =
+        List.empty
+    }
 }
