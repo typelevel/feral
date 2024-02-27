@@ -26,7 +26,7 @@ import feral.lambda.events.SqsEvent
 import feral.lambda.events.SqsRecord
 import feral.lambda.otel4s.SqsRecordTraceAttributes
 import feral.lambda.otel4s.TracedHandler
-import feral.lambda.otel4s.implicits._
+import feral.lambda.otel4s._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.otel4s.sdk.OpenTelemetrySdk
