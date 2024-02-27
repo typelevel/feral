@@ -18,10 +18,10 @@ package feral.lambda.otel4s
 
 import cats.Monad
 import cats.syntax.all._
-import feral.lambda.Invocation
-import org.typelevel.otel4s.trace.Tracer
-import org.typelevel.otel4s.trace.SpanOps
 import feral.lambda.Context
+import feral.lambda.Invocation
+import org.typelevel.otel4s.trace.SpanOps
+import org.typelevel.otel4s.trace.Tracer
 
 object TracedHandler {
 
