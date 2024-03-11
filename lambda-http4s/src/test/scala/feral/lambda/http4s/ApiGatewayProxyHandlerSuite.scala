@@ -57,7 +57,7 @@ class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
       event <- event.as[ApiGatewayProxyEvent].liftTo[IO]
       request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
       _ <- IO(assertEquals(request.method, Method.POST))
-      _ <- IO(assertEquals(request.uri, uri"/path/to/resource?foo=bar&foo=bar"))
+      _ <- IO(assertEquals(request.uri, uri"/path/to/resource?foo=bar"))
       _ <- IO(assertEquals(request.headers, expectedHeaders))
       responseBody <- request.bodyText.compile.string
       _ <- IO(assertEquals(responseBody, expectedBody))
