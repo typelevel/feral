@@ -63,6 +63,7 @@ object ApiGatewayProxyHandler {
       event: ApiGatewayProxyEvent): F[Request[F]] = {
     val queryString: String = getMultiValueQueryStringParameters(
       event.multiValueQueryStringParameters)
+
     val uriString: String = event.path + (if (queryString.nonEmpty) s"?$queryString" else "")
 
     for {
@@ -70,13 +71,9 @@ object ApiGatewayProxyHandler {
       uri <- Uri.fromString(uriString).liftTo[F]
       headers = {
         val builder = List.newBuilder[Header.Raw]
-        event.headers.foreach { h => h.foreachEntry(builder += Header.Raw(_, _)) }
         event.multiValueHeaders.foreach { hMap =>
           hMap.foreach {
-            case (key, values) =>
-              if (!event.headers.exists(_.contains(key))) {
-                values.foreach(value => builder += Header.Raw(key, value))
-              }
+            case (key, values) => values.foreach(value => builder += Header.Raw(key, value))
           }
         }
         Headers(builder.result())

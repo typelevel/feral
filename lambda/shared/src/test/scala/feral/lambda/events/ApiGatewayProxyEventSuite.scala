@@ -43,7 +43,8 @@ object ApiGatewayProxyEventSuite {
     },
     "multiValueQueryStringParameters": {
       "foo": [
-        "bar"
+        "bar",
+        "baz"
       ]
     },
     "pathParameters": {
@@ -70,7 +71,8 @@ object ApiGatewayProxyEventSuite {
       "X-Amz-Cf-Id": "cDehVQoZnx43VYQb9j2-nvCh-9z396Uhbp027Y2JvkCPNLmGJHqlaA==",
       "X-Forwarded-For": "127.0.0.1, 127.0.0.2",
       "X-Forwarded-Port": "443",
-      "X-Forwarded-Proto": "https"
+      "X-Forwarded-Proto": "https",
+      "X-MultiHeader": "foo"
     },
     "multiValueHeaders": {
       "Accept": [
@@ -104,7 +106,7 @@ object ApiGatewayProxyEventSuite {
         "US"
       ],
       "Host": [
-        "0123456789.execute-api.us-east-1.amazonaws.com"
+        "1234567890.execute-api.us-east-1.amazonaws.com"
       ],
       "Upgrade-Insecure-Requests": [
         "1"
@@ -126,6 +128,10 @@ object ApiGatewayProxyEventSuite {
       ],
       "X-Forwarded-Proto": [
         "https"
+      ],
+      "X-MultiHeader": [
+        "foo",
+        "bar"
       ]
     },
     "requestContext": {

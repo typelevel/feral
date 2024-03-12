@@ -37,6 +37,8 @@ class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
     "X-Amz-Cf-Id" -> "cDehVQoZnx43VYQb9j2-nvCh-9z396Uhbp027Y2JvkCPNLmGJHqlaA==",
     "Host" -> "1234567890.execute-api.us-east-1.amazonaws.com",
     "Accept-Encoding" -> "gzip, deflate, sdch",
+    "X-MultiHeader" -> "foo",
+    "X-MultiHeader" -> "bar",
     "X-Forwarded-Port" -> "443",
     "Cache-Control" -> "max-age=0",
     "CloudFront-Viewer-Country" -> "US",
@@ -57,7 +59,7 @@ class ApiGatewayProxyHandlerSuite extends CatsEffectSuite {
       event <- event.as[ApiGatewayProxyEvent].liftTo[IO]
       request <- ApiGatewayProxyHandler.decodeEvent[IO](event)
       _ <- IO(assertEquals(request.method, Method.POST))
-      _ <- IO(assertEquals(request.uri, uri"/path/to/resource?foo=bar"))
+      _ <- IO(assertEquals(request.uri, uri"/path/to/resource?foo=bar&foo=baz"))
       _ <- IO(assertEquals(request.headers, expectedHeaders))
       responseBody <- request.bodyText.compile.string
       _ <- IO(assertEquals(responseBody, expectedBody))
