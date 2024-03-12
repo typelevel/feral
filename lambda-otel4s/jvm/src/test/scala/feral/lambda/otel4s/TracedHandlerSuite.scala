@@ -80,51 +80,53 @@ class TracedHandlerSuite extends CatsEffectSuite {
         _ <- IO {
           assertEquals(res, "\"body\"".toString)
           assertEquals(spans.length, 1)
-          // assertEquals(spans.headOption.map(_.name), Some(functionName))
+          assertEquals(spans.headOption.map(_.getName()), Some(functionName))
         }
       } yield ()
     }
 
   }
 
-  // fixture.test("multiple root span per invocation created with function name ") { traces =>
-  //   traces.tracerProvider.tracer("test-tracer").get.flatMap { implicit tracer =>
-  //     val allocationCounter = new AtomicInteger
-  //     val invokeCounter = new AtomicInteger
+  fixture.test("multiple root span per invocation created with function name ") { traces =>
+    traces.tracerProvider.tracer("test-tracer").get.flatMap { implicit tracer =>
+      val allocationCounter = new AtomicInteger
+      val invokeCounter = new AtomicInteger
 
-  //     val lambda = new IOLambda[TestEvent, String] {
-  //       def handler =
-  //         Resource.eval(IO(allocationCounter.getAndIncrement())).as { implicit inv =>
-  //           def fn(ev: TestEvent): IO[Option[String]] =
-  //             for {
-  //               _ <- IO(invokeCounter.getAndIncrement())
-  //               res = Some(ev.payload)
-  //             } yield res
+      val lambda = new IOLambda[TestEvent, String] {
+        def handler =
+          Resource.eval(IO(allocationCounter.getAndIncrement())).as { implicit inv =>
+            def fn(ev: TestEvent): IO[Option[String]] =
+              for {
+                _ <- IO(invokeCounter.getAndIncrement())
+                res = Some(ev.payload)
+              } yield res
 
-  //           TracedHandler(fn)
-  //         }
-  //     }
+            TracedHandler(fn)
+          }
+      }
 
-  //     val functionName = "test-function-name"
-  //     val chars = 'A'.to('C').toList
-  //     val run =
-  //       chars.zipWithIndex.map { case (c, i) => TestEvent(i.toString, c.toString) }.traverse {
-  //         e => IO.fromPromise(IO(lambda.handlerFn(e.asJsAny, DummyContext(functionName))))
-  //       }
+      val functionName = "test-function-name"
+      val chars = 'A'.to('C').toList
+      val run =
+        chars.zipWithIndex.map { case (c, i) => TestEvent(i.toString, c.toString) }.traverse {
+          e =>
+            val payload = e.asJson.noSpaces
+            IO(lambda.handleRequestHelper(payload, DummyContext(functionName)))
+        }
 
-  //     val expectedSpanNames = List.fill(3)(functionName)
+      val expectedSpanNames = List.fill(3)(functionName)
 
-  //     for {
-  //       res <- run
-  //       spans <- traces.finishedSpans
-  //       _ <- IO {
-  //         assertEquals(res.length, chars.length)
-  //         assertEquals(spans.length, chars.length)
-  //         assertEquals(spans.map(_.name), expectedSpanNames)
-  //       }
-  //     } yield ()
-  //   }
-  // }
+      for {
+        res <- run
+        spans <- traces.finishedSpans
+        _ <- IO {
+          assertEquals(res.length, chars.length)
+          assertEquals(spans.length, chars.length)
+          assertEquals(spans.map(_.getName()), expectedSpanNames)
+        }
+      } yield ()
+    }
+  }
 
   case class DummyContext(functionName: String) extends runtime.Context {
     override def getAwsRequestId(): String = ""
