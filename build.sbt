@@ -205,7 +205,6 @@ lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(lambda)
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
   .in(file("examples"))
   .settings(
     libraryDependencies ++= Seq(
@@ -217,6 +216,11 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
+      "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1"
+    ))
   .dependsOn(lambda, lambdaNatchez, lambdaHttp4s, lambdaOtel4s)
   .enablePlugins(NoPublishPlugin)
 
