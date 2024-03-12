@@ -17,22 +17,21 @@
 package feral.lambda
 package otel4s
 
-import io.circe.syntax._
 import cats.effect.IO
-import com.amazonaws.services.lambda.runtime
 import cats.effect.kernel.Resource
 import cats.syntax.all._
-import feral.lambda.IOLambda
+import com.amazonaws.services.lambda.runtime
 import io.circe.Decoder
 import io.circe.Encoder
+import io.circe.syntax._
 import munit.CatsEffectSuite
 import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.oteljava.testkit.trace.TracesTestkit
 import org.typelevel.otel4s.trace.SpanKind
 
-import java.util.concurrent.atomic.AtomicInteger
-import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.atomic.AtomicInteger
 
 class TracedHandlerSuite extends CatsEffectSuite {
   import TracedHandlerSuite._
