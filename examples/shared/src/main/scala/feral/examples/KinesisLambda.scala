@@ -16,12 +16,12 @@
 
 package feral.examples
 
+import _root_.feral.lambda._
+import _root_.feral.lambda.events.SqsEvent
 import _root_.natchez.Trace
 import _root_.natchez.xray.XRay
 import cats.effect._
 import cats.effect.std.Random
-import feral.lambda._
-import feral.lambda.events.SqsEvent
 import skunk.Session
 
 /**
