@@ -61,10 +61,8 @@ object ApiGatewayProxyHandler {
 
   private[http4s] def decodeEvent[F[_]: Concurrent](
       event: ApiGatewayProxyEvent): F[Request[F]] = {
-    val queryString: String = List(
-      getQueryStringParameters(event.queryStringParameters),
-      getMultiValueQueryStringParameters(event.multiValueQueryStringParameters)
-    ).filter(_.nonEmpty).mkString("&")
+    val queryString: String = getMultiValueQueryStringParameters(
+      event.multiValueQueryStringParameters)
 
     val uriString: String = event.path + (if (queryString.nonEmpty) s"?$queryString" else "")
 
@@ -73,13 +71,9 @@ object ApiGatewayProxyHandler {
       uri <- Uri.fromString(uriString).liftTo[F]
       headers = {
         val builder = List.newBuilder[Header.Raw]
-        event.headers.foreach { h => h.foreachEntry(builder += Header.Raw(_, _)) }
         event.multiValueHeaders.foreach { hMap =>
           hMap.foreach {
-            case (key, values) =>
-              if (!event.headers.exists(_.contains(key))) {
-                values.foreach(value => builder += Header.Raw(key, value))
-              }
+            case (key, values) => values.foreach(value => builder += Header.Raw(key, value))
           }
         }
         Headers(builder.result())
@@ -96,12 +90,6 @@ object ApiGatewayProxyHandler {
       body = Stream.fromOption[F](event.body).through(readBody)
     )
   }
-
-  private def getQueryStringParameters(
-      queryStringParameters: Option[Map[String, String]]): String =
-    queryStringParameters.fold("") { params =>
-      params.map { case (key, value) => s"$key=$value" }.mkString("&")
-    }
 
   private def getMultiValueQueryStringParameters(
       multiValueQueryStringParameters: Option[Map[String, List[String]]]): String =
