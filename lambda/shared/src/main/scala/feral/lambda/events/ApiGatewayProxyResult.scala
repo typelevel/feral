@@ -35,6 +35,10 @@ object ApiGatewayProxyResult {
       isBase64Encoded: Boolean): ApiGatewayProxyResult =
     new Impl(statusCode, headers, body, isBase64Encoded)
 
+  @deprecated("This constructor does not have headers", "0.3.0")
+  def apply(statusCode: Int, body: String, isBase64Encoded: Boolean): ApiGatewayProxyResult =
+    new Impl(statusCode, Map.empty[CIString, String], body, isBase64Encoded)
+
   import codecs.encodeKeyCIString
   implicit def encoder: Encoder[ApiGatewayProxyResult] = Encoder.forProduct4(
     "statusCode",
