@@ -15,6 +15,7 @@
  */
 
 import com.typesafe.tools.mima.core._
+import xerial.sbt.Sonatype.sonatype01
 
 name := "feral"
 
@@ -58,6 +59,7 @@ val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
+val otel4sVersion = "0.5.0-RC1"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -67,6 +69,8 @@ lazy val root =
   tlCrossRootProject
     .aggregate(
       lambda,
+      lambdaNatchez,
+      lambdaOtel4s,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       examples,
@@ -88,7 +92,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
-      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.typelevel" %%% "case-insensitive" % "1.4.0",
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "com.comcast" %%% "ip4s-core" % "3.5.0",
@@ -170,8 +174,37 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .settings(commonSettings)
   .dependsOn(lambda)
 
+lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-natchez"))
+  .settings(
+    name := "feral-lambda-natchez",
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
+lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-otel4s"))
+  .settings(
+    name := "feral-lambda-otel4s",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
+      "org.typelevel" %%% "otel4s-semconv" % otel4sVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .jvmSettings(libraryDependencies ++= Seq(
+    "org.typelevel" %%% "otel4s-oteljava-trace-testkit" % otel4sVersion % Test
+  ))
+  .dependsOn(lambda)
+
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
   .in(file("examples"))
   .settings(
     libraryDependencies ++= Seq(
@@ -183,7 +216,12 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s)
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
+      "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1"
+    ))
+  .dependsOn(lambda, lambdaNatchez, lambdaHttp4s, lambdaOtel4s)
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
