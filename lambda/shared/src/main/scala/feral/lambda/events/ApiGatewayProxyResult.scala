@@ -17,26 +17,39 @@
 package feral.lambda.events
 
 import io.circe.Encoder
+import org.typelevel.ci.CIString
 
 sealed abstract class ApiGatewayProxyResult {
   def statusCode: Int
+  def headers: Map[CIString, String]
   def body: String
   def isBase64Encoded: Boolean
 }
 
 object ApiGatewayProxyResult {
 
-  def apply(statusCode: Int, body: String, isBase64Encoded: Boolean): ApiGatewayProxyResult =
-    new Impl(statusCode, body, isBase64Encoded)
+  def apply(
+      statusCode: Int,
+      headers: Map[CIString, String],
+      body: String,
+      isBase64Encoded: Boolean): ApiGatewayProxyResult =
+    new Impl(statusCode, headers, body, isBase64Encoded)
 
-  implicit def encoder: Encoder[ApiGatewayProxyResult] = Encoder.forProduct3(
+  @deprecated("Use apply method which takes headers", "0.3.0")
+  def apply(statusCode: Int, body: String, isBase64Encoded: Boolean): ApiGatewayProxyResult =
+    apply(statusCode, Map.empty, body, isBase64Encoded)
+
+  import codecs.encodeKeyCIString
+  implicit def encoder: Encoder[ApiGatewayProxyResult] = Encoder.forProduct4(
     "statusCode",
+    "headers",
     "body",
     "isBase64Encoded"
-  )(r => (r.statusCode, r.body, r.isBase64Encoded))
+  )(r => (r.statusCode, r.headers, r.body, r.isBase64Encoded))
 
   private final case class Impl(
       statusCode: Int,
+      headers: Map[CIString, String],
       body: String,
       isBase64Encoded: Boolean
   ) extends ApiGatewayProxyResult {

@@ -50,9 +50,11 @@ object ApiGatewayProxyHandler {
         .compile
         .string
     } yield {
+      val headers = response.headers.headers.groupMap(_.name)(_.value)
       Some(
         ApiGatewayProxyResult(
           response.status.code,
+          headers.map { case (name, values) => name -> values.mkString(",") },
           responseBody,
           isBase64Encoded
         )
