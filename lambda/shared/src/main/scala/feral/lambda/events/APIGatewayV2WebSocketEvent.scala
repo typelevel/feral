@@ -19,7 +19,7 @@ package feral.lambda.events
 import io.circe.Decoder
 
 
-sealed abstract class APIGatewayV2WebSocketEvent:
+sealed abstract class APIGatewayV2WebSocketEvent {
   def resource: String
   def path: String
   def httpMethod: String
@@ -32,8 +32,9 @@ sealed abstract class APIGatewayV2WebSocketEvent:
   def requestContext: RequestContext
   def body: String
   def isBase64Encoded: Boolean 
+}
 
-object APIGatewayV2WebSocketEvent:
+object APIGatewayV2WebSocketEvent {
   def apply(
     resource: String,
     path: String,
@@ -91,10 +92,12 @@ object APIGatewayV2WebSocketEvent:
     requestContext: RequestContext,
     body: String,
     isBase64Encoded: Boolean
-  ) extends APIGatewayV2WebSocketEvent:
+  ) extends APIGatewayV2WebSocketEvent {
     override def productPrefix = "APIGatewayV2WebSocketEvent"
+  }
+}
 
-sealed abstract class RequestIdentity:
+sealed abstract class RequestIdentity {
   def cognitoIdentityPoolId: String
   def accountId: String
   def cognitoIdentityId: String
@@ -107,8 +110,9 @@ sealed abstract class RequestIdentity:
   def userAgent: String
   def user: String
   def accessKey: String
+}
 
-object RequestIdentity:
+object RequestIdentity {
   def apply(
     cognitoIdentityPoolId: String,
     accountId: String,
@@ -166,10 +170,12 @@ object RequestIdentity:
     userAgent: String,
     user: String,
     accessKey: String
-  ) extends RequestIdentity:
+  ) extends RequestIdentity {
     override def productPrefix = "RequestIdentity"
+  }
+}
 
-sealed abstract class RequestContext:
+sealed abstract class RequestContext {
   def accountId: String
   def resourceId: String
   def stage: String
@@ -192,8 +198,9 @@ sealed abstract class RequestContext:
   def requestTimeEpoch: Long
   def routeKey: String
   def status: String
+}
 
-object RequestContext:
+object RequestContext {
   def apply(
     accountId: String,
     resourceId: String,
@@ -291,5 +298,7 @@ object RequestContext:
     requestTimeEpoch: Long,
     routeKey: String,
     status: String
-  ) extends RequestContext:
+  ) extends RequestContext {
     override def productPrefix = "RequestContext"
+  }
+}
