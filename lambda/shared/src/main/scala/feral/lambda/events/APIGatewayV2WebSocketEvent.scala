@@ -257,7 +257,7 @@ object RequestContext {
     "requestId",
     "identity",
     "ResourcePath",
-    "author",
+    "authorizer",
     "httpMethod",
     "apiId",
     "connectedAt",
