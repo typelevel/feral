@@ -36,9 +36,7 @@ object TracedHandler {
       context <- inv.context
       res <- Tracer[F].joinOrRoot(attr.contextCarrier(event)) {
         buildSpan(event, context).surround {
-          for {
-            res <- handler(event)
-          } yield res
+          handler(event)
         }
       }
     } yield res
