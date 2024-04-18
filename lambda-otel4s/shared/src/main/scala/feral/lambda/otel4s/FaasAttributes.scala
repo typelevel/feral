@@ -18,24 +18,24 @@ package feral.lambda.otel4s
 
 import feral.lambda.Context
 import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.semconv.resource.attributes.ResourceAttributes
-import org.typelevel.otel4s.semconv.trace.attributes.SemanticAttributes
+import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes
+import org.typelevel.otel4s.semconv.experimental.attributes.FaasExperimentalAttributes
 
 object LambdaContextTraceAttributes {
-  val InvocationId = SemanticAttributes.FaasInvocationId
-  val FaasTrigger = SemanticAttributes.FaasTrigger
+  val InvocationId = FaasExperimentalAttributes.FaasInvocationId
+  val FaasTrigger = FaasExperimentalAttributes.FaasTrigger
   // ARN
-  val CloudResourceId = ResourceAttributes.CloudResourceId
+  val CloudResourceId = CloudExperimentalAttributes.CloudResourceId
   // log stream name
-  val FaasInstance = ResourceAttributes.FaasInstance
-  val FaasMaxMemory = ResourceAttributes.FaasMaxMemory
-  val FaasName = ResourceAttributes.FaasName
-  val FaasVersion = ResourceAttributes.FaasVersion
-  val CloudProvider = ResourceAttributes.CloudProvider
+  val FaasInstance = FaasExperimentalAttributes.FaasInstance
+  val FaasMaxMemory = FaasExperimentalAttributes.FaasMaxMemory
+  val FaasName = FaasExperimentalAttributes.FaasName
+  val FaasVersion = FaasExperimentalAttributes.FaasVersion
+  val CloudProvider = CloudExperimentalAttributes.CloudProvider
 
   def apply[F[_]](context: Context[F]): List[Attribute[_]] = {
     List(
-      CloudProvider(ResourceAttributes.CloudProviderValue.Aws.value),
+      CloudProvider(CloudExperimentalAttributes.CloudProviderValue.Aws.value),
       CloudResourceId(context.invokedFunctionArn),
       FaasInstance(context.logStreamName),
       FaasMaxMemory(context.memoryLimitInMB.toLong),
