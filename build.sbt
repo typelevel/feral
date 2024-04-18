@@ -59,7 +59,7 @@ val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
-val otel4sVersion = "0.5.0-RC1"
+val otel4sVersion = "0.6.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -194,6 +194,7 @@ lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
       "org.typelevel" %%% "otel4s-semconv" % otel4sVersion,
+      "org.typelevel" %%% "otel4s-semconv-experimental" % otel4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     )
