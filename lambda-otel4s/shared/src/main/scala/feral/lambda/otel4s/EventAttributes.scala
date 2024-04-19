@@ -16,9 +16,7 @@
 
 package feral.lambda.otel4s
 
-import feral.lambda.events.ApiGatewayProxyEvent
 import feral.lambda.events.DynamoDbRecord
-import feral.lambda.events.DynamoDbStreamEvent
 import feral.lambda.events.S3BatchEvent
 import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attribute
