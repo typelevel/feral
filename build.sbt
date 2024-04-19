@@ -193,8 +193,6 @@ lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda-otel4s",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
-      "org.typelevel" %%% "otel4s-semconv" % otel4sVersion,
-      "org.typelevel" %%% "otel4s-semconv-experimental" % otel4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     )
