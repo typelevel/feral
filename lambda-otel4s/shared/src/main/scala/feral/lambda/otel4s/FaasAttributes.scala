@@ -18,24 +18,55 @@ package feral.lambda.otel4s
 
 import feral.lambda.Context
 import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes
-import org.typelevel.otel4s.semconv.experimental.attributes.FaasExperimentalAttributes
+import org.typelevel.otel4s.AttributeKey
 
-object LambdaContextTraceAttributes {
-  val InvocationId = FaasExperimentalAttributes.FaasInvocationId
-  val FaasTrigger = FaasExperimentalAttributes.FaasTrigger
+/**
+ * Temporary aliases for Lambda message-specific attributes in otel4s-semconv-experimental
+ */
+object LambdaMessageAttributes {
+  val MessagingSystem = AttributeKey.string("messaging.system")
+  object MessagingSystemValue {
+    object Sqs {
+      val value = "aws_sqs"
+    }
+  }
+  val MessagingOperation = AttributeKey.string("messaging.operation")
+  object MessagingOperationValue {
+    object Receive {
+      val value = "receive"
+    }
+  }
+  val MessagingMessageId = AttributeKey.string("messaging.message.id")
+  val MessagingDestinationName = AttributeKey.string("messaging.destination.name")
+}
+
+/**
+ * Temporary aliases for Lambda platform attributes in otel4s-semconv-experimental
+ */
+object LambdaContextAttributes {
+  val FaasInvocationId = AttributeKey.string("faas.invocation_id")
+  val FaasTrigger = AttributeKey.string("faas.trigger")
+  object FaasTriggerValue {
+    object Pubsub {
+      val value = "pubsub"
+    }
+  }
   // ARN
-  val CloudResourceId = CloudExperimentalAttributes.CloudResourceId
-  // log stream name
-  val FaasInstance = FaasExperimentalAttributes.FaasInstance
-  val FaasMaxMemory = FaasExperimentalAttributes.FaasMaxMemory
-  val FaasName = FaasExperimentalAttributes.FaasName
-  val FaasVersion = FaasExperimentalAttributes.FaasVersion
-  val CloudProvider = CloudExperimentalAttributes.CloudProvider
+  val CloudResourceId = AttributeKey.string("cloud.resource_id")
+  val FaasInstance = AttributeKey.string("faas.instance")
+  val FaasMaxMemory = AttributeKey.long("faas.max_memory")
+  val FaasName = AttributeKey.string("faas.name")
+  val FaasVersion = AttributeKey.string("faas.version")
+  val CloudProvider = AttributeKey.string("cloud.provider")
+  object CloudProviderValue {
+    object Aws {
+      val value = "aws"
+    }
+  }
 
   def apply[F[_]](context: Context[F]): List[Attribute[_]] = {
     List(
-      CloudProvider(CloudExperimentalAttributes.CloudProviderValue.Aws.value),
+      CloudProvider(CloudProviderValue.Aws.value),
       CloudResourceId(context.invokedFunctionArn),
       FaasInstance(context.logStreamName),
       FaasMaxMemory(context.memoryLimitInMB.toLong),

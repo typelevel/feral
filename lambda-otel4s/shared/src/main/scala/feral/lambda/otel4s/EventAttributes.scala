@@ -18,8 +18,9 @@ package feral.lambda.otel4s
 
 import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.semconv.experimental.attributes.FaasExperimentalAttributes._
-import org.typelevel.otel4s.semconv.experimental.attributes.MessagingExperimentalAttributes._
+
+import LambdaMessageAttributes._
+import LambdaContextAttributes._
 
 object SqsEventTraceAttributes {
   def apply(): List[Attribute[_]] =
