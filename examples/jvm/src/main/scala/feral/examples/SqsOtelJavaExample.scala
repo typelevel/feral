@@ -21,7 +21,7 @@ import _root_.feral.lambda.IOLambda
 import _root_.feral.lambda.Invocation
 import _root_.feral.lambda.events.SqsEvent
 import _root_.feral.lambda.events.SqsRecord
-import _root_.feral.lambda.otel4s.SqsRecordTraceAttributes
+import _root_.feral.lambda.otel4s.SqsRecordAttributes
 import _root_.feral.lambda.otel4s.TracedHandler
 import _root_.feral.lambda.otel4s._
 import cats.Monad
@@ -54,7 +54,7 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
     event
       .records
       .traverse(record =>
-        Tracer[F].span("handle-record", SqsRecordTraceAttributes(record)).surround {
+        Tracer[F].span("handle-record", SqsRecordAttributes(record)).surround {
           handleRecord[F](record)
         })
       .as(None)

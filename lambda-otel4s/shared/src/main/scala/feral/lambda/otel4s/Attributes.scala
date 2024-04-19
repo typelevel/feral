@@ -50,6 +50,12 @@ object LambdaContextAttributes {
     object Pubsub {
       val value = "pubsub"
     }
+    object Datasource {
+      val value = "datasource"
+    }
+    object Http {
+      val value = "http"
+    }
   }
   // ARN
   val CloudResourceId = AttributeKey.string("cloud.resource_id")
