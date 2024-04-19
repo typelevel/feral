@@ -16,13 +16,17 @@
 
 package feral.lambda.otel4s
 
+import feral.lambda.events.ApiGatewayProxyEvent
+import feral.lambda.events.DynamoDbRecord
+import feral.lambda.events.DynamoDbStreamEvent
+import feral.lambda.events.S3BatchEvent
 import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attribute
 
 import LambdaMessageAttributes._
 import LambdaContextAttributes._
 
-object SqsEventTraceAttributes {
+object SqsEventAttributes {
   def apply(): List[Attribute[_]] =
     List(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
@@ -30,12 +34,45 @@ object SqsEventTraceAttributes {
     )
 }
 
-object SqsRecordTraceAttributes {
+object SqsRecordAttributes {
   def apply(e: SqsRecord): List[Attribute[_]] =
     List(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
       MessagingOperation(MessagingOperationValue.Receive.value),
-      MessagingMessageId(e.messageId),
-      MessagingDestinationName(e.eventSource)
+      MessagingMessageId(e.messageId)
+    )
+}
+
+object DynamoDbStreamEventAttributes {
+  def apply(): List[Attribute[_]] =
+    List(
+      FaasTrigger(FaasTriggerValue.Datasource.value),
+      MessagingSystem("aws_sqs")
+    )
+}
+
+object DynamoDbRecordAttributes {
+  def apply(e: DynamoDbRecord): List[Attribute[_]] =
+    List(
+      e.eventId.map(MessagingMessageId(_)),
+      Some(FaasTrigger(FaasTriggerValue.Datasource.value)),
+      Some(MessagingOperation(MessagingOperationValue.Receive.value))
+    ).flatten
+}
+
+object ApiGatewayProxyEventAttributes {
+  def apply(): List[Attribute[_]] =
+    List(
+      FaasTrigger(FaasTriggerValue.Http.value),
+      MessagingOperation(MessagingOperationValue.Receive.value)
+    )
+}
+
+object S3BatchEventAttributes {
+  def apply(e: S3BatchEvent): List[Attribute[_]] =
+    List(
+      MessagingMessageId(e.invocationId),
+      FaasTrigger(FaasTriggerValue.Datasource.value),
+      MessagingOperation(MessagingOperationValue.Receive.value)
     )
 }

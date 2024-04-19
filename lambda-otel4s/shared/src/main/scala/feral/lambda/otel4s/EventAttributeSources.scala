@@ -33,14 +33,51 @@ trait EventAttributeSources {
       def spanKind: SpanKind = SpanKind.Consumer
 
       def attributes(e: SqsEvent): List[Attribute[_]] =
-        SqsEventTraceAttributes()
+        SqsEventAttributes()
     }
 
-  implicit def dynamoDbStreamEvent: EventSpanAttributes[DynamoDbStreamEvent] = ???
+  implicit def dynamoDbStreamEvent: EventSpanAttributes[DynamoDbStreamEvent] =
+    new EventSpanAttributes[DynamoDbStreamEvent] {
+      def contextCarrier(e: DynamoDbStreamEvent): Map[String, String] =
+        Map.empty
 
-  implicit def apiGatewayProxyEvent: EventSpanAttributes[ApiGatewayProxyEvent] = ???
+      def spanKind: SpanKind = SpanKind.Consumer
 
-  implicit def apiGatewayProxyEventV2: EventSpanAttributes[ApiGatewayProxyEventV2] = ???
+      def attributes(e: DynamoDbStreamEvent): List[Attribute[_]] =
+        DynamoDbStreamEventAttributes()
+    }
 
-  implicit def s3BatchEvent: EventSpanAttributes[S3BatchEvent] = ???
+  implicit def apiGatewayProxyEvent: EventSpanAttributes[ApiGatewayProxyEvent] =
+    new EventSpanAttributes[ApiGatewayProxyEvent] {
+      def contextCarrier(e: ApiGatewayProxyEvent): Map[String, String] =
+        e.headers.getOrElse(Map.empty).map { case (k, v) => (k.toString, v) }
+
+      def spanKind: SpanKind = SpanKind.Server
+
+      def attributes(e: ApiGatewayProxyEvent): List[Attribute[_]] =
+        ApiGatewayProxyEventAttributes()
+    }
+
+  implicit def apiGatewayProxyEventV2: EventSpanAttributes[ApiGatewayProxyEventV2] =
+    new EventSpanAttributes[ApiGatewayProxyEventV2] {
+      def contextCarrier(e: ApiGatewayProxyEventV2): Map[String, String] =
+        e.headers.map { case (k, v) => (k.toString, v) }
+
+      def spanKind: SpanKind = SpanKind.Server
+
+      def attributes(e: ApiGatewayProxyEventV2): List[Attribute[_]] =
+        ApiGatewayProxyEventAttributes()
+    }
+
+  implicit def s3BatchEvent: EventSpanAttributes[S3BatchEvent] =
+    new EventSpanAttributes[S3BatchEvent] {
+      def contextCarrier(e: S3BatchEvent): Map[String, String] =
+        Map.empty
+
+      def spanKind: SpanKind = SpanKind.Server
+
+      def attributes(e: S3BatchEvent): List[Attribute[_]] =
+        S3BatchEventAttributes(e)
+    }
+
 }
