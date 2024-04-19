@@ -46,7 +46,7 @@ object TracedHandler {
   ): SpanOps[F] =
     Tracer[F]
       .spanBuilder(context.functionName)
-      .addAttributes(LambdaContextTraceAttributes(context))
+      .addAttributes(LambdaContextAttributes(context))
       .withSpanKind(attr.spanKind)
       .addAttributes(attr.attributes(event))
       .build
