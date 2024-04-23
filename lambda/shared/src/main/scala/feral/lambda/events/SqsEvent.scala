@@ -26,7 +26,7 @@ import scodec.bits.ByteVector
 import java.time.Instant
 import scala.util.Try
 
-// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/Sqs.d.ts
+// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/sqs.d.ts
 // https://docs.aws.amazon.com/lambda/latest/dg/invoking-lambda-function.html#supported-event-source-Sqs
 
 sealed abstract class SqsEvent {
