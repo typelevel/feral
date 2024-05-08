@@ -46,8 +46,8 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
-val Scala212 = "2.12.18"
-val Scala213 = "2.13.12"
+val Scala212 = "2.12.19"
+val Scala213 = "2.13.14"
 val Scala3 = "3.3.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
@@ -59,7 +59,7 @@ val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
-val otel4sVersion = "0.6.0"
+val otel4sVersion = "0.7.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
