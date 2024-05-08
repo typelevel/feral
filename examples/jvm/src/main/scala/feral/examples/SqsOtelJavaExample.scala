@@ -16,6 +16,7 @@
 
 package feral.examples
 
+import org.http4s.otel4s.middleware.ClientMiddleware
 import _root_.feral.lambda.INothing
 import _root_.feral.lambda.IOLambda
 import _root_.feral.lambda.Invocation
@@ -40,7 +41,7 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
       implicit tracer: Tracer[IO] =>
         for {
           client <- EmberClientBuilder.default[IO].build
-          tracedClient = clientTraceMiddleware(client)
+          tracedClient = ClientMiddleware.default[IO].build(client)
         } yield { implicit inv: Invocation[IO, SqsEvent] =>
           TracedHandler[IO, SqsEvent, INothing](
             handleEvent[IO](tracedClient)
@@ -64,12 +65,6 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
     Tracer[F].span("some-operation").surround {
       Monad[F].unit
     }
-  }
-
-  // stub client middleware while http4s-otel-middleware catches up to otel4s
-  // 0.5
-  private def clientTraceMiddleware[F[_]](client: Client[F])(implicit @unused T: Tracer[IO]) = {
-    client
   }
 
 }
