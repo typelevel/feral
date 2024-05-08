@@ -16,7 +16,6 @@
 
 package feral.examples
 
-import org.http4s.otel4s.middleware.ClientMiddleware
 import _root_.feral.lambda.INothing
 import _root_.feral.lambda.IOLambda
 import _root_.feral.lambda.Invocation
@@ -30,6 +29,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.otel4s.middleware.ClientMiddleware
 import org.typelevel.otel4s.oteljava.OtelJava
 import org.typelevel.otel4s.trace.Tracer
 import org.typelevel.scalaccompat.annotation.unused
