@@ -16,7 +16,7 @@
 
 package feral.lambda
 
-import events._
+import events.*
 
 type ApiGatewayProxyInvocation[F[_]] = Invocation[F, ApiGatewayProxyEvent]
 type ApiGatewayProxyInvocationV2[F[_]] = Invocation[F, ApiGatewayProxyEventV2]
