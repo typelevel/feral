@@ -26,7 +26,7 @@ import io.circe.Encoder
 import io.circe.syntax._
 import munit.CatsEffectSuite
 import org.typelevel.otel4s.Attribute
-import org.typelevel.otel4s.oteljava.testkit.trace.TracesTestkit
+import org.typelevel.otel4s.sdk.testkit.trace.TracesTestkit
 import org.typelevel.otel4s.trace.SpanKind
 
 import java.io.ByteArrayInputStream
@@ -80,7 +80,7 @@ class TracedHandlerSuite extends CatsEffectSuite {
         _ <- IO {
           assertEquals(res, "\"body\"".toString)
           assertEquals(spans.length, 1)
-          assertEquals(spans.headOption.map(_.getName()), Some(functionName))
+          assertEquals(spans.headOption.map(_.name), Some(functionName))
         }
       } yield ()
     }
@@ -122,7 +122,7 @@ class TracedHandlerSuite extends CatsEffectSuite {
         _ <- IO {
           assertEquals(res.length, chars.length)
           assertEquals(spans.length, chars.length)
-          assertEquals(spans.map(_.getName()), expectedSpanNames)
+          assertEquals(spans.map(_.name), expectedSpanNames)
         }
       } yield ()
     }
