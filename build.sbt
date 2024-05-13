@@ -92,7 +92,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "com.comcast" %%% "ip4s-core" % "3.5.0",
-      "org.scodec" %%% "scodec-bits" % "1.1.38",
+      "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
