@@ -55,7 +55,7 @@ val circeVersion = "0.14.7"
 val fs2Version = "3.10.2"
 val http4sVersion = "0.23.27"
 val natchezVersion = "0.3.5"
-val munitVersion = "0.7.29"
+val munitScalaCheckVersion = "1.0.0-M12"
 val munitCEVersion = "2.0.0"
 val scalacheckEffectVersion = "1.0.4"
 
@@ -93,7 +93,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-jawn" % circeVersion,
       "com.comcast" %%% "ip4s-core" % "3.5.0",
       "org.scodec" %%% "scodec-bits" % "1.2.0",
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % munitScalaCheckVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
@@ -159,7 +159,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % munitScalaCheckVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
       "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
