@@ -53,11 +53,12 @@ ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 val catsEffectVersion = "3.5.4"
 val circeVersion = "0.14.7"
 val fs2Version = "3.10.2"
-val http4sVersion = "0.23.27"
+val http4sVersion = "0.23.27-10-fa6e976-SNAPSHOT"
 val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
+ThisBuild / resolvers += "s01-oss-sonatype-org-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -69,6 +70,7 @@ lazy val root =
       lambda,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
+      vercelNodeJS,
       examples,
       unidocs
     )
@@ -170,6 +172,18 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .settings(commonSettings)
   .dependsOn(lambda)
 
+lazy val vercelNodeJS = project
+  .in(file("vercel-nodejs"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    name := "feral-vercel-nodejs",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.http4s" %%% "http4s-core" % http4sVersion
+    ),
+    tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
+  )
+
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("examples"))
@@ -198,7 +212,8 @@ lazy val unidocs = project
         inProjects(
           lambda.jvm,
           lambdaHttp4s.jvm,
-          lambdaCloudFormationCustomResource.jvm
+          lambdaCloudFormationCustomResource.jvm,
+          vercelNodeJS
         )
     }
   )
