@@ -20,7 +20,7 @@ package http4s
 import cats.effect.IO
 import cats.syntax.all._
 import feral.lambda.events.ApiGatewayProxyEvent
-import feral.lambda.events.ApiGatewayProxyEventSuite.*
+import feral.lambda.events.ApiGatewayProxyEventSuite._
 import munit.CatsEffectSuite
 import org.http4s.Headers
 import org.http4s.HttpApp

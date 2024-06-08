@@ -45,15 +45,15 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
-val Scala212 = "2.12.18"
-val Scala213 = "2.13.12"
+val Scala212 = "2.12.19"
+val Scala213 = "2.13.14"
 val Scala3 = "3.3.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.5.4"
-val circeVersion = "0.14.6"
-val fs2Version = "3.9.4"
-val http4sVersion = "0.23.26"
+val circeVersion = "0.14.7"
+val fs2Version = "3.10.2"
+val http4sVersion = "0.23.27"
 val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
@@ -91,8 +91,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "com.comcast" %%% "ip4s-core" % "3.5.0",
-      "org.scodec" %%% "scodec-bits" % "1.1.38",
+      "com.comcast" %%% "ip4s-core" % "3.6.0",
+      "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
@@ -179,7 +179,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
-      "org.tpolecat" %%% "skunk-core" % "0.6.3"
+      "org.tpolecat" %%% "skunk-core" % "0.6.4"
     )
   )
   .settings(commonSettings)
