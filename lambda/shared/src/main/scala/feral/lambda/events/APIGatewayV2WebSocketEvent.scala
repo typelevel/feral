@@ -18,61 +18,28 @@ package feral.lambda.events
 
 import io.circe.Decoder
 
-
 sealed abstract class APIGatewayV2WebSocketEvent {
-  def resource: String
-  def path: String
-  def httpMethod: String
-  def headers: Map[String, String]
-  def multiValueHeaders: Map[String, List[String]]
-  def queryStringParameters: Map[String, String]
-  def multiValueQueryStringParameters: Map[String, List[String]]
-  def pathParameters: Map[String, String]
   def stageVariables: Map[String, String]
   def requestContext: WebSocketRequestContext
   def body: String
-  def isBase64Encoded: Boolean 
+  def isBase64Encoded: Boolean
 }
 
 object APIGatewayV2WebSocketEvent {
   def apply(
-    resource: String,
-    path: String,
-    httpMethod: String,
-    headers: Map[String, String],
-    multiValueHeaders: Map[String, List[String]],
-    queryStringParameters: Map[String, String],
-    multiValueQueryStringParameters: Map[String, List[String]],
-    pathParameters: Map[String, String],
-    stageVariables: Map[String, String],
-    requestContext: WebSocketRequestContext,
-    body: String,
-    isBase64Encoded: Boolean
+      stageVariables: Map[String, String],
+      requestContext: WebSocketRequestContext,
+      body: String,
+      isBase64Encoded: Boolean
   ): APIGatewayV2WebSocketEvent =
     new Impl(
-      resource,
-      path,
-      httpMethod,
-      headers,
-      multiValueHeaders,
-      queryStringParameters,
-      multiValueQueryStringParameters,
-      pathParameters,
       stageVariables,
       requestContext,
       body,
       isBase64Encoded
     )
-  
-  implicit val decoder: Decoder[APIGatewayV2WebSocketEvent] = Decoder.forProduct12(
-    "resource",
-    "path",
-    "httpMethod",
-    "headers",
-    "multiValueHeaders",
-    "queryStringParameters",
-    "multiValueQueryStringParameters",
-    "pathParameters",
+
+  implicit val decoder: Decoder[APIGatewayV2WebSocketEvent] = Decoder.forProduct4(
     "stageVariables",
     "requestContext",
     "body",
@@ -80,224 +47,93 @@ object APIGatewayV2WebSocketEvent {
   )(APIGatewayV2WebSocketEvent.apply)
 
   private final case class Impl(
-    resource: String,
-    path: String,
-    httpMethod: String,
-    headers: Map[String, String],
-    multiValueHeaders: Map[String, List[String]],
-    queryStringParameters: Map[String, String],
-    multiValueQueryStringParameters: Map[String, List[String]],
-    pathParameters: Map[String, String],
-    stageVariables: Map[String, String],
-    requestContext: WebSocketRequestContext,
-    body: String,
-    isBase64Encoded: Boolean
+      stageVariables: Map[String, String],
+      requestContext: WebSocketRequestContext,
+      body: String,
+      isBase64Encoded: Boolean
   ) extends APIGatewayV2WebSocketEvent {
     override def productPrefix = "APIGatewayV2WebSocketEvent"
   }
 }
 
-sealed abstract class WebSocketRequestIdentity {
-  def cognitoIdentityPoolId: String
-  def accountId: String
-  def cognitoIdentityId: String
-  def caller: String
-  def apiKey: String
-  def sourceIp: String
-  def cognitoAuthenticationType: String
-  def cognitoAuthenticationProvider: String
-  def userArn: String
-  def userAgent: String
-  def user: String
-  def accessKey: String
-}
-
-object WebSocketRequestIdentity {
-  def apply(
-    cognitoIdentityPoolId: String,
-    accountId: String,
-    cognitoIdentityId: String,
-    caller: String,
-    apiKey: String,
-    sourceIp: String,
-    cognitoAuthenticationType: String,
-    cognitoAuthenticationProvider: String,
-    userArn: String,
-    userAgent: String,
-    user: String,
-    accessKey: String
-  ): WebSocketRequestIdentity =
-    new Impl(
-      cognitoIdentityPoolId,
-      accountId,
-      cognitoIdentityId,
-      caller,
-      apiKey,
-      sourceIp,
-      cognitoAuthenticationType,
-      cognitoAuthenticationProvider,
-      userArn,
-      userAgent,
-      user,
-      accessKey
-    )
-  
-  private[events] implicit val decoder: Decoder[WebSocketRequestIdentity] = Decoder.forProduct12(
-    "cognitoIdentityPoolId",
-    "accountId",
-    "cognitoIdentityId",
-    "caller",
-    "apiKey",
-    "sourceIp",
-    "cognitoAuthenticationType",
-    "cognitoAuthenticationProvider",
-    "userArn",
-    "userAgent",
-    "user",
-    "accessKey"
-  )(WebSocketRequestIdentity.apply)
-
-  private final case class Impl(
-    cognitoIdentityPoolId: String,
-    accountId: String,
-    cognitoIdentityId: String,
-    caller: String,
-    apiKey: String,
-    sourceIp: String,
-    cognitoAuthenticationType: String,
-    cognitoAuthenticationProvider: String,
-    userArn: String,
-    userAgent: String,
-    user: String,
-    accessKey: String
-  ) extends WebSocketRequestIdentity {
-    override def productPrefix = "WebSocketRequestIdentity"
-  }
-}
-
 sealed abstract class WebSocketRequestContext {
-  def accountId: String
-  def resourceId: String
   def stage: String
   def requestId: String
-  def identity: WebSocketRequestIdentity
-  def ResourcePath: String
-  def authorizer: Map[String, Object]
-  def httpMethod: String
   def apiId: String
   def connectedAt: Long
   def connectionId: String
   def domainName: String
-  def error: String
   def eventType: String
   def extendedRequestId: String
-  def integrationLatency: String
   def messageDirection: String
   def messageId: String
   def requestTime: String
   def requestTimeEpoch: Long
   def routeKey: String
-  def status: String
 }
 
 object WebSocketRequestContext {
   def apply(
-    accountId: String,
-    resourceId: String,
-    stage: String,
-    requestId: String,
-    identity: WebSocketRequestIdentity,
-    ResourcePath: String,
-    authorizer: Map[String, Object],
-    httpMethod: String,
-    apiId: String,
-    connectedAt: Long,
-    connectionId: String,
-    domainName: String,
-    error: String,
-    eventType: String,
-    extendedRequestId: String,
-    integrationLatency: String,
-    messageDirection: String,
-    messageId: String,
-    requestTime: String,
-    requestTimeEpoch: Long,
-    routeKey: String,
-    status: String
+      stage: String,
+      requestId: String,
+      apiId: String,
+      connectedAt: Long,
+      connectionId: String,
+      domainName: String,
+      eventType: String,
+      extendedRequestId: String,
+      messageDirection: String,
+      messageId: String,
+      requestTime: String,
+      requestTimeEpoch: Long,
+      routeKey: String
   ): WebSocketRequestContext =
     new Impl(
-      accountId,
-      resourceId,
       stage,
       requestId,
-      identity,
-      ResourcePath,
-      authorizer,
-      httpMethod,
       apiId,
       connectedAt,
       connectionId,
       domainName,
-      error,
       eventType,
       extendedRequestId,
-      integrationLatency,
       messageDirection,
       messageId,
       requestTime,
       requestTimeEpoch,
-      routeKey,
-      status
+      routeKey
     )
-  
-  private[events] implicit val decoder: Decoder[WebSocketRequestContext] = Decoder.forProduct22(
-    "accountId",
-    "resourceId",
+
+  private[events] implicit val decoder: Decoder[WebSocketRequestContext] = Decoder.forProduct13(
     "stage",
     "requestId",
-    "identity",
-    "ResourcePath",
-    "authorizer",
-    "httpMethod",
     "apiId",
     "connectedAt",
     "connectionId",
     "domainName",
-    "error",
     "eventType",
     "extendedRequestId",
-    "integrationLatency",
     "messageDirection",
     "messageId",
     "requestTime",
     "requestTimeEpoch",
-    "routeKey",
-    "status"
+    "routeKey"
   )(WebSocketRequestContext.apply)
 
   private final case class Impl(
-    accountId: String,
-    resourceId: String,
-    stage: String,
-    requestId: String,
-    identity: WebSocketRequestIdentity,
-    ResourcePath: String,
-    authorizer: Map[String, Object],
-    httpMethod: String,
-    apiId: String,
-    connectedAt: Long,
-    connectionId: String,
-    domainName: String,
-    error: String,
-    eventType: String,
-    extendedRequestId: String,
-    integrationLatency: String,
-    messageDirection: String,
-    messageId: String,
-    requestTime: String,
-    requestTimeEpoch: Long,
-    routeKey: String,
-    status: String
+      stage: String,
+      requestId: String,
+      apiId: String,
+      connectedAt: Long,
+      connectionId: String,
+      domainName: String,
+      eventType: String,
+      extendedRequestId: String,
+      messageDirection: String,
+      messageId: String,
+      requestTime: String,
+      requestTimeEpoch: Long,
+      routeKey: String
   ) extends WebSocketRequestContext {
     override def productPrefix = "WebSocketRequestContext"
   }
