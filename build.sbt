@@ -211,7 +211,7 @@ lazy val scalafix = tlScalafixProject
   )
   .inputSettings(
     crossScalaVersions := Seq(Scala213),
-    libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
+    libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.3.0",
     headerSources / excludeFilter := AllPassFilter
   )
   .inputConfigure(_.disablePlugins(ScalafixPlugin))
