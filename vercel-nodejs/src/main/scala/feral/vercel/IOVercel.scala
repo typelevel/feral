@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- package feral.vercel
+package feral.vercel
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -39,8 +39,7 @@ private[vercel] abstract class IOVercel {
 
   def handler: Resource[IO, HttpApp[IO]]
 
-  private[vercel] lazy val handlerFn
-      : js.Function2[IncomingMessage, ServerResponse, Unit] = {
+  private[vercel] lazy val handlerFn: js.Function2[IncomingMessage, ServerResponse, Unit] = {
     val dispatcherHandle = {
       Dispatcher
         .parallel[IO](await = false)
@@ -54,7 +53,7 @@ private[vercel] abstract class IOVercel {
       dispatcherHandle.`then`[Unit] {
         case (dispatcher, handle) =>
           dispatcher.unsafeRunAndForget(
-            request.toRequest.flatMap(handle(_)).flatMap(response.writeResponse[IO])
+            request.toRequest[IO].flatMap(handle(_)).flatMap(response.writeResponse[IO])
           )
       }
   }
