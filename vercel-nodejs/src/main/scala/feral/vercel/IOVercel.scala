@@ -18,15 +18,14 @@ package feral.vercel
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import cats.effect.unsafe.IORuntime
 import cats.effect.std.Dispatcher
+import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
-
-import scala.scalajs.js
-
+import org.http4s.HttpApp
 import org.http4s.nodejs.IncomingMessage
 import org.http4s.nodejs.ServerResponse
-import org.http4s.HttpApp
+
+import scala.scalajs.js
 
 private[vercel] abstract class IOVercel {
 
