@@ -49,7 +49,7 @@ private[vercel] abstract class IOVercel {
     }
 
     (request: IncomingMessage, response: ServerResponse) =>
-      dispatcherHandle.`then`[Unit] {
+      val _ = dispatcherHandle.`then`[Unit] {
         case (dispatcher, handle) =>
           dispatcher.unsafeRunAndForget(
             request.toRequest[IO].flatMap(handle(_)).flatMap(response.writeResponse[IO])
