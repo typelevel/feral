@@ -16,6 +16,7 @@
 
 package feral.lambda.events
 
+import com.comcast.ip4s.Hostname
 import com.comcast.ip4s.IpAddress
 import io.circe.Decoder
 import io.circe.KeyDecoder
@@ -39,6 +40,9 @@ private object codecs {
 
   implicit def decodeIpAddress: Decoder[IpAddress] =
     Decoder.decodeString.emap(IpAddress.fromString(_).toRight("Cannot parse IP address"))
+
+  implicit def decodeHostname: Decoder[Hostname] =
+    Decoder.decodeString.emap(Hostname.fromString(_).toRight("Cannot parse hostname"))
 
   implicit def decodeKeyCIString: KeyDecoder[CIString] =
     KeyDecoder.decodeKeyString.map(CIString(_))
