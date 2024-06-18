@@ -16,22 +16,28 @@
 
 package feral.lambda.events
 
+import com.comcast.ip4s.Hostname
 import io.circe.Decoder
 
+import java.time.Instant
+
+import codecs.decodeInstant
+import codecs.decodeHostname
+
 sealed abstract class ApiGatewayV2WebSocketEvent {
-  def stageVariables: Map[String, String]
+  def stageVariables: Option[Map[String, String]]
   def requestContext: WebSocketRequestContext
-  def body: String
+  def body: Option[String]
   def isBase64Encoded: Boolean
 }
 
-object APIGatewayV2WebSocketEvent {
+object ApiGatewayV2WebSocketEvent {
   def apply(
-      stageVariables: Map[String, String],
+      stageVariables: Option[Map[String, String]],
       requestContext: WebSocketRequestContext,
-      body: String,
+      body: Option[String],
       isBase64Encoded: Boolean
-  ): APIGatewayV2WebSocketEvent =
+  ): ApiGatewayV2WebSocketEvent =
     new Impl(
       stageVariables,
       requestContext,
@@ -39,36 +45,49 @@ object APIGatewayV2WebSocketEvent {
       isBase64Encoded
     )
 
-  implicit val decoder: Decoder[APIGatewayV2WebSocketEvent] = Decoder.forProduct4(
+  implicit val decoder: Decoder[ApiGatewayV2WebSocketEvent] = Decoder.forProduct4(
     "stageVariables",
     "requestContext",
     "body",
     "isBase64Encoded"
-  )(APIGatewayV2WebSocketEvent.apply)
+  )(ApiGatewayV2WebSocketEvent.apply)
 
   private final case class Impl(
-      stageVariables: Map[String, String],
+      stageVariables: Option[Map[String, String]],
       requestContext: WebSocketRequestContext,
-      body: String,
+      body: Option[String],
       isBase64Encoded: Boolean
-  ) extends APIGatewayV2WebSocketEvent {
-    override def productPrefix = "APIGatewayV2WebSocketEvent"
+  ) extends ApiGatewayV2WebSocketEvent {
+    override def productPrefix = "ApiGatewayV2WebSocketEvent"
   }
+}
+
+sealed abstract class WebSocketEventType
+
+object WebSocketEventType {
+  case object Connect extends WebSocketEventType
+  case object Message extends WebSocketEventType
+  case object Disconnect extends WebSocketEventType
+
+  private[events] implicit val decoder: Decoder[WebSocketEventType] =
+    Decoder.decodeString.map {
+      case "CONNECT" => Connect
+      case "MESSAGE" => Message
+      case "DISCONNECT" => Disconnect
+    }
 }
 
 sealed abstract class WebSocketRequestContext {
   def stage: String
   def requestId: String
   def apiId: String
-  def connectedAt: Long
+  def connectedAt: Instant
   def connectionId: String
-  def domainName: String
-  def eventType: String
+  def domainName: Hostname
+  def eventType: WebSocketEventType
   def extendedRequestId: String
-  def messageDirection: String
-  def messageId: String
-  def requestTime: String
-  def requestTimeEpoch: Long
+  def messageId: Option[String]
+  def requestTime: Instant
   def routeKey: String
 }
 
@@ -77,15 +96,13 @@ object WebSocketRequestContext {
       stage: String,
       requestId: String,
       apiId: String,
-      connectedAt: Long,
+      connectedAt: Instant,
       connectionId: String,
-      domainName: String,
-      eventType: String,
+      domainName: Hostname,
+      eventType: WebSocketEventType,
       extendedRequestId: String,
-      messageDirection: String,
-      messageId: String,
-      requestTime: String,
-      requestTimeEpoch: Long,
+      messageId: Option[String],
+      requestTime: Instant,
       routeKey: String
   ): WebSocketRequestContext =
     new Impl(
@@ -97,14 +114,12 @@ object WebSocketRequestContext {
       domainName,
       eventType,
       extendedRequestId,
-      messageDirection,
       messageId,
       requestTime,
-      requestTimeEpoch,
       routeKey
     )
 
-  private[events] implicit val decoder: Decoder[WebSocketRequestContext] = Decoder.forProduct13(
+  private[events] implicit val decoder: Decoder[WebSocketRequestContext] = Decoder.forProduct11(
     "stage",
     "requestId",
     "apiId",
@@ -113,9 +128,7 @@ object WebSocketRequestContext {
     "domainName",
     "eventType",
     "extendedRequestId",
-    "messageDirection",
     "messageId",
-    "requestTime",
     "requestTimeEpoch",
     "routeKey"
   )(WebSocketRequestContext.apply)
@@ -124,15 +137,13 @@ object WebSocketRequestContext {
       stage: String,
       requestId: String,
       apiId: String,
-      connectedAt: Long,
+      connectedAt: Instant,
       connectionId: String,
-      domainName: String,
-      eventType: String,
+      domainName: Hostname,
+      eventType: WebSocketEventType,
       extendedRequestId: String,
-      messageDirection: String,
-      messageId: String,
-      requestTime: String,
-      requestTimeEpoch: Long,
+      messageId: Option[String],
+      requestTime: Instant,
       routeKey: String
   ) extends WebSocketRequestContext {
     override def productPrefix = "WebSocketRequestContext"
