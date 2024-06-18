@@ -18,7 +18,7 @@ package feral.lambda.events
 
 import io.circe.Decoder
 
-sealed abstract class APIGatewayV2WebSocketEvent {
+sealed abstract class ApiGatewayV2WebSocketEvent {
   def stageVariables: Map[String, String]
   def requestContext: WebSocketRequestContext
   def body: String
