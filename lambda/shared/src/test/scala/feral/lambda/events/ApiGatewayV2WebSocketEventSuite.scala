@@ -1,5 +1,3 @@
-package feral.lambda.events
-
 /*
  * Copyright 2021 Typelevel
  *
