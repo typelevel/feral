@@ -212,8 +212,7 @@ lazy val unidocs = project
         inProjects(
           lambda.jvm,
           lambdaHttp4s.jvm,
-          lambdaCloudFormationCustomResource.jvm,
-          vercelNodeJS
+          lambdaCloudFormationCustomResource.jvm
         )
     }
   )
