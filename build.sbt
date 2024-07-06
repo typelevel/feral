@@ -184,7 +184,6 @@ lazy val vercelNodeJS = project
     tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
   )
 
-
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .in(file("examples"))
   .settings(
