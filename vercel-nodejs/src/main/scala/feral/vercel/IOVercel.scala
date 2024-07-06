@@ -27,12 +27,10 @@ import org.http4s.nodejs.ServerResponse
 
 import scala.scalajs.js
 
-private[vercel] abstract class IOVercel {
+abstract class IOVercel {
 
   final def main(args: Array[String]): Unit =
-    js.Dynamic.global.exports.updateDynamic(handlerName)(handlerFn)
-
-  protected def handlerName: String = getClass.getSimpleName.init
+    js.Dynamic.global.module.exports = handlerFn
 
   protected def runtime: IORuntime = IORuntime.global
 
