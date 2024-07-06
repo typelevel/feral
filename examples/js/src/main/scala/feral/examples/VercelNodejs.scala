@@ -23,10 +23,12 @@ import org.http4s.dsl.io._
 
 object vercelNodejsHandler extends IOVercel {
   def handler = {
-    val app = HttpRoutes.of[IO] {
-      case GET -> Root / "hello" / name =>
-        Ok(s"Hello, $name.")
-    }.orNotFound
+    val app = HttpRoutes
+      .of[IO] {
+        case GET -> Root / "hello" / name =>
+          Ok(s"Hello, $name.")
+      }
+      .orNotFound
 
     Resource.pure(app)
 
