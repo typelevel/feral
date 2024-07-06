@@ -185,7 +185,6 @@ lazy val vercelNodeJS = project
   )
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
   .in(file("examples"))
   .settings(
     libraryDependencies ++= Seq(
@@ -198,6 +197,12 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .dependsOn(lambda, lambdaHttp4s)
+  .jsConfigure(_.dependsOn(vercelNodeJS))
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true,
+    Compile / mainClass := Some("feral.examples.vercelNodejsHandler"),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
@@ -212,8 +217,7 @@ lazy val unidocs = project
         inProjects(
           lambda.jvm,
           lambdaHttp4s.jvm,
-          lambdaCloudFormationCustomResource.jvm,
-          vercelNodeJS
+          lambdaCloudFormationCustomResource.jvm
         )
     }
   )
