@@ -73,7 +73,7 @@ object LambdaRuntime {
     val program = for {
       event <- request.body.as[Event].liftTo[F]
       maybeResult <- run(Invocation.pure(event, Context.from[F](request, settings)))
-      _ <- maybeResult.traverse(result => client.submit(request.id, result))
+      _ <- maybeResult.traverse(client.submit(request.id, _))
     } yield ()
     program.handleErrorWith {
       case ex @ ContainerError => ex.raiseError
