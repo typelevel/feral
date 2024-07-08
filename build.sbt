@@ -98,11 +98,37 @@ lazy val `lambda-kernel` = crossProject(JSPlatform, JVMPlatform)
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
-    mimaPreviousArtifacts := Set.empty
+    mimaPreviousArtifacts := Set(
+      "org.typelevel" %%% "feral-lambda" % "0.3.0"
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      // These classes are moved to lambda-runtime-binding module
+      ProblemFilters.exclude[MissingTypesProblem]("feral.lambda.Context$"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.ContextCompanionPlatform"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda$"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda$Simple"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambdaPlatform")
+    )
   )
   .settings(commonSettings)
   .jsSettings(
-    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
+    mimaBinaryIssueFilters ++= Seq(
+      // These classes are moved to lambda-runtime-binding module
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context.fromJS"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.ClientContext"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.ClientContextClient"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.ClientContextEnv"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.CognitoIdentity"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.Context")
+    )
+  )
+  .jvmSettings(
+    mimaBinaryIssueFilters ++= Seq(
+      // These classes are moved to lambda-runtime-binding module
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context.fromJava")
+    )
   )
 
 lazy val `lambda-runtime` = crossProject(JVMPlatform, JSPlatform)
@@ -131,9 +157,12 @@ lazy val `lambda-runtime-binding` = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
-    mimaPreviousArtifacts := Set.empty,
+    mimaPreviousArtifacts := Set(
+      "org.typelevel" %%% "feral-lambda" % "0.3.0"
+    ),
     mimaBinaryIssueFilters ++= Seq(
-      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.*")
     )
   )
   .settings(commonSettings)
