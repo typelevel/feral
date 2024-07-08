@@ -36,8 +36,10 @@ object LambdaJSPlugin extends AutoPlugin {
   override def requires: Plugins = ScalaJSPlugin && NpmPackagePlugin && JvmPlugin
 
   override def projectSettings: Seq[Setting[_]] = Seq(
-    libraryDependencies +=
-      BuildInfo.organization %%% BuildInfo.name.drop(4) % BuildInfo.version,
+    libraryDependencies ++= Seq(
+      BuildInfo.organization %%% s"${BuildInfo.name.stripPrefix("sbt-")}-kernel" % BuildInfo.version,
+      BuildInfo.organization %%% s"${BuildInfo.name.stripPrefix("sbt-")}-runtime-binding" % BuildInfo.version
+    ),
     scalaJSUseMainModuleInitializer := true,
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
     npmPackageOutputFilename := "index.js",

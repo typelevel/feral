@@ -1,0 +1,84 @@
+/*
+ * Copyright 2021 Typelevel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package feral.lambda
+package runtime
+
+import cats.effect.Resource
+import cats.effect.Temporal
+import cats.effect.std.Queue
+import cats.effect.syntax.resource._
+import cats.syntax.all._
+import io.circe.Decoder
+import io.circe.Encoder
+import org.http4s.client.Client
+
+import scala.util.control.NonFatal
+
+import api._
+
+object LambdaRuntime {
+
+  def apply[F[_]: Temporal: LambdaRuntimeEnv, Event: Decoder, Result: Encoder](
+      client: Client[F])(
+      handler: Resource[F, Invocation[F, Event] => F[Option[Result]]]): F[Nothing] =
+    LambdaRuntimeAPIClient(client).flatMap(client =>
+      handler.both(LambdaSettings.fromLambdaEnv.toResource).attempt.use[INothing] {
+        case Right((handler, settings)) =>
+          runloop[F, Event, Result](client, settings, handler)
+        case Left(ex) => client.reportInitError(ex) *> ex.raiseError[F, INothing]
+      })
+
+  private def runloop[F[_]: Temporal, Event: Decoder, Result: Encoder](
+      client: LambdaRuntimeAPIClient[F],
+      settings: LambdaSettings,
+      run: Invocation[F, Event] => F[Option[Result]]) = {
+    Queue.unbounded[F, LambdaRequest].flatMap { q =>
+      val producer = client
+        .nextInvocation()
+        .flatMap(q.offer)
+        .handleErrorWith {
+          case ex @ ContainerError => ex.raiseError[F, Unit]
+          case NonFatal(_) => ().pure
+          case ex => ex.raiseError
+        }
+        .foreverM[INothing]
+      val handleRequest = handleSingleRequest(client, settings, run)
+      val workers = fs2
+        .Stream
+        .fromQueueUnterminated(q)
+        .parEvalMapUnordered(1024)(handleRequest)
+        .compile
+        .drain
+      Temporal[F].both(producer, workers).map(_._1)
+    }
+  }
+  private def handleSingleRequest[F[_]: Temporal, Event: Decoder, Result: Encoder](
+      client: LambdaRuntimeAPIClient[F],
+      settings: LambdaSettings,
+      run: Invocation[F, Event] => F[Option[Result]])(request: LambdaRequest): F[Unit] = {
+    val program = for {
+      event <- request.body.as[Event].liftTo[F]
+      maybeResult <- run(Invocation.pure(event, Context.from[F](request, settings)))
+      _ <- maybeResult.traverse(result => client.submit(request.id, result))
+    } yield ()
+    program.handleErrorWith {
+      case ex @ ContainerError => ex.raiseError
+      case NonFatal(ex) => client.reportInvocationError(request.id, ex)
+      case ex => ex.raiseError
+    }
+  }
+}
