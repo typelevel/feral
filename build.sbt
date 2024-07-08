@@ -97,7 +97,8 @@ lazy val `lambda-kernel` = crossProject(JSPlatform, JVMPlatform)
       "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
-    )
+    ),
+    mimaPreviousArtifacts := Set.empty
   )
   .settings(commonSettings)
   .jsSettings(
@@ -116,7 +117,8 @@ lazy val `lambda-runtime` = crossProject(JVMPlatform, JSPlatform)
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
-    )
+    ),
+    mimaPreviousArtifacts := Set.empty
   )
   .settings(commonSettings)
   .dependsOn(`lambda-kernel`)
@@ -129,6 +131,7 @@ lazy val `lambda-runtime-binding` = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
+    mimaPreviousArtifacts := Set.empty,
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
     )
