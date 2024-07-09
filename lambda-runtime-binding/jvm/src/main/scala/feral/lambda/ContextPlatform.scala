@@ -33,6 +33,7 @@ private[lambda] object ContextPlatform {
       context.getInvokedFunctionArn(),
       context.getMemoryLimitInMB(),
       context.getAwsRequestId(),
+      None,
       context.getLogGroupName(),
       context.getLogStreamName(),
       Option(context.getIdentity()).map { identity =>

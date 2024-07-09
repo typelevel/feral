@@ -28,6 +28,7 @@ sealed abstract class Context[F[_]] {
   def invokedFunctionArn: String
   def memoryLimitInMB: Int
   def awsRequestId: String
+  def xRayTraceId: Option[String]
   def logGroupName: String
   def logStreamName: String
   def identity: Option[CognitoIdentity]
@@ -41,6 +42,7 @@ sealed abstract class Context[F[_]] {
       invokedFunctionArn,
       memoryLimitInMB,
       awsRequestId,
+      xRayTraceId,
       logGroupName,
       logStreamName,
       identity,
@@ -57,6 +59,7 @@ object Context {
       invokedFunctionArn: String,
       memoryLimitInMB: Int,
       awsRequestId: String,
+      xRayTraceId: Option[String],
       logGroupName: String,
       logStreamName: String,
       identity: Option[CognitoIdentity],
@@ -70,11 +73,13 @@ object Context {
       invokedFunctionArn,
       memoryLimitInMB,
       awsRequestId,
+      xRayTraceId,
       logGroupName,
       logStreamName,
       identity,
       clientContext,
-      remainingTime)
+      remainingTime
+    )
   }
 
   private final case class Impl[F[_]](
@@ -83,6 +88,7 @@ object Context {
       invokedFunctionArn: String,
       memoryLimitInMB: Int,
       awsRequestId: String,
+      xRayTraceId: Option[String],
       logGroupName: String,
       logStreamName: String,
       identity: Option[CognitoIdentity],

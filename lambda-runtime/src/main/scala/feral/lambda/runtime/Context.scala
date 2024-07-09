@@ -31,6 +31,7 @@ private[runtime] object Context {
       request.invokedFunctionArn,
       settings.functionMemorySize,
       request.id,
+      request.traceId,
       settings.logGroupName,
       settings.logStreamName,
       request.identity,

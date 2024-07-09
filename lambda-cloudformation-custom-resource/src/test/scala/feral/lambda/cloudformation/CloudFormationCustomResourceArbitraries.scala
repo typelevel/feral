@@ -84,6 +84,7 @@ trait CloudFormationCustomResourceArbitraries {
       invokedFunctionArn <- arbitrary[String]
       memoryLimitInMB <- arbitrary[Int]
       awsRequestId <- arbitrary[String]
+      xRayTraceId <- arbitrary[Option[String]]
       logGroupName <- arbitrary[String]
       logStreamName <- arbitrary[String]
       identity <- arbitrary[Option[CognitoIdentity]]
@@ -95,6 +96,7 @@ trait CloudFormationCustomResourceArbitraries {
       invokedFunctionArn,
       memoryLimitInMB,
       awsRequestId,
+      xRayTraceId,
       logGroupName,
       logStreamName,
       identity,

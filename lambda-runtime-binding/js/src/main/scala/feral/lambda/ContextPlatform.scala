@@ -31,6 +31,7 @@ private[lambda] object ContextPlatform {
       context.invokedFunctionArn,
       context.memoryLimitInMB.toInt,
       context.awsRequestId,
+      None,
       context.logGroupName,
       context.logStreamName,
       context.identity.toOption.map { identity =>

@@ -33,7 +33,7 @@ private[runtime] final class LambdaRequest(
     val invokedFunctionArn: String,
     val identity: Option[CognitoIdentity],
     val clientContext: Option[ClientContext],
-    val traceId: String,
+    val traceId: Option[String],
     val body: Json
 )
 import cats.syntax.all._
@@ -54,7 +54,7 @@ private[runtime] object LambdaRequest {
         invokedFunctionArn.value,
         cognitoIdentity.map(_.value),
         clientContext.map(_.value),
-        traceId.value,
+        traceId.map(_.value),
         body
       )
     }
@@ -72,10 +72,7 @@ private[runtime] object LambdaRequest {
       .headers
       .get[`Lambda-Runtime-Deadline-Ms`]
       .toRightNec(`Lambda-Runtime-Deadline-Ms`.name.toString),
-    response
-      .headers
-      .get[`Lambda-Runtime-Trace-Id`]
-      .toRightNec(`Lambda-Runtime-Trace-Id`.name.toString),
+    response.headers.get[`Lambda-Runtime-Trace-Id`].rightNec,
     response.headers.get[`Lambda-Runtime-Cognito-Identity`].rightNec,
     response.headers.get[`Lambda-Runtime-Client-Context`].rightNec)
     .parTupled
