@@ -27,6 +27,8 @@ import org.http4s.Status
 import org.http4s.circe.jsonEncoderOf
 import org.http4s.client.Client
 
+import headers.`Lambda-Runtime-Function-Error-Type`
+
 /**
  * AWS Lambda Runtime API Client
  */
@@ -68,7 +70,9 @@ private[runtime] object LambdaRuntimeAPIClient {
             Request[F]()
               .withMethod(Method.POST)
               .withUri(runtimeApi / "init" / "error")
-              .withEntity(ErrorRequest.fromThrowable(t)))
+              .withEntity(ErrorRequest.fromThrowable(t))
+              .withHeaders(`Lambda-Runtime-Function-Error-Type`("Runtime.UnknownReason"))
+          )
           .use[Unit](handleResponse)
 
         def nextInvocation(): F[LambdaRequest] =
@@ -81,7 +85,8 @@ private[runtime] object LambdaRuntimeAPIClient {
               Request[F]()
                 .withMethod(Method.POST)
                 .withUri(runtimeApi / "invocation" / awsRequestId / "response")
-                .withEntity(responseBody))
+                .withEntity(responseBody)
+            )
             .use[Unit](handleResponse)
         }
 
@@ -92,6 +97,7 @@ private[runtime] object LambdaRuntimeAPIClient {
                 .withMethod(Method.POST)
                 .withUri(runtimeApi / "invocation" / awsRequestId / "error")
                 .withEntity(ErrorRequest.fromThrowable(t))
+                .withHeaders(`Lambda-Runtime-Function-Error-Type`("Runtime.UnknownReason"))
             )
             .use[Unit](handleResponse)
       }
