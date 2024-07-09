@@ -19,7 +19,6 @@ package runtime
 
 import cats.effect.Resource
 import cats.effect.Temporal
-import cats.effect.std.Queue
 import cats.effect.syntax.resource._
 import cats.syntax.all._
 import io.circe.Decoder
@@ -46,25 +45,15 @@ object LambdaRuntime {
       client: LambdaRuntimeAPIClient[F],
       settings: LambdaSettings,
       run: Invocation[F, Event] => F[Option[Result]]) = {
-    Queue.unbounded[F, LambdaRequest].flatMap { q =>
-      val producer = client
-        .nextInvocation()
-        .flatMap(q.offer)
-        .handleErrorWith {
-          case ex @ ContainerError => ex.raiseError[F, Unit]
-          case NonFatal(_) => ().pure
-          case ex => ex.raiseError
-        }
-        .foreverM[INothing]
-      val handleRequest = handleSingleRequest(client, settings, run)
-      val workers = fs2
-        .Stream
-        .fromQueueUnterminated(q)
-        .parEvalMapUnordered(1024)(handleRequest)
-        .compile
-        .drain
-      Temporal[F].both(producer, workers).map(_._1)
-    }
+    client
+      .nextInvocation()
+      .flatMap(handleSingleRequest(client, settings, run))
+      .handleErrorWith {
+        case ex @ ContainerError => ex.raiseError[F, Unit]
+        case NonFatal(_) => ().pure
+        case ex => ex.raiseError
+      }
+      .foreverM[INothing]
   }
   private def handleSingleRequest[F[_]: Temporal, Event: Decoder, Result: Encoder](
       client: LambdaRuntimeAPIClient[F],
