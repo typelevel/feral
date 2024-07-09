@@ -35,7 +35,7 @@ private[runtime] object Context {
       settings.logStreamName,
       request.identity,
       request.clientContext,
-      F.realTime.map(curTime => request.deadlineTime - curTime),
+      F.realTime.map(request.deadlineTime - _),
       request.traceId
     )
 }
