@@ -28,12 +28,12 @@ sealed abstract class Context[F[_]] {
   def invokedFunctionArn: String
   def memoryLimitInMB: Int
   def awsRequestId: String
-  def xRayTraceId: Option[String]
   def logGroupName: String
   def logStreamName: String
   def identity: Option[CognitoIdentity]
   def clientContext: Option[ClientContext]
   def remainingTime: F[FiniteDuration]
+  def xRayTraceId: Option[String]
 
   final def mapK[G[_]](f: F ~> G): Context[G] =
     new Context.Impl(
@@ -42,12 +42,12 @@ sealed abstract class Context[F[_]] {
       invokedFunctionArn,
       memoryLimitInMB,
       awsRequestId,
-      xRayTraceId,
       logGroupName,
       logStreamName,
       identity,
       clientContext,
-      f(remainingTime)
+      f(remainingTime),
+      xRayTraceId
     )
 
 }
@@ -59,7 +59,6 @@ object Context {
       invokedFunctionArn: String,
       memoryLimitInMB: Int,
       awsRequestId: String,
-      xRayTraceId: Option[String],
       logGroupName: String,
       logStreamName: String,
       identity: Option[CognitoIdentity],
@@ -73,12 +72,40 @@ object Context {
       invokedFunctionArn,
       memoryLimitInMB,
       awsRequestId,
-      xRayTraceId,
       logGroupName,
       logStreamName,
       identity,
       clientContext,
-      remainingTime
+      remainingTime,
+      None
+    )
+  }
+  def apply[F[_]](
+      functionName: String,
+      functionVersion: String,
+      invokedFunctionArn: String,
+      memoryLimitInMB: Int,
+      awsRequestId: String,
+      logGroupName: String,
+      logStreamName: String,
+      identity: Option[CognitoIdentity],
+      clientContext: Option[ClientContext],
+      remainingTime: F[FiniteDuration],
+      xRayTraceId: Option[String]
+  )(implicit F: Applicative[F]): Context[F] = {
+    val _ = F // might be useful for future compatibility
+    new Impl(
+      functionName,
+      functionVersion,
+      invokedFunctionArn,
+      memoryLimitInMB,
+      awsRequestId,
+      logGroupName,
+      logStreamName,
+      identity,
+      clientContext,
+      remainingTime,
+      xRayTraceId
     )
   }
 
@@ -88,12 +115,12 @@ object Context {
       invokedFunctionArn: String,
       memoryLimitInMB: Int,
       awsRequestId: String,
-      xRayTraceId: Option[String],
       logGroupName: String,
       logStreamName: String,
       identity: Option[CognitoIdentity],
       clientContext: Option[ClientContext],
-      remainingTime: F[FiniteDuration]
+      remainingTime: F[FiniteDuration],
+      xRayTraceId: Option[String]
   ) extends Context[F] {
     override def productPrefix = "Context"
   }

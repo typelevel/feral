@@ -108,7 +108,11 @@ lazy val `lambda-kernel` = crossProject(JSPlatform, JVMPlatform)
       ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda"),
       ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda$"),
       ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda$Simple"),
-      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambdaPlatform")
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambdaPlatform"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("feral.lambda.Context.xRayTraceId"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context#Impl.copy"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context#Impl.apply"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context#Impl.this")
     )
   )
   .settings(commonSettings)
