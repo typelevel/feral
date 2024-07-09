@@ -17,6 +17,8 @@
 package feral.lambda
 
 import cats.effect.Sync
+import cats.effect.std.Env
+import cats.syntax.functor._
 import com.amazonaws.services.lambda.runtime
 import io.circe.JsonObject
 import io.circe.jawn.parse
@@ -26,42 +28,45 @@ import scala.jdk.CollectionConverters._
 
 private[lambda] object ContextPlatform {
 
-  private[lambda] def fromJava[F[_]: Sync](context: runtime.Context): Context[F] =
-    Context(
-      context.getFunctionName(),
-      context.getFunctionVersion(),
-      context.getInvokedFunctionArn(),
-      context.getMemoryLimitInMB(),
-      context.getAwsRequestId(),
-      context.getLogGroupName(),
-      context.getLogStreamName(),
-      Option(context.getIdentity()).map { identity =>
-        CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
-      },
-      Option(context.getClientContext()).map { clientContext =>
-        ClientContext(
-          ClientContextClient(
-            clientContext.getClient().getInstallationId(),
-            clientContext.getClient().getAppTitle(),
-            clientContext.getClient().getAppVersionName(),
-            clientContext.getClient().getAppVersionCode(),
-            clientContext.getClient().getAppPackageName()
-          ),
-          ClientContextEnv(
-            clientContext.getEnvironment().get("platformVersion"),
-            clientContext.getEnvironment().get("platform"),
-            clientContext.getEnvironment().get("make"),
-            clientContext.getEnvironment().get("model"),
-            clientContext.getEnvironment().get("locale")
-          ),
-          JsonObject.fromIterable(clientContext.getCustom().asScala.view.flatMap {
-            case (k, v) =>
-              parse(v).toOption.map(k -> _)
-          })
-        )
-      },
-      Sync[F].delay(context.getRemainingTimeInMillis().millis),
-      None
-    )
+  private[lambda] def fromJava[F[_]: Sync: Env](context: runtime.Context): F[Context[F]] =
+    Env[F]
+      .get("_X_AMZN_TRACE_ID")
+      .map(traceId =>
+        Context(
+          context.getFunctionName(),
+          context.getFunctionVersion(),
+          context.getInvokedFunctionArn(),
+          context.getMemoryLimitInMB(),
+          context.getAwsRequestId(),
+          context.getLogGroupName(),
+          context.getLogStreamName(),
+          Option(context.getIdentity()).map { identity =>
+            CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
+          },
+          Option(context.getClientContext()).map { clientContext =>
+            ClientContext(
+              ClientContextClient(
+                clientContext.getClient().getInstallationId(),
+                clientContext.getClient().getAppTitle(),
+                clientContext.getClient().getAppVersionName(),
+                clientContext.getClient().getAppVersionCode(),
+                clientContext.getClient().getAppPackageName()
+              ),
+              ClientContextEnv(
+                clientContext.getEnvironment().get("platformVersion"),
+                clientContext.getEnvironment().get("platform"),
+                clientContext.getEnvironment().get("make"),
+                clientContext.getEnvironment().get("model"),
+                clientContext.getEnvironment().get("locale")
+              ),
+              JsonObject.fromIterable(clientContext.getCustom().asScala.view.flatMap {
+                case (k, v) =>
+                  parse(v).toOption.map(k -> _)
+              })
+            )
+          },
+          Sync[F].delay(context.getRemainingTimeInMillis().millis),
+          traceId
+        ))
 
 }

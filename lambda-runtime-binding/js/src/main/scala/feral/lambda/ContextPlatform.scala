@@ -15,8 +15,9 @@
  */
 
 package feral.lambda
-
 import cats.effect.Sync
+import cats.effect.std.Env
+import cats.syntax.functor._
 import io.circe.JsonObject
 import io.circe.scalajs._
 
@@ -24,45 +25,47 @@ import scala.concurrent.duration._
 
 private[lambda] object ContextPlatform {
 
-  private[lambda] def fromJS[F[_]: Sync](context: facade.Context): Context[F] =
-    Context(
-      context.functionName,
-      context.functionVersion,
-      context.invokedFunctionArn,
-      context.memoryLimitInMB.toInt,
-      context.awsRequestId,
-      context.logGroupName,
-      context.logStreamName,
-      context.identity.toOption.map { identity =>
-        CognitoIdentity(identity.cognitoIdentityId, identity.cognitoIdentityPoolId)
-      },
-      context
-        .clientContext
-        .toOption
-        .map { clientContext =>
-          ClientContext(
-            ClientContextClient(
-              clientContext.client.installationId,
-              clientContext.client.appTitle,
-              clientContext.client.appVersionName,
-              clientContext.client.appVersionCode,
-              clientContext.client.appPackageName
-            ),
-            ClientContextEnv(
-              clientContext.env.platformVersion,
-              clientContext.env.platform,
-              clientContext.env.make,
-              clientContext.env.model,
-              clientContext.env.locale
-            ),
-            clientContext
-              .custom
-              .toOption
-              .flatMap(decodeJs[JsonObject](_).toOption)
-              .getOrElse(JsonObject.empty)
-          )
+  private[lambda] def fromJS[F[_]: Sync: Env](context: facade.Context): F[Context[F]] = Env[F]
+    .get("_X_AMZN_TRACE_ID")
+    .map(traceId =>
+      Context(
+        context.functionName,
+        context.functionVersion,
+        context.invokedFunctionArn,
+        context.memoryLimitInMB.toInt,
+        context.awsRequestId,
+        context.logGroupName,
+        context.logStreamName,
+        context.identity.toOption.map { identity =>
+          CognitoIdentity(identity.cognitoIdentityId, identity.cognitoIdentityPoolId)
         },
-      Sync[F].delay(context.getRemainingTimeInMillis().millis),
-      None
-    )
+        context
+          .clientContext
+          .toOption
+          .map { clientContext =>
+            ClientContext(
+              ClientContextClient(
+                clientContext.client.installationId,
+                clientContext.client.appTitle,
+                clientContext.client.appVersionName,
+                clientContext.client.appVersionCode,
+                clientContext.client.appPackageName
+              ),
+              ClientContextEnv(
+                clientContext.env.platformVersion,
+                clientContext.env.platform,
+                clientContext.env.make,
+                clientContext.env.model,
+                clientContext.env.locale
+              ),
+              clientContext
+                .custom
+                .toOption
+                .flatMap(decodeJs[JsonObject](_).toOption)
+                .getOrElse(JsonObject.empty)
+            )
+          },
+        Sync[F].delay(context.getRemainingTimeInMillis().millis),
+        traceId
+      ))
 }

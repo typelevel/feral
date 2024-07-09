@@ -49,7 +49,8 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result] {
           val io =
             for {
               event <- IO.fromEither(decodeJs[Event](event))
-              result <- handle(Invocation.pure(event, ContextPlatform.fromJS(context)))
+              ctx <- ContextPlatform.fromJS[IO](context)
+              result <- handle(Invocation.pure(event, ctx))
             } yield result.map(_.asJsAny).orUndefined
 
           dispatcher.unsafeToPromise(io)

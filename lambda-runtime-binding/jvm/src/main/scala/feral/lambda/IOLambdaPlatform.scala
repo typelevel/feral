@@ -73,7 +73,11 @@ private[lambda] abstract class IOLambdaPlatform[Event, Result]
     val context = ContextPlatform.fromJava[IO](runtimeContext)
     dispatcher
       .unsafeRunTimed(
-        handle.flatMap(_(Invocation.pure(event, context))),
+        for {
+          f <- handle
+          ctx <- context
+          result <- f(Invocation.pure(event, ctx))
+        } yield result,
         runtimeContext.getRemainingTimeInMillis().millis
       )
       .foreach { result =>
