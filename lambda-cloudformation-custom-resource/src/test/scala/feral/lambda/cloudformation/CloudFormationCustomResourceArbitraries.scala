@@ -84,6 +84,7 @@ trait CloudFormationCustomResourceArbitraries {
       invokedFunctionArn <- arbitrary[String]
       memoryLimitInMB <- arbitrary[Int]
       awsRequestId <- arbitrary[String]
+      xRayTraceId <- arbitrary[Option[String]]
       logGroupName <- arbitrary[String]
       logStreamName <- arbitrary[String]
       identity <- arbitrary[Option[CognitoIdentity]]
@@ -99,7 +100,8 @@ trait CloudFormationCustomResourceArbitraries {
       logStreamName,
       identity,
       clientContext,
-      remainingTime.pure[F]
+      remainingTime.pure[F],
+      xRayTraceId
     )
 
   implicit def arbContext[F[_]: Applicative]: Arbitrary[Context[F]] = Arbitrary(genContext[F])

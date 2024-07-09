@@ -66,7 +66,9 @@ lazy val commonSettings = Seq(
 lazy val root =
   tlCrossRootProject
     .aggregate(
-      lambda,
+      `lambda-kernel`,
+      `lambda-runtime-binding`,
+      `lambda-runtime`,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       examples,
@@ -82,10 +84,10 @@ lazy val rootSbtScalafix = project
   .aggregate(scalafix.componentProjectReferences: _*)
   .enablePlugins(NoPublishPlugin)
 
-lazy val lambda = crossProject(JSPlatform, JVMPlatform)
-  .in(file("lambda"))
+lazy val `lambda-kernel` = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-kernel"))
   .settings(
-    name := "feral-lambda",
+    name := "feral-lambda-kernel",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
@@ -94,18 +96,83 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "com.comcast" %%% "ip4s-core" % "3.6.0",
       "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    mimaPreviousArtifacts := Set(
+      "org.typelevel" %%% "feral-lambda" % "0.3.0"
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      // These classes are moved to lambda-runtime-binding module
+      ProblemFilters.exclude[MissingTypesProblem]("feral.lambda.Context$"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.ContextCompanionPlatform"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda$"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambda$Simple"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.IOLambdaPlatform"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("feral.lambda.Context.xRayTraceId"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context#Impl.copy"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context#Impl.apply"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context#Impl.this")
+    )
+  )
+  .settings(commonSettings)
+  .jsSettings(
+    libraryDependencies += "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
+    mimaBinaryIssueFilters ++= Seq(
+      // These classes are moved to lambda-runtime-binding module
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context.fromJS"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.ClientContext"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.ClientContextClient"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.ClientContextEnv"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.CognitoIdentity"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.facade.Context")
+    )
+  )
+  .jvmSettings(
+    mimaBinaryIssueFilters ++= Seq(
+      // These classes are moved to lambda-runtime-binding module
+      ProblemFilters.exclude[DirectMissingMethodProblem]("feral.lambda.Context.fromJava")
+    )
+  )
+
+lazy val `lambda-runtime` = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("lambda-runtime"))
+  .settings(
+    name := "feral-lambda-runtime",
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-core" % http4sVersion,
+      "org.http4s" %%% "http4s-ember-client" % http4sVersion,
+      "org.http4s" %%% "http4s-circe" % http4sVersion,
+      "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
+    mimaPreviousArtifacts := Set.empty
+  )
+  .settings(commonSettings)
+  .dependsOn(`lambda-kernel`)
+
+lazy val `lambda-runtime-binding` = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-runtime-binding"))
+  .settings(
+    name := "feral-lambda-runtime-binding",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    mimaPreviousArtifacts := Set(
+      "org.typelevel" %%% "feral-lambda" % "0.3.0"
+    ),
     mimaBinaryIssueFilters ++= Seq(
-      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo")
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.IOLambda.setupMemo"),
+      ProblemFilters.exclude[MissingClassProblem]("feral.lambda.*")
     )
   )
   .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+      "io.circe" %%% "circe-scalajs" % circeVersion
     )
   )
   .jvmSettings(
@@ -115,6 +182,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "co.fs2" %%% "fs2-io" % fs2Version
     )
   )
+  .dependsOn(`lambda-kernel`)
 
 lazy val sbtLambda = project
   .in(file("sbt-lambda"))
@@ -129,7 +197,9 @@ lazy val sbtLambda = project
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++ Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
-    scripted := scripted.dependsOn(lambda.js / publishLocal).evaluated,
+    scripted := scripted
+      .dependsOn(`lambda-kernel`.js / publishLocal, `lambda-runtime-binding`.js / publishLocal)
+      .evaluated,
     Test / test := scripted.toTask("").value
   )
 
@@ -143,7 +213,9 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda % "compile->compile;test->test")
+  .dependsOn(
+    `lambda-kernel` % "compile->compile;test->test",
+    `lambda-runtime-binding` % "compile->compile;test->test")
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -168,7 +240,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda)
+  .dependsOn(`lambda-runtime-binding`)
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -183,7 +255,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s)
+  .dependsOn(`lambda-runtime-binding`, lambdaHttp4s)
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
@@ -196,7 +268,9 @@ lazy val unidocs = project
         inProjects(sbtLambda)
       else
         inProjects(
-          lambda.jvm,
+          `lambda-kernel`.jvm,
+          `lambda-runtime-binding`.jvm,
+          `lambda-runtime`.jvm,
           lambdaHttp4s.jvm,
           lambdaCloudFormationCustomResource.jvm
         )
