@@ -106,13 +106,13 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
   def testInvocationErrorRoute(eventualInvocationError: Deferred[IO, Json]): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req @ POST -> `runtimeApi` / "invocation" / _ / "error" =>
-        req.as[Json].flatTap(eventualInvocationError.complete) *> Ok()
+        req.as[Json].flatTap(eventualInvocationError.complete) *> Accepted()
     }
 
   def testInvocationResponseRoute(eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case POST -> `runtimeApi` / "invocation" / id / "response" =>
-        eventualInvocationId.complete(id) >> Ok()
+        eventualInvocationId.complete(id) >> Accepted()
     }
   def testInvocationResponseContainerErrorRoute(
       eventualInvocationId: Deferred[IO, String]): HttpRoutes[IO] =
@@ -124,7 +124,7 @@ abstract class BaseRuntimeSuite extends CatsEffectSuite {
   def testInitErrorRoute(eventualInitError: Deferred[IO, Json]): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req @ POST -> `runtimeApi` / "init" / "error" =>
-        req.as[Json].flatTap(eventualInitError.complete(_)) *> Ok()
+        req.as[Json].flatTap(eventualInitError.complete(_)) *> Accepted()
     }
 
   def testInitContainerErrorRoute(eventualInitError: Deferred[IO, Json]): HttpRoutes[IO] =

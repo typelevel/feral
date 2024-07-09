@@ -24,7 +24,7 @@ import org.http4s.circe.jsonOf
 private[runtime] case class ErrorResponse(
     errorMessage: String,
     errorType: String
-)
+) extends Exception
 
 private[runtime] object ErrorResponse {
   implicit val dec: Decoder[ErrorResponse] =

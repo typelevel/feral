@@ -20,6 +20,7 @@ import cats.effect.Concurrent
 import io.circe.Json
 import org.http4s.EntityDecoder
 import org.http4s.Response
+import org.http4s.Status
 import org.http4s.circe.jsonDecoderIncremental
 
 import java.util.concurrent.TimeUnit
@@ -38,27 +39,32 @@ private[runtime] final class LambdaRequest(
 )
 import cats.syntax.all._
 private[runtime] object LambdaRequest {
-  def fromResponse[F[_]](response: Response[F])(implicit F: Concurrent[F]): F[LambdaRequest] = {
+  def fromResponse[F[_]](response: Response[F])(implicit F: Concurrent[F]): F[LambdaRequest] =
+    response.status match {
+      case Status.Ok => fromOk(response)
+      case Status.InternalServerError => ContainerError.raiseError
+      case _ => response.as[ErrorResponse].flatMap(_.raiseError)
+    }
+
+  private def fromOk[F[_]: Concurrent](response: Response[F]): F[LambdaRequest] = {
     implicit val jsonDecoder: EntityDecoder[F, Json] = jsonDecoderIncremental
     for {
-      _ <- F.raiseWhen(response.status.code === 500)(ContainerError)
       headers <-
         headersFrom(response).liftTo[F]
       (id, invokedFunctionArn, deadlineTimeInMs, traceId, cognitoIdentity, clientContext) =
         headers
       body <- response.as[Json]
-    } yield {
-      new LambdaRequest(
-        FiniteDuration(deadlineTimeInMs.value, TimeUnit.MILLISECONDS),
-        id.value,
-        invokedFunctionArn.value,
-        cognitoIdentity.map(_.value),
-        clientContext.map(_.value),
-        traceId.map(_.value),
-        body
-      )
-    }
+    } yield new LambdaRequest(
+      FiniteDuration(deadlineTimeInMs.value, TimeUnit.MILLISECONDS),
+      id.value,
+      invokedFunctionArn.value,
+      cognitoIdentity.map(_.value),
+      clientContext.map(_.value),
+      traceId.map(_.value),
+      body
+    )
   }
+
   private def headersFrom[F[_]](response: Response[F]) = (
     response
       .headers

@@ -22,6 +22,8 @@ import io.circe.Encoder
 import org.http4s.EntityEncoder
 import org.http4s.Method
 import org.http4s.Request
+import org.http4s.Response
+import org.http4s.Status
 import org.http4s.circe.jsonEncoderOf
 import org.http4s.client.Client
 
@@ -61,41 +63,43 @@ private[runtime] object LambdaRuntimeAPIClient {
     LambdaRuntimeEnv[F].lambdaRuntimeApi.map { host =>
       val runtimeApi = host / ApiVersion / "runtime"
       new LambdaRuntimeAPIClient[F] {
-        def reportInitError(t: Throwable): F[Unit] = for {
-          status <- client.status(
+        def reportInitError(t: Throwable): F[Unit] = client
+          .run(
             Request[F]()
               .withMethod(Method.POST)
               .withUri(runtimeApi / "init" / "error")
               .withEntity(ErrorRequest.fromThrowable(t)))
-          _ <- Concurrent[F].raiseWhen(status.code === 500)(ContainerError)
-        } yield ()
+          .use[Unit](handleResponse)
 
         def nextInvocation(): F[LambdaRequest] =
           client.get(runtimeApi / "invocation" / "next")(LambdaRequest.fromResponse[F])
 
         def submit[T: Encoder](awsRequestId: String, responseBody: T): F[Unit] = {
           implicit val enc: EntityEncoder[F, T] = jsonEncoderOf
-          for {
-            status <- client.status(
+          client
+            .run(
               Request[F]()
                 .withMethod(Method.POST)
                 .withUri(runtimeApi / "invocation" / awsRequestId / "response")
                 .withEntity(responseBody))
-            _ <- Concurrent[F].raiseWhen(status.code === 500)(ContainerError)
-          } yield ()
+            .use[Unit](handleResponse)
         }
 
-        def reportInvocationError(awsRequestId: String, t: Throwable): F[Unit] = for {
-          status <- client.status(
-            Request[F]()
-              .withMethod(Method.POST)
-              .withUri(
-                runtimeApi / "invocation" / awsRequestId / "error"
-              )
-              .withEntity(ErrorRequest.fromThrowable(t))
-          )
-          _ <- Concurrent[F].raiseWhen(status.code === 500)(ContainerError)
-        } yield ()
+        def reportInvocationError(awsRequestId: String, t: Throwable): F[Unit] =
+          client
+            .run(
+              Request[F]()
+                .withMethod(Method.POST)
+                .withUri(runtimeApi / "invocation" / awsRequestId / "error")
+                .withEntity(ErrorRequest.fromThrowable(t))
+            )
+            .use[Unit](handleResponse)
       }
+    }
+  private def handleResponse[F[_]: Concurrent](response: Response[F]): F[Unit] =
+    response.status match {
+      case Status.InternalServerError => ContainerError.raiseError
+      case Status.Accepted => ().pure
+      case _ => response.as[ErrorResponse].flatMap(_.raiseError)
     }
 }
