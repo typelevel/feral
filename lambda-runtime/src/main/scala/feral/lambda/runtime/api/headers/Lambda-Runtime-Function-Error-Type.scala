@@ -20,7 +20,7 @@ import org.http4s._
 import org.typelevel.ci._
 
 /**
- * The ARN requested. This can be different in each invoke that executes the same version.
+ * Error type that the runtime encountered
  */
 private[runtime] final class `Lambda-Runtime-Function-Error-Type`(val value: String)
 
