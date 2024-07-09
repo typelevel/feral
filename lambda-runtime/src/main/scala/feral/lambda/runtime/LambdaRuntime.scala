@@ -36,9 +36,8 @@ object LambdaRuntime {
       handler: Resource[F, Invocation[F, Event] => F[Option[Result]]]): F[Nothing] =
     LambdaRuntimeAPIClient(client).flatMap(client =>
       handler.both(LambdaSettings.fromLambdaEnv.toResource).attempt.use[INothing] {
-        case Right((handler, settings)) =>
-          runloop[F, Event, Result](client, settings, handler)
-        case Left(ex) => client.reportInitError(ex) *> ex.raiseError[F, INothing]
+        case Right((handler, settings)) => runloop(client, settings, handler)
+        case Left(ex) => client.reportInitError(ex) *> ex.raiseError
       })
 
   private def runloop[F[_]: Temporal, Event: Decoder, Result: Encoder](
