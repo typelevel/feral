@@ -33,7 +33,6 @@ private[lambda] object ContextPlatform {
       context.getInvokedFunctionArn(),
       context.getMemoryLimitInMB(),
       context.getAwsRequestId(),
-      None,
       context.getLogGroupName(),
       context.getLogStreamName(),
       Option(context.getIdentity()).map { identity =>
@@ -61,7 +60,8 @@ private[lambda] object ContextPlatform {
           })
         )
       },
-      Sync[F].delay(context.getRemainingTimeInMillis().millis)
+      Sync[F].delay(context.getRemainingTimeInMillis().millis),
+      None
     )
 
 }

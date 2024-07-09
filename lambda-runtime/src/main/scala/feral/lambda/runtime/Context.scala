@@ -31,11 +31,11 @@ private[runtime] object Context {
       request.invokedFunctionArn,
       settings.functionMemorySize,
       request.id,
-      request.traceId,
       settings.logGroupName,
       settings.logStreamName,
       request.identity,
       request.clientContext,
-      F.realTime.map(curTime => request.deadlineTime - curTime)
+      F.realTime.map(curTime => request.deadlineTime - curTime),
+      request.traceId
     )
 }

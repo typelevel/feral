@@ -96,12 +96,12 @@ trait CloudFormationCustomResourceArbitraries {
       invokedFunctionArn,
       memoryLimitInMB,
       awsRequestId,
-      xRayTraceId,
       logGroupName,
       logStreamName,
       identity,
       clientContext,
-      remainingTime.pure[F]
+      remainingTime.pure[F],
+      xRayTraceId
     )
 
   implicit def arbContext[F[_]: Applicative]: Arbitrary[Context[F]] = Arbitrary(genContext[F])

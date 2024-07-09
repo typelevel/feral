@@ -31,7 +31,6 @@ private[lambda] object ContextPlatform {
       context.invokedFunctionArn,
       context.memoryLimitInMB.toInt,
       context.awsRequestId,
-      None,
       context.logGroupName,
       context.logStreamName,
       context.identity.toOption.map { identity =>
@@ -63,6 +62,7 @@ private[lambda] object ContextPlatform {
               .getOrElse(JsonObject.empty)
           )
         },
-      Sync[F].delay(context.getRemainingTimeInMillis().millis)
+      Sync[F].delay(context.getRemainingTimeInMillis().millis),
+      None
     )
 }
