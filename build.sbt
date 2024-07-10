@@ -224,3 +224,39 @@ lazy val scalafix = tlScalafixProject
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
   )
+
+lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
+  .in(file("google-cloud-http4s"))
+  .settings(
+    name := "feral-google-cloud-http4s",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "io.circe" %%% "circe-jawn" % circeVersion,
+      "com.comcast" %%% "ip4s-core" % "3.6.0",
+      "org.scodec" %%% "scodec-bits" % "1.2.0",
+      "org.http4s" %%% "http4s-server" % http4sVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[IncompatibleResultTypeProblem](
+        "feral.google-cloud.IOLambda.setupMemo")
+    )
+  )
+  .settings(commonSettings)
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+    )
+  )
+  .jvmSettings(
+    Test / fork := true,
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions" % "functions-framework-api" % "1.1.0",
+      "co.fs2" %%% "fs2-io" % fs2Version
+    )
+  )
