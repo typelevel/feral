@@ -69,6 +69,7 @@ lazy val root =
       lambda,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
+      googleCloudHttp4s,
       examples,
       unidocs
     )
@@ -171,7 +172,6 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .dependsOn(lambda)
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
   .in(file("examples"))
   .settings(
     libraryDependencies ++= Seq(
@@ -184,6 +184,12 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .dependsOn(lambda, lambdaHttp4s)
+  .jsConfigure(_.dependsOn(googleCloudHttp4s))
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true,
+    Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandle"),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
