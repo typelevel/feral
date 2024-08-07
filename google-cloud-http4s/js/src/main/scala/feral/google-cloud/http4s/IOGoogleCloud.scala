@@ -31,7 +31,9 @@ import scala.scalajs.js.annotation._
 object IOGoogleCloud {
   @js.native
   @JSImport("@google-cloud/functions-framework", "http")
-  def http(functionName: String, handler: js.Function2[IncomingMessage, ServerResponse, Unit]): Unit = js.native
+  def http(
+      functionName: String,
+      handler: js.Function2[IncomingMessage, ServerResponse, Unit]): Unit = js.native
 }
 
 abstract class IOGoogleCloud {
@@ -40,12 +42,13 @@ abstract class IOGoogleCloud {
     IOGoogleCloud.http(functionName, handlerFn)
 
   protected def functionName: String = getClass.getSimpleName.init
-  
+
   protected def runtime: IORuntime = IORuntime.global
 
   def handler: Resource[IO, HttpApp[IO]]
 
-  private[google_cloud] lazy val handlerFn: js.Function2[IncomingMessage, ServerResponse, Unit] = {
+  private[google_cloud] lazy val handlerFn
+      : js.Function2[IncomingMessage, ServerResponse, Unit] = {
     val dispatcherHandle = {
       Dispatcher
         .parallel[IO](await = false)
@@ -64,4 +67,3 @@ abstract class IOGoogleCloud {
       }
   }
 }
-

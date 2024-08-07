@@ -53,11 +53,12 @@ ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 val catsEffectVersion = "3.5.4"
 val circeVersion = "0.14.7"
 val fs2Version = "3.10.2"
-val http4sVersion = "0.23.27"
+val http4sVersion = "0.23.27-10-fa6e976-SNAPSHOT"
 val natchezVersion = "0.3.5"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
+ThisBuild / resolvers += "s01-oss-sonatype-org-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -183,11 +184,10 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s)
-  .jsConfigure(_.dependsOn(googleCloudHttp4s))
+  .dependsOn(lambda, lambdaHttp4s, googleCloudHttp4s)
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
-    Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandle"),
+    Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .enablePlugins(NoPublishPlugin)
@@ -263,6 +263,7 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
     Test / fork := true,
     libraryDependencies ++= Seq(
       "com.google.cloud.functions" % "functions-framework-api" % "1.1.0",
-      "co.fs2" %%% "fs2-io" % fs2Version
+      "co.fs2" %%% "fs2-io" % fs2Version,
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
     )
   )
