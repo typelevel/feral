@@ -37,11 +37,10 @@ import org.typelevel.ci.CIString
 
 import scala.util.control.NonFatal
 
-abstract class IOGoogleCloud
-    extends HttpFunction {
-  
+abstract class IOGoogleCloud extends HttpFunction {
+
   protected def runtime: IORuntime = IORuntime.global
-  
+
   def handler: Resource[IO, HttpApp[IO]]
 
   private[this] val (dispatcher, handle) = {
@@ -77,10 +76,9 @@ abstract class IOGoogleCloud
     uri <- Uri.fromString(request.getUri()).liftTo[IO]
     headers <- IO {
       val builder = List.newBuilder[Header.Raw]
-      request.getHeaders().forEach { case (name, values) =>
-        values.forEach { value =>
-          builder += Header.Raw(CIString(name), value)
-        }
+      request.getHeaders().forEach {
+        case (name, values) =>
+          values.forEach { value => builder += Header.Raw(CIString(name), value) }
       }
       Headers(builder.result())
     }
@@ -92,37 +90,34 @@ abstract class IOGoogleCloud
     body = body
   )
 
-  def writeResponse(http4sResponse: Response[IO], googleResponse: HttpResponse): IO[Unit] = for {
-    _ <- IO {
-      googleResponse.setStatusCode(http4sResponse.status.code, http4sResponse.status.reason)
-    }
-    
-    _ <- IO { 
-      http4sResponse.headers.foreach { header => {
-        googleResponse.appendHeader(header.name.toString, header.value)
-        }
+  def writeResponse(http4sResponse: Response[IO], googleResponse: HttpResponse): IO[Unit] =
+    for {
+      _ <- IO {
+        googleResponse.setStatusCode(http4sResponse.status.code, http4sResponse.status.reason)
       }
-    }
 
-    _ <- http4sResponse.body
-      .through(fs2.io.writeOutputStream(IO(googleResponse.getOutputStream())))
-      .compile
-      .drain
-
-  } yield ()
-
-  final def service(
-      request: HttpRequest,
-      response: HttpResponse): Unit = {
-    
-    
-    dispatcher
-      .unsafeRunSync(
-        fromHttpRequest(request).flatMap { req =>
-          handle.flatMap(_(req)).flatMap { res =>
-            writeResponse(res, response)
+      _ <- IO {
+        http4sResponse.headers.foreach { header =>
+          {
+            googleResponse.appendHeader(header.name.toString, header.value)
           }
         }
-      )
+      }
+
+      _ <- http4sResponse
+        .body
+        .through(fs2.io.writeOutputStream(IO(googleResponse.getOutputStream())))
+        .compile
+        .drain
+
+    } yield ()
+
+  final def service(request: HttpRequest, response: HttpResponse): Unit = {
+
+    dispatcher.unsafeRunSync(
+      fromHttpRequest(request).flatMap { req =>
+        handle.flatMap(_(req)).flatMap { res => writeResponse(res, response) }
+      }
+    )
   }
 }
