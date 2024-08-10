@@ -250,7 +250,8 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[IncompatibleResultTypeProblem](
         "feral.google-cloud.IOLambda.setupMemo")
-    )
+    ),
+    tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
   )
   .settings(commonSettings)
   .jsSettings(
