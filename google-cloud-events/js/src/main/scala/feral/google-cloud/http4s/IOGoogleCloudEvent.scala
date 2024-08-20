@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package feral.google_cloud
+package feral.googlecloud
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -28,18 +28,19 @@ import org.http4s.nodejs.ServerResponse
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 
-object IOGoogleCloud {
+object IOGoogleCloudEvent {
   @js.native
-  @JSImport("@google-cloud/functions-framework", "http")
-  def http(
+  @JSImport("@google-cloud/functions-framework", "cloudEvent")
+  def cloudEvent(
       functionName: String,
-      handler: js.Function2[IncomingMessage, ServerResponse, Unit]): Unit = js.native
+      // input type should be cloudEvent from cloudevents
+      handler: js.Function2[???, Unit]): Unit = js.native
 }
 
-abstract class IOGoogleCloud {
+abstract class IOGoogleCloudEvent {
 
   final def main(args: Array[String]): Unit =
-    IOGoogleCloud.http(functionName, handlerFn)
+    IOGoogleCloudEvent.cloudEvent(functionName, handlerFn)
 
   protected def functionName: String = getClass.getSimpleName.init
 
@@ -47,8 +48,8 @@ abstract class IOGoogleCloud {
 
   def handler: Resource[IO, HttpApp[IO]]
 
-  private[google_cloud] lazy val handlerFn
-      : js.Function2[IncomingMessage, ServerResponse, Unit] = {
+  private[googlecloud] lazy val handlerFn
+      : js.Function2[???, Unit] = {
     val dispatcherHandle = {
       Dispatcher
         .parallel[IO](await = false)
@@ -58,7 +59,7 @@ abstract class IOGoogleCloud {
         .unsafeToPromise()(runtime)
     }
 
-    (request: IncomingMessage, response: ServerResponse) =>
+    (event: ???) =>
       val _ = dispatcherHandle.`then`[Unit] {
         case (dispatcher, handle) =>
           dispatcher.unsafeRunAndForget(

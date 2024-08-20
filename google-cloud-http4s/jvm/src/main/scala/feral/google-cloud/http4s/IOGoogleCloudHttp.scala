@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package feral.google_cloud
+package feral.googlecloud
 
 import cats.effect.Async
 import cats.effect.IO
@@ -37,40 +37,7 @@ import org.typelevel.ci.CIString
 
 import scala.util.control.NonFatal
 
-abstract class IOGoogleCloud extends HttpFunction {
-
-  protected def runtime: IORuntime = IORuntime.global
-
-  def handler: Resource[IO, HttpApp[IO]]
-
-  private[this] val (dispatcher, handle) = {
-    val handler = {
-      val h =
-        try this.handler
-        catch { case ex if NonFatal(ex) => null }
-
-      if (h ne null) {
-        h.map(IO.pure(_))
-      } else {
-        val functionName = getClass().getSimpleName()
-        val msg =
-          s"""|There was an error initializing `$functionName` during startup.
-              |Falling back to initialize-during-first-invocation strategy.
-              |To fix, try replacing any `val`s in `$functionName` with `def`s.""".stripMargin
-        System.err.println(msg)
-
-        Async[Resource[IO, *]].defer(this.handler).memoize.map(_.allocated.map(_._1))
-      }
-    }
-
-    Dispatcher
-      .parallel[IO](await = false)
-      .product(handler)
-      .allocated
-      .map(_._1) // drop unused finalizer
-      .unsafeRunSync()(runtime)
-  }
-
+object IOGoogleCloudHttp {
   def fromHttpRequest(request: HttpRequest): IO[Request[IO]] = for {
     method <- Method.fromString(request.getMethod()).liftTo[IO]
     uri <- Uri.fromString(request.getUri()).liftTo[IO]
@@ -111,12 +78,47 @@ abstract class IOGoogleCloud extends HttpFunction {
         .drain
 
     } yield ()
+}
+
+abstract class IOGoogleCloudHttp extends HttpFunction {
+
+  protected def runtime: IORuntime = IORuntime.global
+
+  def handler: Resource[IO, HttpApp[IO]]
+
+  private[this] val (dispatcher, handle) = {
+    val handler = {
+      val h =
+        try this.handler
+        catch { case ex if NonFatal(ex) => null }
+
+      if (h ne null) {
+        h.map(IO.pure(_))
+      } else {
+        val functionName = getClass().getSimpleName()
+        val msg =
+          s"""|There was an error initializing `$functionName` during startup.
+              |Falling back to initialize-during-first-invocation strategy.
+              |To fix, try replacing any `val`s in `$functionName` with `def`s.""".stripMargin
+        System.err.println(msg)
+
+        Async[Resource[IO, *]].defer(this.handler).memoize.map(_.allocated.map(_._1))
+      }
+    }
+
+    Dispatcher
+      .parallel[IO](await = false)
+      .product(handler)
+      .allocated
+      .map(_._1) // drop unused finalizer
+      .unsafeRunSync()(runtime)
+  }
 
   final def service(request: HttpRequest, response: HttpResponse): Unit = {
 
     dispatcher.unsafeRunSync(
-      fromHttpRequest(request).flatMap { req =>
-        handle.flatMap(_(req)).flatMap { res => writeResponse(res, response) }
+      IOGoogleCloudHttp.fromHttpRequest(request).flatMap { req =>
+        handle.flatMap(_(req)).flatMap { res => IOGoogleCloudHttp.writeResponse(res, response) }
       }
     )
   }

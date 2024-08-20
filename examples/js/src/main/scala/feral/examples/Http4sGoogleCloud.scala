@@ -17,11 +17,11 @@
 package feral.examples
 
 import cats.effect._
-import feral.google_cloud._
+import feral.googlecloud._
 import org.http4s._
 import org.http4s.dsl.io._
 
-object http4sGoogleCloudHandler extends IOGoogleCloud {
+object http4sGoogleCloudHandler extends IOGoogleCloudHttp {
   def handler = {
     val app = HttpRoutes
       .of[IO] {
