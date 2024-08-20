@@ -36,31 +36,34 @@ import java.io.BufferedWriter
 
 class TestIOGoogleCloudHttp extends CatsEffectSuite {
 
-  def googleRequest(method: Method, uri: Uri, headers: Headers, body: ByteVector) = new HttpRequest {
-    def getMethod(): String = method.name
-    def getUri(): String = uri.renderString
-    def getHeaders(): ju.Map[String,ju.List[String]] = {
-      val juHeaders = new ju.LinkedHashMap[String,ju.List[String]]
-      headers.foreach { header =>
-        juHeaders.computeIfAbsent(header.name.toString, _ => new ju.LinkedList[String]()).add(header.value)
-        ()
+  def googleRequest(method: Method, uri: Uri, headers: Headers, body: ByteVector) =
+    new HttpRequest {
+      def getMethod(): String = method.name
+      def getUri(): String = uri.renderString
+      def getHeaders(): ju.Map[String, ju.List[String]] = {
+        val juHeaders = new ju.LinkedHashMap[String, ju.List[String]]
+        headers.foreach { header =>
+          juHeaders
+            .computeIfAbsent(header.name.toString, _ => new ju.LinkedList[String]())
+            .add(header.value)
+          ()
+        }
+        juHeaders
       }
-      juHeaders
+      def getInputStream(): InputStream = body.toInputStream
+      def getContentType(): ju.Optional[String] = ???
+      def getContentLength(): Long = ???
+      def getCharacterEncoding(): ju.Optional[String] = ???
+      def getReader(): BufferedReader = ???
+      def getPath(): String = ???
+      def getQuery(): ju.Optional[String] = ???
+      def getQueryParameters(): ju.Map[String, ju.List[String]] = ???
+      def getParts(): ju.Map[String, HttpRequest.HttpPart] = ???
     }
-    def getInputStream(): InputStream = body.toInputStream
-    def getContentType(): ju.Optional[String] = ???
-    def getContentLength(): Long = ???
-    def getCharacterEncoding(): ju.Optional[String] = ???
-    def getReader(): BufferedReader = ???
-    def getPath(): String = ???
-    def getQuery(): ju.Optional[String] = ???
-    def getQueryParameters(): ju.Map[String,ju.List[String]] = ???
-    def getParts(): ju.Map[String,HttpRequest.HttpPart] = ???
-  }
 
   def googleResponse() = new HttpResponse {
     var statusCode: Option[(Int, String)] = None
-    val headers = new ju.HashMap[String,ju.List[String]]
+    val headers = new ju.HashMap[String, ju.List[String]]
     val body = new ByteArrayOutputStream
     def setStatusCode(code: Int): Unit = ???
     def setStatusCode(x: Int, y: String): Unit = statusCode = Some((x, y))
@@ -69,7 +72,7 @@ class TestIOGoogleCloudHttp extends CatsEffectSuite {
       ()
     }
     def getOutputStream(): OutputStream = body
-    def getHeaders(): ju.Map[String,ju.List[String]] = headers
+    def getHeaders(): ju.Map[String, ju.List[String]] = headers
     def getStatusCode(): (Int, String) = statusCode.get
     def getContentType(): ju.Optional[String] = ???
     def getWriter(): BufferedWriter = ???
@@ -80,7 +83,12 @@ class TestIOGoogleCloudHttp extends CatsEffectSuite {
 
   test("decode request") {
     for {
-      request <- fromHttpRequest(googleRequest(Method.GET, uri"/default/nodejs-apig-function-1G3XMPLZXVXYI?", expectedHeaders, ByteVector.empty))
+      request <- fromHttpRequest(
+        googleRequest(
+          Method.GET,
+          uri"/default/nodejs-apig-function-1G3XMPLZXVXYI?",
+          expectedHeaders,
+          ByteVector.empty))
       _ <- IO(assertEquals(request.method, Method.GET))
       _ <- IO(assertEquals(request.uri, uri"/default/nodejs-apig-function-1G3XMPLZXVXYI?"))
       _ <- IO(assertEquals(request.headers, expectedHeaders))
@@ -93,7 +101,7 @@ class TestIOGoogleCloudHttp extends CatsEffectSuite {
       gResponse <- IO(googleResponse())
       _ <- writeResponse(http4sResponse, gResponse)
       _ <- IO(assertEquals(gResponse.getStatusCode(), (200, "OK")))
-      _ <- IO(assertEquals(gResponse.getHeaders(), new ju.HashMap[String,ju.List[String]]()))
+      _ <- IO(assertEquals(gResponse.getHeaders(), new ju.HashMap[String, ju.List[String]]()))
       _ <- IO(assertEquals(ByteVector(gResponse.body.toByteArray()), ByteVector.empty))
     } yield ()
   }
