@@ -17,22 +17,23 @@
 package feral.googlecloud
 
 import cats.effect.IO
+import com.google.cloud.functions.HttpRequest
+import com.google.cloud.functions.HttpResponse
 import feral.googlecloud.IOGoogleCloudHttp._
 import munit.CatsEffectSuite
 import org.http4s.Headers
 import org.http4s.Method
-import org.http4s.syntax.all._
-import com.google.cloud.functions.HttpRequest
-import com.google.cloud.functions.HttpResponse
 import org.http4s.Response
-import java.{util => ju}
-import java.io.InputStream
-import java.io.OutputStream
 import org.http4s.Uri
+import org.http4s.syntax.all._
 import scodec.bits.ByteVector
-import java.io.ByteArrayOutputStream
+
 import java.io.BufferedReader
 import java.io.BufferedWriter
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.{util => ju}
 
 class TestIOGoogleCloudHttp extends CatsEffectSuite {
 
