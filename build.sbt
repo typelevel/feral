@@ -237,15 +237,10 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
     name := "feral-google-cloud-http4s",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
-      "org.tpolecat" %%% "natchez-core" % natchezVersion,
-      "io.circe" %%% "circe-scodec" % circeVersion,
-      "io.circe" %%% "circe-jawn" % circeVersion,
-      "com.comcast" %%% "ip4s-core" % "3.6.0",
       "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.http4s" %%% "http4s-server" % http4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
-      "io.circe" %%% "circe-literal" % circeVersion % Test
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     ),
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[IncompatibleResultTypeProblem](
