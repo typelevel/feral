@@ -37,32 +37,36 @@ import java.{util => ju}
 
 class TestIOGoogleCloudHttp extends CatsEffectSuite {
 
-  def googleRequest(method: Method, uri: Uri, headers: Headers, body: ByteVector) =
-    new HttpRequest {
-      def getMethod(): String = method.name
-      def getUri(): String = uri.renderString
-      def getHeaders(): ju.Map[String, ju.List[String]] = {
-        val juHeaders = new ju.LinkedHashMap[String, ju.List[String]]
-        headers.foreach { header =>
-          juHeaders
-            .computeIfAbsent(header.name.toString, _ => new ju.LinkedList[String]())
-            .add(header.value)
-          ()
-        }
+  class GoogleRequest(
+      val method: Method,
+      val uri: Uri,
+      val headers: Headers,
+      val body: ByteVector)
+      extends HttpRequest {
+    def getMethod(): String = method.name
+    def getUri(): String = uri.renderString
+    def getHeaders(): ju.Map[String, ju.List[String]] = {
+      val juHeaders = new ju.LinkedHashMap[String, ju.List[String]]
+      headers.foreach { header =>
         juHeaders
+          .computeIfAbsent(header.name.toString, _ => new ju.LinkedList[String]())
+          .add(header.value)
+        ()
       }
-      def getInputStream(): InputStream = body.toInputStream
-      def getContentType(): ju.Optional[String] = ???
-      def getContentLength(): Long = ???
-      def getCharacterEncoding(): ju.Optional[String] = ???
-      def getReader(): BufferedReader = ???
-      def getPath(): String = ???
-      def getQuery(): ju.Optional[String] = ???
-      def getQueryParameters(): ju.Map[String, ju.List[String]] = ???
-      def getParts(): ju.Map[String, HttpRequest.HttpPart] = ???
+      juHeaders
     }
+    def getInputStream(): InputStream = body.toInputStream
+    def getContentType(): ju.Optional[String] = ???
+    def getContentLength(): Long = ???
+    def getCharacterEncoding(): ju.Optional[String] = ???
+    def getReader(): BufferedReader = ???
+    def getPath(): String = ???
+    def getQuery(): ju.Optional[String] = ???
+    def getQueryParameters(): ju.Map[String, ju.List[String]] = ???
+    def getParts(): ju.Map[String, HttpRequest.HttpPart] = ???
+  }
 
-  def googleResponse() = new HttpResponse {
+  class GoogleResponse extends HttpResponse {
     var statusCode: Option[(Int, String)] = None
     val headers = new ju.HashMap[String, ju.List[String]]
     val body = new ByteArrayOutputStream
@@ -85,7 +89,7 @@ class TestIOGoogleCloudHttp extends CatsEffectSuite {
   test("decode request") {
     for {
       request <- fromHttpRequest(
-        googleRequest(
+        new GoogleRequest(
           Method.GET,
           uri"/default/nodejs-apig-function-1G3XMPLZXVXYI?",
           expectedHeaders,
@@ -99,7 +103,7 @@ class TestIOGoogleCloudHttp extends CatsEffectSuite {
 
   test("encode response") {
     for {
-      gResponse <- IO(googleResponse())
+      gResponse <- IO(new GoogleResponse)
       _ <- writeResponse(http4sResponse, gResponse)
       _ <- IO(assertEquals(gResponse.getStatusCode(), (200, "OK")))
       _ <- IO(assertEquals(gResponse.getHeaders(), new ju.HashMap[String, ju.List[String]]()))
