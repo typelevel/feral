@@ -27,7 +27,7 @@ ThisBuild / developers := List(
   tlGitHubDev("djspiewak", "Daniel Spiewak")
 )
 
-ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corretto(_))
+ThisBuild / githubWorkflowJavaVersions := Seq("11", "17").map(JavaSpec.corretto(_))
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
   List("rootJS", "rootJVM").map(p => MatrixExclude(Map("project" -> p, "scala" -> "2.12"))) ++
