@@ -29,19 +29,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         scala: [2.12, 3, 2.13]
-        java: [corretto@8, corretto@11, corretto@17]
+        java: [corretto@11, corretto@17]
         project: [rootJS, rootJVM, rootSbtScalafix]
         exclude:
           - scala: 2.12
-            java: corretto@11
-          - scala: 2.12
             java: corretto@17
           - scala: 3
-            java: corretto@11
-          - scala: 3
             java: corretto@17
-          - project: rootJS
-            java: corretto@11
           - project: rootJS
             java: corretto@17
           - project: rootJS
@@ -59,19 +53,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Java (corretto@8)
-        id: setup-java-corretto-8
-        if: matrix.java == 'corretto@8'
-        uses: actions/setup-java@v4
-        with:
-          distribution: corretto
-          java-version: 8
-          cache: sbt
-
-      - name: sbt update
-        if: matrix.java == 'corretto@8' && steps.setup-java-corretto-8.outputs.cache-hit == 'false'
-        run: sbt +update
 
       - name: Setup Java (corretto@11)
         id: setup-java-corretto-11
@@ -109,11 +90,11 @@ jobs:
         run: sbt githubWorkflowCheck
 
       - name: Check headers and formatting
-        if: matrix.java == 'corretto@8' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'corretto@11' && matrix.os == 'ubuntu-latest'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck
 
       - name: Check scalafix lints
-        if: matrix.java == 'corretto@8' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'corretto@11' && matrix.os == 'ubuntu-latest'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
 
       - name: scalaJSLink
@@ -124,20 +105,20 @@ jobs:
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
       - name: Check binary compatibility
-        if: matrix.java == 'corretto@8' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'corretto@11' && matrix.os == 'ubuntu-latest'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' mimaReportBinaryIssues
 
       - name: Generate API documentation
-        if: matrix.java == 'corretto@8' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'corretto@11' && matrix.os == 'ubuntu-latest'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' doc
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target unidocs/target lambda-http4s/.js/target lambda/js/target scalafix/rules/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: mkdir -p lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target unidocs/target lambda-http4s/.js/target lambda/js/target scalafix/rules/target lambda/jvm/target sbt-lambda/target google-cloud-http4s/jvm/target lambda-cloudformation-custom-resource/.jvm/target google-cloud-http4s/js/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target unidocs/target lambda-http4s/.js/target lambda/js/target scalafix/rules/target lambda/jvm/target sbt-lambda/target lambda-cloudformation-custom-resource/.jvm/target project/target
+        run: tar cf targets.tar lambda-cloudformation-custom-resource/.js/target lambda-http4s/.jvm/target unidocs/target lambda-http4s/.js/target lambda/js/target scalafix/rules/target lambda/jvm/target sbt-lambda/target google-cloud-http4s/jvm/target lambda-cloudformation-custom-resource/.jvm/target google-cloud-http4s/js/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
@@ -153,26 +134,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [corretto@8]
+        java: [corretto@11]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Java (corretto@8)
-        id: setup-java-corretto-8
-        if: matrix.java == 'corretto@8'
-        uses: actions/setup-java@v4
-        with:
-          distribution: corretto
-          java-version: 8
-          cache: sbt
-
-      - name: sbt update
-        if: matrix.java == 'corretto@8' && steps.setup-java-corretto-8.outputs.cache-hit == 'false'
-        run: sbt +update
 
       - name: Setup Java (corretto@11)
         id: setup-java-corretto-11
@@ -280,26 +248,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [corretto@8]
+        java: [corretto@11]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Java (corretto@8)
-        id: setup-java-corretto-8
-        if: matrix.java == 'corretto@8'
-        uses: actions/setup-java@v4
-        with:
-          distribution: corretto
-          java-version: 8
-          cache: sbt
-
-      - name: sbt update
-        if: matrix.java == 'corretto@8' && steps.setup-java-corretto-8.outputs.cache-hit == 'false'
-        run: sbt +update
 
       - name: Setup Java (corretto@11)
         id: setup-java-corretto-11
