@@ -242,23 +242,18 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     ),
-    mimaBinaryIssueFilters ++= Seq(
-      ProblemFilters.exclude[IncompatibleResultTypeProblem](
-        "feral.google-cloud.IOLambda.setupMemo")
-    ),
     tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
   )
   .settings(commonSettings)
   .jsSettings(
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-scalajs" % circeVersion,
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
     )
   )
   .jvmSettings(
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "com.google.cloud.functions" % "functions-framework-api" % "1.1.0",
+      "com.google.cloud.functions" % "functions-framework-api" % "1.1.0" % Provided,
       "co.fs2" %%% "fs2-io" % fs2Version,
       "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
     )
