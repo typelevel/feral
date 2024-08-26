@@ -190,6 +190,11 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+    )
+  )
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
@@ -254,7 +259,6 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
     Test / fork := true,
     libraryDependencies ++= Seq(
       "com.google.cloud.functions" % "functions-framework-api" % "1.1.0" % Provided,
-      "co.fs2" %%% "fs2-io" % fs2Version,
-      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+      "co.fs2" %%% "fs2-io" % fs2Version
     )
   )
