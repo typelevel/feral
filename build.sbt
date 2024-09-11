@@ -55,7 +55,7 @@ val circeVersion = "0.14.10"
 val fs2Version = "3.11.0"
 val http4sVersion = "0.23.27-10-fa6e976-SNAPSHOT"
 val natchezVersion = "0.3.6"
-val munitScalaCheckVersion = "1.0.0-M12"
+val munitScalaCheckVersion = "1.0.0"
 val munitCEVersion = "2.0.0"
 val scalacheckEffectVersion = "1.0.4"
 ThisBuild / resolvers += "s01-oss-sonatype-org-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
@@ -245,7 +245,7 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.http4s" %%% "http4s-server" % http4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitScalaCheckVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     ),
     tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
   )
