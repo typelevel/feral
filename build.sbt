@@ -27,7 +27,7 @@ ThisBuild / developers := List(
   tlGitHubDev("djspiewak", "Daniel Spiewak")
 )
 
-ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corretto(_))
+ThisBuild / githubWorkflowJavaVersions := Seq("11", "17").map(JavaSpec.corretto(_))
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
   List("rootJS", "rootJVM").map(p => MatrixExclude(Map("project" -> p, "scala" -> "2.12"))) ++
@@ -51,13 +51,14 @@ val Scala3 = "3.3.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.5.4"
-val circeVersion = "0.14.7"
-val fs2Version = "3.10.2"
-val http4sVersion = "0.23.27"
-val natchezVersion = "0.3.5"
+val circeVersion = "0.14.10"
+val fs2Version = "3.11.0"
+val http4sVersion = "0.23.27-10-fa6e976-SNAPSHOT"
+val natchezVersion = "0.3.6"
 val munitScalaCheckVersion = "1.0.0-M12"
 val munitCEVersion = "2.0.0"
 val scalacheckEffectVersion = "1.0.4"
+ThisBuild / resolvers += "s01-oss-sonatype-org-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -69,6 +70,7 @@ lazy val root =
       lambda,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
+      googleCloudHttp4s,
       examples,
       unidocs
     )
@@ -91,8 +93,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "com.comcast" %%% "ip4s-core" % "3.5.0",
-      "org.scodec" %%% "scodec-bits" % "1.2.0",
+      "com.comcast" %%% "ip4s-core" % "3.6.0",
+      "org.scodec" %%% "scodec-bits" % "1.2.1",
       "org.scalameta" %%% "munit-scalacheck" % munitScalaCheckVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
@@ -105,7 +107,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+      "io.github.cquiroz" %%% "scala-java-time" % "2.6.0"
     )
   )
   .jvmSettings(
@@ -155,7 +157,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       case _ => Nil
     }),
     libraryDependencies ++= Seq(
-      "io.monix" %%% "newtypes-core" % "0.2.3",
+      "io.monix" %%% "newtypes-core" % "0.3.0",
       "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
@@ -171,19 +173,28 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .dependsOn(lambda)
 
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
   .in(file("examples"))
   .settings(
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
-      "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
+      "org.tpolecat" %%% "natchez-http4s" % "0.6.0",
       "org.tpolecat" %%% "skunk-core" % "0.6.4"
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s)
+  .dependsOn(lambda, lambdaHttp4s, googleCloudHttp4s)
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true,
+    Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+    )
+  )
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
@@ -223,4 +234,31 @@ lazy val scalafix = tlScalafixProject
   .testsSettings(
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
+  )
+
+lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
+  .in(file("google-cloud-http4s"))
+  .settings(
+    name := "feral-google-cloud-http4s",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.scodec" %%% "scodec-bits" % "1.2.0",
+      "org.http4s" %%% "http4s-server" % http4sVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    ),
+    tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
+  )
+  .settings(commonSettings)
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+    )
+  )
+  .jvmSettings(
+    Test / fork := true,
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions" % "functions-framework-api" % "1.1.0" % Provided,
+      "co.fs2" %%% "fs2-io" % fs2Version
+    )
   )
