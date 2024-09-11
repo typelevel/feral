@@ -53,12 +53,11 @@ ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 val catsEffectVersion = "3.5.4"
 val circeVersion = "0.14.10"
 val fs2Version = "3.11.0"
-val http4sVersion = "0.23.27-121-b8811f9-SNAPSHOT"
+val http4sVersion = "0.23.28"
 val natchezVersion = "0.3.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
-ThisBuild / resolvers += "s01-oss-sonatype-org-snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
