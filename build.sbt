@@ -244,7 +244,7 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.http4s" %%% "http4s-server" % http4sVersion,
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % munitScalaCheckVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
     ),
     tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
