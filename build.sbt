@@ -15,7 +15,6 @@
  */
 
 import com.typesafe.tools.mima.core._
-import xerial.sbt.Sonatype.sonatype01
 
 name := "feral"
 
