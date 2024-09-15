@@ -26,7 +26,7 @@ protected trait EventSpanAttributes[E] {
   def attributes(e: E): List[Attribute[_]]
 }
 
-object EventSpanAttributes {
+protected object EventSpanAttributes {
   def empty[E](sk: SpanKind): EventSpanAttributes[E] =
     new EventSpanAttributes[E] {
       def contextCarrier(e: E): Map[String, String] =

@@ -81,6 +81,8 @@ class TracedHandlerSuite extends CatsEffectSuite {
           assertEquals(res, "\"body\"".toString)
           assertEquals(spans.length, 1)
           assertEquals(spans.headOption.map(_.name), Some(functionName))
+          assertEquals(allocationCounter.get(), 1)
+          assertEquals(invokeCounter.get(), 1)
         }
       } yield ()
     }
