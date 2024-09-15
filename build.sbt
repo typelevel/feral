@@ -28,7 +28,7 @@ ThisBuild / developers := List(
   tlGitHubDev("djspiewak", "Daniel Spiewak")
 )
 
-ThisBuild / githubWorkflowJavaVersions := Seq("8", "11", "17").map(JavaSpec.corretto(_))
+ThisBuild / githubWorkflowJavaVersions := Seq("11", "17").map(JavaSpec.corretto(_))
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
   List("rootJS", "rootJVM").map(p => MatrixExclude(Map("project" -> p, "scala" -> "2.12"))) ++
@@ -52,10 +52,10 @@ val Scala3 = "3.3.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
 val catsEffectVersion = "3.5.4"
-val circeVersion = "0.14.6"
-val fs2Version = "3.10.2"
-val http4sVersion = "0.23.26"
-val natchezVersion = "0.3.5"
+val circeVersion = "0.14.10"
+val fs2Version = "3.11.0"
+val http4sVersion = "0.23.28"
+val natchezVersion = "0.3.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
@@ -73,6 +73,7 @@ lazy val root =
       lambdaOtel4s,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
+      googleCloudHttp4s,
       examples,
       unidocs
     )
@@ -95,8 +96,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "case-insensitive" % "1.4.0",
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "com.comcast" %%% "ip4s-core" % "3.5.0",
-      "org.scodec" %%% "scodec-bits" % "1.1.38",
+      "com.comcast" %%% "ip4s-core" % "3.6.0",
+      "org.scodec" %%% "scodec-bits" % "1.2.1",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
@@ -109,7 +110,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+      "io.github.cquiroz" %%% "scala-java-time" % "2.6.0"
     )
   )
   .jvmSettings(
@@ -159,7 +160,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       case _ => Nil
     }),
     libraryDependencies ++= Seq(
-      "io.monix" %%% "newtypes-core" % "0.2.3",
+      "io.monix" %%% "newtypes-core" % "0.3.0",
       "org.http4s" %%% "http4s-client" % http4sVersion,
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
@@ -208,7 +209,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
-      "org.tpolecat" %%% "natchez-http4s" % "0.5.0",
+      "org.tpolecat" %%% "natchez-http4s" % "0.6.0",
       "org.tpolecat" %%% "skunk-core" % "0.6.3",
       "org.http4s" %%% "http4s-otel4s-middleware" % "0.6.0"
     )
@@ -219,7 +220,17 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
       "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1"
     ))
-  .dependsOn(lambda, lambdaNatchez, lambdaHttp4s, lambdaOtel4s)
+  .dependsOn(lambda, lambdaHttp4s, lambdaNatchez, lambdaOtel4s, googleCloudHttp4s)
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true,
+    Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+    )
+  )
   .enablePlugins(NoPublishPlugin)
 
 lazy val unidocs = project
@@ -259,4 +270,31 @@ lazy val scalafix = tlScalafixProject
   .testsSettings(
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
+  )
+
+lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
+  .in(file("google-cloud-http4s"))
+  .settings(
+    name := "feral-google-cloud-http4s",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.scodec" %%% "scodec-bits" % "1.2.0",
+      "org.http4s" %%% "http4s-server" % http4sVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    ),
+    tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
+  )
+  .settings(commonSettings)
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+    )
+  )
+  .jvmSettings(
+    Test / fork := true,
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions" % "functions-framework-api" % "1.1.0" % Provided,
+      "co.fs2" %%% "fs2-io" % fs2Version
+    )
   )
