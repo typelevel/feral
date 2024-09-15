@@ -27,7 +27,7 @@ import natchez.Trace
 
 import scala.annotation.nowarn
 
-class TracedLambdaSuite {
+class TracedHandlerSuite {
 
   @nowarn
   def syntaxTest = { // Checking for compilation, nothing more
