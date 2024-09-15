@@ -68,10 +68,10 @@ lazy val root =
   tlCrossRootProject
     .aggregate(
       lambda,
-      lambdaNatchez,
-      lambdaOtel4s,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
+      lambdaNatchez,
+      lambdaOtel4s,
       googleCloudHttp4s,
       examples,
       unidocs
