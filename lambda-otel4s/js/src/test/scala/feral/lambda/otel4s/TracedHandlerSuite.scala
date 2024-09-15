@@ -21,13 +21,11 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import munit.CatsEffectSuite
+import org.typelevel.otel4s.sdk.testkit.trace.TracesTestkit
 import org.typelevel.otel4s.trace.SpanKind
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.scalajs.js
-import org.typelevel.otel4s.sdk.testkit.trace.TracesTestkit
-import feral.lambda.otel4s.TracedHandler
-import feral.lambda.otel4s.EventSpanAttributes
 
 class TracedHandlerSuite extends CatsEffectSuite {
   import TracedHandlerSuite._
