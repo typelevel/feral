@@ -168,6 +168,4 @@ object TracedHandlerSuite {
       }
   }
 
-  def tracedLambda(allocationCounter: AtomicInteger, invokeCounter: AtomicInteger) = {}
-
 }
