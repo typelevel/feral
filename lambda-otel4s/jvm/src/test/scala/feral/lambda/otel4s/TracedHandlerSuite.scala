@@ -198,7 +198,7 @@ object TracedHandlerSuite {
 
         override def spanKind: SpanKind = SpanKind.Consumer
 
-        override def attributes(e: TestEvent): List[Attribute[_]] = List.empty
+        override def attributes(e: TestEvent): Attributes = Attributes.empty
 
       }
   }

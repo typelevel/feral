@@ -20,21 +20,22 @@ import feral.lambda.events.DynamoDbRecord
 import feral.lambda.events.S3BatchEvent
 import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.Attributes
 
 import LambdaMessageAttributes._
 import LambdaContextAttributes._
 
 object SqsEventAttributes {
-  def apply(): List[Attribute[_]] =
-    List(
+  def apply(): Attributes =
+    Attributes(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
       MessagingSystem("aws_sqs")
     )
 }
 
 object SqsRecordAttributes {
-  def apply(e: SqsRecord): List[Attribute[_]] =
-    List(
+  def apply(e: SqsRecord): Attributes =
+    Attributes(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
       MessagingOperation(MessagingOperationValue.Receive.value),
       MessagingMessageId(e.messageId)
@@ -42,33 +43,33 @@ object SqsRecordAttributes {
 }
 
 object DynamoDbStreamEventAttributes {
-  def apply(): List[Attribute[_]] =
-    List(
+  def apply(): Attributes =
+    Attributes(
       FaasTrigger(FaasTriggerValue.Datasource.value),
       MessagingSystem("aws_sqs")
     )
 }
 
 object DynamoDbRecordAttributes {
-  def apply(e: DynamoDbRecord): List[Attribute[_]] =
-    List(
-      e.eventId.map(MessagingMessageId(_)),
-      Some(FaasTrigger(FaasTriggerValue.Datasource.value)),
-      Some(MessagingOperation(MessagingOperationValue.Receive.value))
-    ).flatten
+  def apply(e: DynamoDbRecord): Attributes = {
+    Attributes(
+      FaasTrigger(FaasTriggerValue.Datasource.value),
+      MessagingOperation(MessagingOperationValue.Receive.value)
+    ) ++ e.eventId.map(MessagingMessageId(_))
+  }
 }
 
 object ApiGatewayProxyEventAttributes {
-  def apply(): List[Attribute[_]] =
-    List(
+  def apply(): Attributes =
+    Attributes(
       FaasTrigger(FaasTriggerValue.Http.value),
       MessagingOperation(MessagingOperationValue.Receive.value)
     )
 }
 
 object S3BatchEventAttributes {
-  def apply(e: S3BatchEvent): List[Attribute[_]] =
-    List(
+  def apply(e: S3BatchEvent): Attributes =
+    Attributes(
       MessagingMessageId(e.invocationId),
       FaasTrigger(FaasTriggerValue.Datasource.value),
       MessagingOperation(MessagingOperationValue.Receive.value)
