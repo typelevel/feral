@@ -56,8 +56,10 @@ class TracedHandlerSuite extends CatsEffectSuite {
 
   private val memoryLimitInMB = 1024
   private val functionVersion = "1.0.1"
-  private val logStreamNameArn = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/my-function:*"
-  private val functionArn = "arn:aws:lambda:us-west-2:123456789012:function:test-function-name:PROD"
+  private val logStreamNameArn =
+    "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/my-function:*"
+  private val functionArn =
+    "arn:aws:lambda:us-west-2:123456789012:function:test-function-name:PROD"
 
   fixture.test("single root span is created for single invocation") { traces =>
     traces.tracerProvider.tracer("test-tracer").get.flatMap { implicit tracer =>
