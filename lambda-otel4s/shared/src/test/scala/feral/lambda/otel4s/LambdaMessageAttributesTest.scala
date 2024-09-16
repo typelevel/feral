@@ -40,16 +40,16 @@ class LambdaMessageAttributesTest extends FunSuite {
     assertEquals(ours, otel)
   }
 
-  test("MessagingOperation") {
+  test("MessagingOperationType") {
     val value = "value"
-    val ours = MessagingOperation(value)
-    val otel = otel4s.MessagingOperation(value)
+    val ours = MessagingOperationType(value)
+    val otel = otel4s.MessagingOperationType(value)
     assertEquals(ours, otel)
   }
 
   test("MessagingOperationValue.Receive") {
-    val ours = MessagingOperationValue.Receive.value
-    val otel = otel4s.MessagingOperationValue.Receive.value
+    val ours = MessagingOperationTypeValue.Receive.value
+    val otel = otel4s.MessagingOperationTypeValue.Receive.value
     assertEquals(ours, otel)
   }
 
