@@ -29,19 +29,21 @@ import feral.lambda.otel4s.TracedHandler
 import feral.lambda.otel4s._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
-import org.http4s.otel4s.middleware.ClientMiddleware
 import org.typelevel.otel4s.oteljava.OtelJava
 import org.typelevel.otel4s.trace.Tracer
 import org.typelevel.scalaccompat.annotation.unused
 
 object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
 
+  // Could be http4s-otel4s-middleware ClientMiddleware for example
+  def clientMiddleware(client: Client[IO]): Client[IO] = client
+
   def handler =
     OtelJava.autoConfigured[IO]().map(_.tracerProvider).evalMap(_.get("tracer")).flatMap {
       implicit tracer: Tracer[IO] =>
         for {
           client <- EmberClientBuilder.default[IO].build
-          tracedClient = ClientMiddleware.default[IO].build(client)
+          tracedClient = clientMiddleware(client)
         } yield { implicit inv: Invocation[IO, SqsEvent] =>
           TracedHandler[IO, SqsEvent, INothing](
             handleEvent[IO](tracedClient)
