@@ -216,12 +216,11 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .dependsOn(lambda, lambdaHttp4s, lambdaNatchez, lambdaOtel4s, googleCloudHttp4s)
-  .jvmSettings(
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
-      "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1",
-      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
-    ))
+  .jvmSettings(libraryDependencies ++= Seq(
+    "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
+    "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1",
+    "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+  ))
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
     Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
