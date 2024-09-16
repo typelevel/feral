@@ -17,8 +17,8 @@
 package feral.lambda.otel4s
 
 import feral.lambda.Context
-import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.AttributeKey
+import org.typelevel.otel4s.Attributes
 
 /**
  * Temporary aliases for Lambda platform attributes in otel4s-semconv-experimental

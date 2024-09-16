@@ -28,7 +28,7 @@ object SqsEventAttributes {
   def apply(): Attributes =
     Attributes(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
-      MessagingSystem("aws_sqs")
+      MessagingSystem(MessagingSystemValue.AwsSqs.value)
     )
 }
 
@@ -45,7 +45,7 @@ object DynamoDbStreamEventAttributes {
   def apply(): Attributes =
     Attributes(
       FaasTrigger(FaasTriggerValue.Datasource.value),
-      MessagingSystem("aws_sqs")
+      MessagingSystem(MessagingSystemValue.AwsSqs.value)
     )
 }
 
