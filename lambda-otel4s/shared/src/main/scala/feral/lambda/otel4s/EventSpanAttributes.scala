@@ -16,14 +16,14 @@
 
 package feral.lambda.otel4s
 
-import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.trace.SpanKind
 
 // TODO better name
 protected trait EventSpanAttributes[E] {
   def contextCarrier(e: E): Map[String, String]
   def spanKind: SpanKind
-  def attributes(e: E): List[Attribute[_]]
+  def attributes(e: E): Attributes
 }
 
 protected object EventSpanAttributes {
@@ -32,7 +32,7 @@ protected object EventSpanAttributes {
       def contextCarrier(e: E): Map[String, String] =
         Map.empty
       def spanKind: SpanKind = sk
-      def attributes(e: E): List[Attribute[_]] =
-        List.empty
+      def attributes(e: E): Attributes =
+        Attributes.empty
     }
 }
