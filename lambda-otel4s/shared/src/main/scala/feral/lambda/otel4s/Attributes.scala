@@ -75,7 +75,7 @@ object LambdaContextAttributes {
       CloudProvider(CloudProviderValue.Aws.value),
       CloudResourceId(context.invokedFunctionArn),
       FaasInstance(context.logStreamName),
-      FaasMaxMemory(context.memoryLimitInMB.toLong),
+      FaasMaxMemory(context.memoryLimitInMB.toLong * 1024 * 1024),
       FaasName(context.functionName),
       FaasVersion(context.functionVersion)
     )
