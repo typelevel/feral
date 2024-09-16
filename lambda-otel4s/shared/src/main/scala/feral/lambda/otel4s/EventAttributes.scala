@@ -36,7 +36,7 @@ object SqsRecordAttributes {
   def apply(e: SqsRecord): Attributes =
     Attributes(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
-      MessagingOperation(MessagingOperationValue.Receive.value),
+      MessagingOperationType(MessagingOperationTypeValue.Receive.value),
       MessagingMessageId(e.messageId)
     )
 }
@@ -53,7 +53,7 @@ object DynamoDbRecordAttributes {
   def apply(e: DynamoDbRecord): Attributes = {
     Attributes(
       FaasTrigger(FaasTriggerValue.Datasource.value),
-      MessagingOperation(MessagingOperationValue.Receive.value)
+      MessagingOperationType(MessagingOperationTypeValue.Receive.value)
     ) ++ e.eventId.map(MessagingMessageId(_))
   }
 }
@@ -62,7 +62,7 @@ object ApiGatewayProxyEventAttributes {
   def apply(): Attributes =
     Attributes(
       FaasTrigger(FaasTriggerValue.Http.value),
-      MessagingOperation(MessagingOperationValue.Receive.value)
+      MessagingOperationType(MessagingOperationTypeValue.Receive.value)
     )
 }
 
@@ -71,6 +71,6 @@ object S3BatchEventAttributes {
     Attributes(
       MessagingMessageId(e.invocationId),
       FaasTrigger(FaasTriggerValue.Datasource.value),
-      MessagingOperation(MessagingOperationValue.Receive.value)
+      MessagingOperationType(MessagingOperationTypeValue.Receive.value)
     )
 }
