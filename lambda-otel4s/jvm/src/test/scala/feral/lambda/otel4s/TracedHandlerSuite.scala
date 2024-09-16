@@ -26,7 +26,11 @@ import io.circe.Encoder
 import io.circe.syntax._
 import munit.CatsEffectSuite
 import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.sdk.testkit.trace.TracesTestkit
+import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes
+import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes.CloudProviderValue
+import org.typelevel.otel4s.semconv.experimental.attributes.FaasExperimentalAttributes
 import org.typelevel.otel4s.trace.SpanKind
 
 import java.io.ByteArrayInputStream
@@ -49,6 +53,11 @@ class TracedHandlerSuite extends CatsEffectSuite {
   }
 
   val fixture = ResourceFixture(TracesTestkit.inMemory[IO]())
+
+  private val memoryLimitInMB = 1024
+  private val functionVersion = "1.0.1"
+  private val logStreamNameArn = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/my-function:*"
+  private val functionArn = "arn:aws:lambda:us-west-2:123456789012:function:test-function-name:PROD"
 
   fixture.test("single root span is created for single invocation") { traces =>
     traces.tracerProvider.tracer("test-tracer").get.flatMap { implicit tracer =>
@@ -74,13 +83,23 @@ class TracedHandlerSuite extends CatsEffectSuite {
       val functionName = "test-function-name"
       val run = IO(lambda.handleRequestHelper(payload, DummyContext(functionName)))
 
+      val attributes = Attributes(
+        FaasExperimentalAttributes.FaasName(functionName),
+        FaasExperimentalAttributes.FaasVersion(functionVersion),
+        FaasExperimentalAttributes.FaasInstance(logStreamNameArn),
+        FaasExperimentalAttributes.FaasMaxMemory(memoryLimitInMB * 1024L * 1024L),
+        CloudExperimentalAttributes.CloudProvider(CloudProviderValue.Aws.value),
+        CloudExperimentalAttributes.CloudResourceId(functionArn)
+      )
+
       for {
         res <- run
         spans <- traces.finishedSpans
         _ <- IO {
-          assertEquals(res, "\"body\"".toString)
+          assertEquals(res, "\"body\"")
           assertEquals(spans.length, 1)
           assertEquals(spans.headOption.map(_.name), Some(functionName))
+          assertEquals(spans.headOption.map(_.attributes), Some(attributes))
           assertEquals(allocationCounter.get(), 1)
           assertEquals(invokeCounter.get(), 1)
         }
@@ -118,6 +137,17 @@ class TracedHandlerSuite extends CatsEffectSuite {
 
       val expectedSpanNames = List.fill(3)(functionName)
 
+      val expectedAttributes = List.fill(3)(
+        Attributes(
+          FaasExperimentalAttributes.FaasName(functionName),
+          FaasExperimentalAttributes.FaasVersion(functionVersion),
+          FaasExperimentalAttributes.FaasInstance(logStreamNameArn),
+          FaasExperimentalAttributes.FaasMaxMemory(memoryLimitInMB * 1024L * 1024L),
+          CloudExperimentalAttributes.CloudProvider(CloudProviderValue.Aws.value),
+          CloudExperimentalAttributes.CloudResourceId(functionArn)
+        )
+      )
+
       for {
         res <- run
         spans <- traces.finishedSpans
@@ -125,6 +155,7 @@ class TracedHandlerSuite extends CatsEffectSuite {
           assertEquals(res.length, chars.length)
           assertEquals(spans.length, chars.length)
           assertEquals(spans.map(_.name), expectedSpanNames)
+          assertEquals(spans.map(_.attributes), expectedAttributes)
         }
       } yield ()
     }
@@ -133,14 +164,14 @@ class TracedHandlerSuite extends CatsEffectSuite {
   case class DummyContext(functionName: String) extends runtime.Context {
     override def getAwsRequestId(): String = ""
     override def getLogGroupName(): String = ""
-    override def getLogStreamName(): String = ""
+    override def getLogStreamName(): String = logStreamNameArn
     override def getFunctionName(): String = functionName
-    override def getFunctionVersion(): String = ""
-    override def getInvokedFunctionArn(): String = ""
+    override def getFunctionVersion(): String = functionVersion
+    override def getInvokedFunctionArn(): String = functionArn
     override def getIdentity(): runtime.CognitoIdentity = null
     override def getClientContext(): runtime.ClientContext = null
     override def getRemainingTimeInMillis(): Int = Int.MaxValue
-    override def getMemoryLimitInMB(): Int = 0
+    override def getMemoryLimitInMB(): Int = memoryLimitInMB
     override def getLogger(): runtime.LambdaLogger = null
   }
 
