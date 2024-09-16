@@ -16,14 +16,13 @@
 
 package feral.examples
 
-import _root_.feral.lambda.INothing
-import _root_.feral.lambda.IOLambda
-import _root_.feral.lambda.Invocation
-import _root_.feral.lambda.events.SqsEvent
-import _root_.feral.lambda.events.SqsRecord
-import _root_.feral.lambda.otel4s.SqsRecordAttributes
-import _root_.feral.lambda.otel4s.TracedHandler
-import _root_.feral.lambda.otel4s._
+import feral.lambda.INothing
+import feral.lambda.IOLambda
+import feral.lambda.Invocation
+import feral.lambda.events.SqsEvent
+import feral.lambda.events.SqsRecord
+import feral.lambda.otel4s.SqsRecordAttributes
+import feral.lambda.otel4s.TracedHandler
 import cats.Monad
 import cats.effect.IO
 import cats.syntax.all._
