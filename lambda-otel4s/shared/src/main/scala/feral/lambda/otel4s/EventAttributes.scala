@@ -19,7 +19,6 @@ package feral.lambda.otel4s
 import feral.lambda.events.DynamoDbRecord
 import feral.lambda.events.S3BatchEvent
 import feral.lambda.events.SqsRecord
-import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.Attributes
 
 import LambdaMessageAttributes._
