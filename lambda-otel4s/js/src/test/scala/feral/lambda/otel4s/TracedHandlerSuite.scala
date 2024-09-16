@@ -21,7 +21,10 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import munit.CatsEffectSuite
+import org.typelevel.otel4s.AttributeKey
 import org.typelevel.otel4s.sdk.testkit.trace.TracesTestkit
+import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes
+import org.typelevel.otel4s.semconv.experimental.attributes.FaasExperimentalAttributes
 import org.typelevel.otel4s.trace.SpanKind
 
 import java.util.concurrent.atomic.AtomicInteger
@@ -55,12 +58,22 @@ class TracedHandlerSuite extends CatsEffectSuite {
       val functionName = "test-function-name"
       val run = IO.fromPromise(IO(lambda.handlerFn(event, new DummyContext(functionName))))
 
+      val attributeKeys = Set[AttributeKey[_]](
+        FaasExperimentalAttributes.FaasName,
+        FaasExperimentalAttributes.FaasVersion,
+        FaasExperimentalAttributes.FaasInstance,
+        FaasExperimentalAttributes.FaasMaxMemory,
+        CloudExperimentalAttributes.CloudProvider,
+        CloudExperimentalAttributes.CloudResourceId
+      )
+
       for {
         res <- run
         spans <- traces.finishedSpans
         _ <- IO {
           assertEquals(spans.length, 1)
           assertEquals(spans.headOption.map(_.name), Some(functionName))
+          assertEquals(spans.headOption.map(_.attributes.map(_.key).toSet), Some(attributeKeys))
           assertEquals(allocationCounter.get(), 1)
           assertEquals(invokeCounter.get(), 1)
           assertEquals(res, event.asInstanceOf[js.UndefOr[js.Any]])
