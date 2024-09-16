@@ -25,7 +25,6 @@ import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.syntax._
 import munit.CatsEffectSuite
-import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.sdk.testkit.trace.TracesTestkit
 import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes
