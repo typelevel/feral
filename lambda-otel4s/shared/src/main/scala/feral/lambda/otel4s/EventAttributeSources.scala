@@ -21,7 +21,7 @@ import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.DynamoDbStreamEvent
 import feral.lambda.events.S3BatchEvent
 import feral.lambda.events.SqsEvent
-import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.trace.SpanKind
 
 trait EventAttributeSources {
@@ -32,7 +32,7 @@ trait EventAttributeSources {
 
       def spanKind: SpanKind = SpanKind.Consumer
 
-      def attributes(e: SqsEvent): List[Attribute[_]] =
+      def attributes(e: SqsEvent): Attributes =
         SqsEventAttributes()
     }
 
@@ -43,7 +43,7 @@ trait EventAttributeSources {
 
       def spanKind: SpanKind = SpanKind.Consumer
 
-      def attributes(e: DynamoDbStreamEvent): List[Attribute[_]] =
+      def attributes(e: DynamoDbStreamEvent): Attributes =
         DynamoDbStreamEventAttributes()
     }
 
@@ -54,7 +54,7 @@ trait EventAttributeSources {
 
       def spanKind: SpanKind = SpanKind.Server
 
-      def attributes(e: ApiGatewayProxyEvent): List[Attribute[_]] =
+      def attributes(e: ApiGatewayProxyEvent): Attributes =
         ApiGatewayProxyEventAttributes()
     }
 
@@ -65,7 +65,7 @@ trait EventAttributeSources {
 
       def spanKind: SpanKind = SpanKind.Server
 
-      def attributes(e: ApiGatewayProxyEventV2): List[Attribute[_]] =
+      def attributes(e: ApiGatewayProxyEventV2): Attributes =
         ApiGatewayProxyEventAttributes()
     }
 
@@ -76,7 +76,7 @@ trait EventAttributeSources {
 
       def spanKind: SpanKind = SpanKind.Server
 
-      def attributes(e: S3BatchEvent): List[Attribute[_]] =
+      def attributes(e: S3BatchEvent): Attributes =
         S3BatchEventAttributes(e)
     }
 
