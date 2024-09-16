@@ -28,8 +28,8 @@ private[otel4s] object LambdaMessageAttributes {
       val value = "aws_sqs"
     }
   }
-  val MessagingOperation = AttributeKey.string("messaging.operation")
-  object MessagingOperationValue {
+  val MessagingOperationType = AttributeKey.string("messaging.operation.type")
+  object MessagingOperationTypeValue {
     object Receive {
       val value = "receive"
     }

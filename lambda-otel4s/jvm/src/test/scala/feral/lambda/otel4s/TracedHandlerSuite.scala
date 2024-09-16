@@ -100,7 +100,7 @@ class TracedHandlerSuite extends CatsEffectSuite {
           assertEquals(res, "\"body\"")
           assertEquals(spans.length, 1)
           assertEquals(spans.headOption.map(_.name), Some(functionName))
-          assertEquals(spans.headOption.map(_.attributes), Some(attributes))
+          assertEquals(spans.headOption.map(_.attributes.elements), Some(attributes))
           assertEquals(allocationCounter.get(), 1)
           assertEquals(invokeCounter.get(), 1)
         }
@@ -156,7 +156,7 @@ class TracedHandlerSuite extends CatsEffectSuite {
           assertEquals(res.length, chars.length)
           assertEquals(spans.length, chars.length)
           assertEquals(spans.map(_.name), expectedSpanNames)
-          assertEquals(spans.map(_.attributes), expectedAttributes)
+          assertEquals(spans.map(_.attributes.elements), expectedAttributes)
         }
       } yield ()
     }
