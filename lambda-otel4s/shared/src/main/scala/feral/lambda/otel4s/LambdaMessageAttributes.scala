@@ -21,7 +21,7 @@ import org.typelevel.otel4s.AttributeKey
 /**
  * Temporary aliases for Lambda message-specific attributes in otel4s-semconv-experimental
  */
-object LambdaMessageAttributes {
+private[otel4s] object LambdaMessageAttributes {
   val MessagingSystem = AttributeKey.string("messaging.system")
   object MessagingSystemValue {
     object AwsSqs {
