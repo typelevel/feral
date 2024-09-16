@@ -41,7 +41,7 @@ object TracedHandler {
       }
     } yield res
 
-  def buildSpan[F[_]: Tracer, Event](event: Event, context: Context[F])(
+  private def buildSpan[F[_]: Tracer, Event](event: Event, context: Context[F])(
       implicit attr: EventSpanAttributes[Event]
   ): SpanOps[F] =
     Tracer[F]

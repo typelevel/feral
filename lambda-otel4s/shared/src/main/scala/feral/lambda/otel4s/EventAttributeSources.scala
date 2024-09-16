@@ -24,7 +24,7 @@ import feral.lambda.events.SqsEvent
 import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.trace.SpanKind
 
-trait EventAttributeSources {
+private[otel4s] trait EventAttributeSources {
   implicit def sqsEvent: EventSpanAttributes[SqsEvent] =
     new EventSpanAttributes[SqsEvent] {
       def contextCarrier(e: SqsEvent): Map[String, String] =

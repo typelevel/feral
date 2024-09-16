@@ -20,13 +20,13 @@ import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.trace.SpanKind
 
 // TODO better name
-protected trait EventSpanAttributes[E] {
+private[otel4s] trait EventSpanAttributes[E] {
   def contextCarrier(e: E): Map[String, String]
   def spanKind: SpanKind
   def attributes(e: E): Attributes
 }
 
-protected object EventSpanAttributes {
+private[otel4s] object EventSpanAttributes {
   def empty[E](sk: SpanKind): EventSpanAttributes[E] =
     new EventSpanAttributes[E] {
       def contextCarrier(e: E): Map[String, String] =
