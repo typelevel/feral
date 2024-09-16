@@ -17,28 +17,8 @@
 package feral.lambda.otel4s
 
 import feral.lambda.Context
-import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.AttributeKey
-
-/**
- * Temporary aliases for Lambda message-specific attributes in otel4s-semconv-experimental
- */
-private[otel4s] object LambdaMessageAttributes {
-  val MessagingSystem = AttributeKey.string("messaging.system")
-  object MessagingSystemValue {
-    object Sqs {
-      val value = "aws_sqs"
-    }
-  }
-  val MessagingOperation = AttributeKey.string("messaging.operation")
-  object MessagingOperationValue {
-    object Receive {
-      val value = "receive"
-    }
-  }
-  val MessagingMessageId = AttributeKey.string("messaging.message.id")
-  val MessagingDestinationName = AttributeKey.string("messaging.destination.name")
-}
 
 /**
  * Temporary aliases for Lambda platform attributes in otel4s-semconv-experimental
@@ -57,6 +37,7 @@ private[otel4s] object LambdaContextAttributes {
       val value = "http"
     }
   }
+
   // ARN
   val CloudResourceId = AttributeKey.string("cloud.resource_id")
   val FaasInstance = AttributeKey.string("faas.instance")
@@ -70,8 +51,8 @@ private[otel4s] object LambdaContextAttributes {
     }
   }
 
-  def apply[F[_]](context: Context[F]): List[Attribute[_]] = {
-    List(
+  def apply[F[_]](context: Context[F]): Attributes = {
+    Attributes(
       CloudProvider(CloudProviderValue.Aws.value),
       CloudResourceId(context.invokedFunctionArn),
       FaasInstance(context.logStreamName),
