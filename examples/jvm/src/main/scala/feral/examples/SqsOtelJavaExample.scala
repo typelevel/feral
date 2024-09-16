@@ -16,6 +16,9 @@
 
 package feral.examples
 
+import cats.Monad
+import cats.effect.IO
+import cats.syntax.all._
 import feral.lambda.INothing
 import feral.lambda.IOLambda
 import feral.lambda.Invocation
@@ -23,9 +26,7 @@ import feral.lambda.events.SqsEvent
 import feral.lambda.events.SqsRecord
 import feral.lambda.otel4s.SqsRecordAttributes
 import feral.lambda.otel4s.TracedHandler
-import cats.Monad
-import cats.effect.IO
-import cats.syntax.all._
+import feral.lambda.otel4s._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.otel4s.middleware.ClientMiddleware
