@@ -118,7 +118,9 @@ abstract class IOCloudHttpFunction extends HttpFunction {
 
     dispatcher.unsafeRunSync(
       IOCloudHttpFunction.fromHttpRequest(request).flatMap { req =>
-        handle.flatMap(_(req)).flatMap { res => IOCloudHttpFunction.writeResponse(res, response) }
+        handle.flatMap(_(req)).flatMap { res =>
+          IOCloudHttpFunction.writeResponse(res, response)
+        }
       }
     )
   }
