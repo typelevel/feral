@@ -21,7 +21,7 @@ import feral.googlecloud._
 import org.http4s._
 import org.http4s.dsl.io._
 
-object http4sGoogleCloudHandler extends IOGoogleCloudHttp {
+object http4sGoogleCloudHandler extends IOCloudHttpFunction {
   def handler = {
     val app = HttpRoutes
       .of[IO] {

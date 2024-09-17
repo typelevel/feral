@@ -28,7 +28,7 @@ import org.http4s.nodejs.ServerResponse
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 
-object IOGoogleCloudHttp {
+object IOCloudHttpFunction {
   @js.native
   @JSImport("@google-cloud/functions-framework", "http")
   def http(
@@ -36,10 +36,10 @@ object IOGoogleCloudHttp {
       handler: js.Function2[IncomingMessage, ServerResponse, Unit]): Unit = js.native
 }
 
-abstract class IOGoogleCloudHttp {
+abstract class IOCloudHttpFunction {
 
   final def main(args: Array[String]): Unit =
-    IOGoogleCloudHttp.http(functionName, handlerFn)
+    IOCloudHttpFunction.http(functionName, handlerFn)
 
   protected def functionName: String = getClass.getSimpleName.init
 

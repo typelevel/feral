@@ -19,7 +19,7 @@ package feral.googlecloud
 import cats.effect.IO
 import com.google.cloud.functions.HttpRequest
 import com.google.cloud.functions.HttpResponse
-import feral.googlecloud.IOGoogleCloudHttp._
+import feral.googlecloud.IOCloudHttpFunction._
 import munit.CatsEffectSuite
 import org.http4s.Headers
 import org.http4s.Method
@@ -35,7 +35,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.{util => ju}
 
-class TestIOGoogleCloudHttp extends CatsEffectSuite {
+class TestIOCloudHttp extends CatsEffectSuite {
 
   class GoogleRequest(
       val method: Method,
