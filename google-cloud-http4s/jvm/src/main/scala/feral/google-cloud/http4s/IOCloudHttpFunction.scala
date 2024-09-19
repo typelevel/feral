@@ -57,7 +57,9 @@ object IOCloudHttpFunction {
     body = body
   )
 
-  private[googlecloud] def writeResponse(http4sResponse: Response[IO], googleResponse: HttpResponse): IO[Unit] =
+  private[googlecloud] def writeResponse(
+      http4sResponse: Response[IO],
+      googleResponse: HttpResponse): IO[Unit] =
     for {
       _ <- IO {
         googleResponse.setStatusCode(http4sResponse.status.code, http4sResponse.status.reason)
