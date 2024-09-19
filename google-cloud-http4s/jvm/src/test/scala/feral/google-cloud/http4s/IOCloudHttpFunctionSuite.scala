@@ -35,7 +35,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.{util => ju}
 
-class TestIOCloudHttp extends CatsEffectSuite {
+class IOCloudHttpFunctionSuite extends CatsEffectSuite {
 
   class GoogleRequest(
       val method: Method,

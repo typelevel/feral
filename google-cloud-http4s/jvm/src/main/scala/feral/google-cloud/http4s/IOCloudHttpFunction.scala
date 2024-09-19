@@ -38,7 +38,7 @@ import org.typelevel.ci.CIString
 import scala.util.control.NonFatal
 
 object IOCloudHttpFunction {
-  def fromHttpRequest(request: HttpRequest): IO[Request[IO]] = for {
+  private[googlecloud] def fromHttpRequest(request: HttpRequest): IO[Request[IO]] = for {
     method <- Method.fromString(request.getMethod()).liftTo[IO]
     uri <- Uri.fromString(request.getUri()).liftTo[IO]
     headers <- IO {
@@ -57,7 +57,7 @@ object IOCloudHttpFunction {
     body = body
   )
 
-  def writeResponse(http4sResponse: Response[IO], googleResponse: HttpResponse): IO[Unit] =
+  private[googlecloud] def writeResponse(http4sResponse: Response[IO], googleResponse: HttpResponse): IO[Unit] =
     for {
       _ <- IO {
         googleResponse.setStatusCode(http4sResponse.status.code, http4sResponse.status.reason)
