@@ -31,7 +31,7 @@ import scala.scalajs.js.annotation._
 object IOCloudHttpFunction {
   @js.native
   @JSImport("@google-cloud/functions-framework", "http")
-  def http(
+  private[googlecloud] def http(
       functionName: String,
       handler: js.Function2[IncomingMessage, ServerResponse, Unit]): Unit = js.native
 }
