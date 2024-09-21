@@ -37,8 +37,8 @@ import org.typelevel.ci.CIString
 
 import scala.util.control.NonFatal
 
-object IOGoogleCloudHttp {
-  def fromHttpRequest(request: HttpRequest): IO[Request[IO]] = for {
+object IOCloudHttpFunction {
+  private[googlecloud] def fromHttpRequest(request: HttpRequest): IO[Request[IO]] = for {
     method <- Method.fromString(request.getMethod()).liftTo[IO]
     uri <- Uri.fromString(request.getUri()).liftTo[IO]
     headers <- IO {
@@ -57,7 +57,9 @@ object IOGoogleCloudHttp {
     body = body
   )
 
-  def writeResponse(http4sResponse: Response[IO], googleResponse: HttpResponse): IO[Unit] =
+  private[googlecloud] def writeResponse(
+      http4sResponse: Response[IO],
+      googleResponse: HttpResponse): IO[Unit] =
     for {
       _ <- IO {
         googleResponse.setStatusCode(http4sResponse.status.code, http4sResponse.status.reason)
@@ -80,7 +82,7 @@ object IOGoogleCloudHttp {
     } yield ()
 }
 
-abstract class IOGoogleCloudHttp extends HttpFunction {
+abstract class IOCloudHttpFunction extends HttpFunction {
 
   protected def runtime: IORuntime = IORuntime.global
 
@@ -117,8 +119,10 @@ abstract class IOGoogleCloudHttp extends HttpFunction {
   final def service(request: HttpRequest, response: HttpResponse): Unit = {
 
     dispatcher.unsafeRunSync(
-      IOGoogleCloudHttp.fromHttpRequest(request).flatMap { req =>
-        handle.flatMap(_(req)).flatMap { res => IOGoogleCloudHttp.writeResponse(res, response) }
+      IOCloudHttpFunction.fromHttpRequest(request).flatMap { req =>
+        handle.flatMap(_(req)).flatMap { res =>
+          IOCloudHttpFunction.writeResponse(res, response)
+        }
       }
     )
   }

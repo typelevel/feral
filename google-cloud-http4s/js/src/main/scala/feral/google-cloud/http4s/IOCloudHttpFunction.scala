@@ -28,19 +28,18 @@ import org.http4s.nodejs.ServerResponse
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 
-object IOGoogleCloudEvent {
+object IOCloudHttpFunction {
   @js.native
-  @JSImport("@google-cloud/functions-framework", "cloudEvent")
-  def cloudEvent(
+  @JSImport("@google-cloud/functions-framework", "http")
+  private[googlecloud] def http(
       functionName: String,
-      // input type should be cloudEvent from cloudevents
-      handler: js.Function2[???, Unit]): Unit = js.native
+      handler: js.Function2[IncomingMessage, ServerResponse, Unit]): Unit = js.native
 }
 
-abstract class IOGoogleCloudEvent {
+abstract class IOCloudHttpFunction {
 
   final def main(args: Array[String]): Unit =
-    IOGoogleCloudEvent.cloudEvent(functionName, handlerFn)
+    IOCloudHttpFunction.http(functionName, handlerFn)
 
   protected def functionName: String = getClass.getSimpleName.init
 
@@ -49,7 +48,7 @@ abstract class IOGoogleCloudEvent {
   def handler: Resource[IO, HttpApp[IO]]
 
   private[googlecloud] lazy val handlerFn
-      : js.Function2[???, Unit] = {
+      : js.Function2[IncomingMessage, ServerResponse, Unit] = {
     val dispatcherHandle = {
       Dispatcher
         .parallel[IO](await = false)
@@ -59,7 +58,7 @@ abstract class IOGoogleCloudEvent {
         .unsafeToPromise()(runtime)
     }
 
-    (event: ???) =>
+    (request: IncomingMessage, response: ServerResponse) =>
       val _ = dispatcherHandle.`then`[Unit] {
         case (dispatcher, handle) =>
           dispatcher.unsafeRunAndForget(
