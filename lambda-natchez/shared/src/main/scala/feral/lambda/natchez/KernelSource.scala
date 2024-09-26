@@ -16,7 +16,14 @@
 
 package feral.lambda.natchez
 
+import feral.lambda.events.ApiGatewayProxyEvent
+import feral.lambda.events.ApiGatewayProxyEventV2
+import feral.lambda.events.DynamoDbStreamEvent
+import feral.lambda.events.KinesisStreamEvent
+import feral.lambda.events.S3BatchEvent
+import feral.lambda.events.SqsRecordAttributes
 import natchez.Kernel
+import org.typelevel.ci._
 
 trait KernelSource[Event] {
   def extract(event: Event): Kernel
@@ -26,4 +33,27 @@ object KernelSource {
   @inline def apply[E](implicit ev: KernelSource[E]): ev.type = ev
 
   def emptyKernelSource[E]: KernelSource[E] = _ => Kernel(Map.empty)
+
+  private[this] val `X-Amzn-Trace-Id` = ci"X-Amzn-Trace-Id"
+
+  implicit def apiGatewayProxyEvent: KernelSource[ApiGatewayProxyEvent] =
+    e => Kernel(e.headers.getOrElse(Map.empty))
+
+  implicit def apiGatewayProxyEventV2: KernelSource[ApiGatewayProxyEventV2] =
+    e => Kernel(e.headers)
+
+  implicit def sqsRecordAttributes: KernelSource[SqsRecordAttributes] =
+    a => Kernel(a.awsTraceHeader.map(`X-Amzn-Trace-Id` -> _).toMap)
+
+  implicit def s3BatchEvent: KernelSource[S3BatchEvent] = KernelSource.emptyKernelSource
+
+  @deprecated(
+    "See feral.lambda.events.KinesisStreamEvent deprecation",
+    since = "0.3.0"
+  )
+  implicit def kinesisStreamEvent: KernelSource[KinesisStreamEvent] =
+    KernelSource.emptyKernelSource
+
+  implicit def dynamoDbStreamEvent: KernelSource[DynamoDbStreamEvent] =
+    KernelSource.emptyKernelSource
 }
