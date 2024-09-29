@@ -43,13 +43,13 @@ class TracedHandlerSuite extends CatsEffectSuite {
       val lambda = new IOLambda[String, String] {
         def handler =
           Resource.eval(IO(allocationCounter.getAndIncrement())).as { implicit inv =>
-            def fn(ev: String): IO[Option[String]] =
+            TracedHandler {
               for {
                 _ <- IO(invokeCounter.getAndIncrement())
+                ev <- inv.event
                 res = Some(ev)
               } yield res
-
-            TracedHandler(fn)
+            }
           }
       }
 

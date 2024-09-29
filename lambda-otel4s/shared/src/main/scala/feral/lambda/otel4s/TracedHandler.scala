@@ -26,7 +26,7 @@ import org.typelevel.otel4s.trace.Tracer
 object TracedHandler {
 
   def apply[F[_]: Monad: Tracer, Event, Result](
-      handler: Event => F[Option[Result]]
+      handler: F[Option[Result]]
   )(
       implicit inv: Invocation[F, Event],
       attr: EventSpanAttributes[Event]
@@ -36,7 +36,7 @@ object TracedHandler {
       context <- inv.context
       res <- Tracer[F].joinOrRoot(attr.contextCarrier(event)) {
         buildSpan(event, context).surround {
-          handler(event)
+          handler
         }
       }
     } yield res
