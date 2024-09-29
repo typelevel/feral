@@ -23,6 +23,6 @@ class V0_4_0Rewrites extends SemanticRule("V0_4_0Rewrites") {
     Patch.replaceSymbols(
       "feral.lambda.AwsTags" -> "feral.lambda.natchez.AwsTags",
       "feral.lambda.KernelSource" -> "feral.lambda.natchez.KernelSource",
-      "feral.lambda.TracedHandler" -> "feral.lambda.natchez.TracedHandler",
+      "feral.lambda.TracedHandler" -> "feral.lambda.natchez.TracedHandler"
     )
 }
