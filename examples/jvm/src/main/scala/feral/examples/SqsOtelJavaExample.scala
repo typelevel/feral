@@ -53,7 +53,7 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
 
   def handleEvent[F[_]: Monad: Tracer](
       @unused client: Client[F]
-  ): SqsEvent => F[Option[INothing]] = { event =>
+  )(implicit inv: Invocation[F, SqsEvent]): F[Option[INothing]] = inv.event.flatMap { event =>
     event
       .records
       .traverse(record =>
