@@ -77,16 +77,13 @@ lazy val root =
       unidocs
     )
     .configureRoot(
-      _.aggregate(sbtLambda)
-        .aggregate(scalafix_0_3_0.componentProjectReferences: _*)
-        .aggregate(scalafix_0_4_0.componentProjectReferences: _*)
+      _.aggregate(sbtLambda).aggregate(scalafix.componentProjectReferences: _*)
     )
 
 lazy val rootSbtScalafix = project
   .in(file(".rootSbtScalafix"))
   .aggregate(sbtLambda)
-  .aggregate(scalafix_0_3_0.componentProjectReferences: _*)
-  .aggregate(scalafix_0_4_0.componentProjectReferences: _*)
+  .aggregate(scalafix.componentProjectReferences: _*)
   .enablePlugins(NoPublishPlugin)
 
 lazy val lambda = crossProject(JSPlatform, JVMPlatform)
@@ -247,33 +244,10 @@ lazy val unidocs = project
     }
   )
 
-lazy val scalafix_0_3_0 = tlScalafixProject
-  .in(file("scalafix/0_3_0"))
+lazy val scalafix = tlScalafixProject
+  .in(file("scalafix"))
   .rulesSettings(
     name := "feral-scalafix",
-    startYear := Some(2023),
-    crossScalaVersions := Seq(Scala212)
-  )
-  .inputSettings(
-    crossScalaVersions := Seq(Scala213),
-    libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
-    headerSources / excludeFilter := AllPassFilter
-  )
-  .inputConfigure(_.disablePlugins(ScalafixPlugin))
-  .outputSettings(
-    crossScalaVersions := Seq(Scala213),
-    headerSources / excludeFilter := AllPassFilter
-  )
-  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm).disablePlugins(ScalafixPlugin))
-  .testsSettings(
-    startYear := Some(2023),
-    crossScalaVersions := Seq(Scala212)
-  )
-
-lazy val scalafix_0_4_0 = tlScalafixProject
-  .in(file("scalafix/0_4_0"))
-  .rulesSettings(
-    name := "feral-scalafix-0_4_0",
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
   )
