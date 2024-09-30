@@ -298,7 +298,7 @@ lazy val scalafix_0_4_0 = tlScalafixProject
     crossScalaVersions := Seq(Scala213),
     headerSources / excludeFilter := AllPassFilter
   )
-  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm).disablePlugins(ScalafixPlugin))
+  .outputConfigure(_.dependsOn(lambdaNatchez.jvm).disablePlugins(ScalafixPlugin))
   .testsSettings(
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
