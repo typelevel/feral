@@ -46,7 +46,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
   )
 
 val Scala212 = "2.12.19"
-val Scala213 = "2.13.14"
+val Scala213 = "2.13.15"
 val Scala3 = "3.3.3"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
@@ -287,7 +287,7 @@ lazy val scalafix_0_4_0 = tlScalafixProject
     crossScalaVersions := Seq(Scala213),
     headerSources / excludeFilter := AllPassFilter
   )
-  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm).disablePlugins(ScalafixPlugin))
+  .outputConfigure(_.dependsOn(lambdaNatchez.jvm).disablePlugins(ScalafixPlugin))
   .testsSettings(
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
