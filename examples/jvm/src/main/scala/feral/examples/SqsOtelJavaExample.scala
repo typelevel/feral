@@ -24,8 +24,6 @@ import feral.lambda.IOLambda
 import feral.lambda.Invocation
 import feral.lambda.events.SqsEvent
 import feral.lambda.events.SqsRecord
-import feral.lambda.otel4s.SqsRecordAttributes
-import feral.lambda.otel4s.TracedHandler
 import feral.lambda.otel4s._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
