@@ -18,7 +18,7 @@ import com.typesafe.tools.mima.core._
 
 name := "feral"
 
-ThisBuild / tlBaseVersion := "0.3"
+ThisBuild / tlBaseVersion := "0.4"
 ThisBuild / startYear := Some(2021)
 
 ThisBuild / developers := List(
@@ -58,6 +58,7 @@ val natchezVersion = "0.3.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
+val otel4sVersion = "0.10.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -69,6 +70,8 @@ lazy val root =
       lambda,
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
+      lambdaNatchez,
+      lambdaOtel4s,
       googleCloudHttp4s,
       examples,
       unidocs
@@ -89,7 +92,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
-      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.typelevel" %%% "case-insensitive" % "1.4.0",
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "com.comcast" %%% "ip4s-core" % "3.6.0",
@@ -171,6 +174,34 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
   .settings(commonSettings)
   .dependsOn(lambda)
 
+lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-natchez"))
+  .settings(
+    name := "feral-lambda-natchez",
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %%% "natchez-core" % natchezVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
+lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
+  .in(file("lambda-otel4s"))
+  .settings(
+    name := "feral-lambda-otel4s",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
+      "org.typelevel" %%% "otel4s-sdk-trace-testkit" % otel4sVersion % Test,
+      "org.typelevel" %%% "otel4s-semconv-experimental" % otel4sVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+    )
+  )
+  .settings(commonSettings)
+  .dependsOn(lambda)
+
 lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .in(file("examples"))
   .settings(
@@ -183,16 +214,16 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     )
   )
   .settings(commonSettings)
-  .dependsOn(lambda, lambdaHttp4s, googleCloudHttp4s)
+  .dependsOn(lambda, lambdaHttp4s, lambdaNatchez, lambdaOtel4s, googleCloudHttp4s)
+  .jvmSettings(libraryDependencies ++= Seq(
+    "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
+    "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1",
+    "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+  ))
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
     Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-  )
-  .jvmSettings(
-    libraryDependencies ++= Seq(
-      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
-    )
   )
   .enablePlugins(NoPublishPlugin)
 
@@ -214,6 +245,7 @@ lazy val unidocs = project
   )
 
 lazy val scalafix = tlScalafixProject
+  .in(file("scalafix"))
   .rulesSettings(
     name := "feral-scalafix",
     startYear := Some(2023),
@@ -221,7 +253,7 @@ lazy val scalafix = tlScalafixProject
   )
   .inputSettings(
     crossScalaVersions := Seq(Scala213),
-    libraryDependencies += "org.typelevel" %%% "feral-lambda-http4s" % "0.2.4",
+    libraryDependencies += "org.typelevel" %%% "feral-lambda" % "0.3.1",
     headerSources / excludeFilter := AllPassFilter
   )
   .inputConfigure(_.disablePlugins(ScalafixPlugin))
@@ -229,7 +261,7 @@ lazy val scalafix = tlScalafixProject
     crossScalaVersions := Seq(Scala213),
     headerSources / excludeFilter := AllPassFilter
   )
-  .outputConfigure(_.dependsOn(lambdaHttp4s.jvm).disablePlugins(ScalafixPlugin))
+  .outputConfigure(_.dependsOn(lambdaNatchez.jvm).disablePlugins(ScalafixPlugin))
   .testsSettings(
     startYear := Some(2023),
     crossScalaVersions := Seq(Scala212)
