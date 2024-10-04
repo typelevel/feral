@@ -29,7 +29,7 @@ object TracedHandler {
       handler: F[Option[Result]]
   )(
       implicit inv: Invocation[F, Event],
-      attr: EventSpanAttributes[Event]
+      attr: EventAttributeSource[Event]
   ): F[Option[Result]] =
     for {
       event <- inv.event
@@ -42,7 +42,7 @@ object TracedHandler {
     } yield res
 
   private def buildSpan[F[_]: Tracer, Event](event: Event, context: Context[F])(
-      implicit attr: EventSpanAttributes[Event]
+      implicit attr: EventAttributeSource[Event]
   ): SpanOps[F] =
     Tracer[F]
       .spanBuilder(context.functionName)
