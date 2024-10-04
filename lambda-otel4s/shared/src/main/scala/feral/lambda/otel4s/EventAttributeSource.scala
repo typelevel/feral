@@ -24,9 +24,24 @@ import feral.lambda.events.SqsEvent
 import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.trace.SpanKind
 
-private[otel4s] trait EventAttributeSources {
-  implicit def sqsEvent: EventSpanAttributes[SqsEvent] =
-    new EventSpanAttributes[SqsEvent] {
+trait EventAttributeSource[E] {
+  def contextCarrier(e: E): Map[String, String]
+  def spanKind: SpanKind
+  def attributes(e: E): Attributes
+}
+
+object EventAttributeSource {
+  def empty[E](sk: SpanKind): EventAttributeSource[E] =
+    new EventAttributeSource[E] {
+      def contextCarrier(e: E): Map[String, String] =
+        Map.empty
+      def spanKind: SpanKind = sk
+      def attributes(e: E): Attributes =
+        Attributes.empty
+    }
+
+  implicit def sqsEvent: EventAttributeSource[SqsEvent] =
+    new EventAttributeSource[SqsEvent] {
       def contextCarrier(e: SqsEvent): Map[String, String] =
         Map.empty
 
@@ -36,8 +51,8 @@ private[otel4s] trait EventAttributeSources {
         SqsEventAttributes()
     }
 
-  implicit def dynamoDbStreamEvent: EventSpanAttributes[DynamoDbStreamEvent] =
-    new EventSpanAttributes[DynamoDbStreamEvent] {
+  implicit def dynamoDbStreamEvent: EventAttributeSource[DynamoDbStreamEvent] =
+    new EventAttributeSource[DynamoDbStreamEvent] {
       def contextCarrier(e: DynamoDbStreamEvent): Map[String, String] =
         Map.empty
 
@@ -47,8 +62,8 @@ private[otel4s] trait EventAttributeSources {
         DynamoDbStreamEventAttributes()
     }
 
-  implicit def apiGatewayProxyEvent: EventSpanAttributes[ApiGatewayProxyEvent] =
-    new EventSpanAttributes[ApiGatewayProxyEvent] {
+  implicit def apiGatewayProxyEvent: EventAttributeSource[ApiGatewayProxyEvent] =
+    new EventAttributeSource[ApiGatewayProxyEvent] {
       def contextCarrier(e: ApiGatewayProxyEvent): Map[String, String] =
         e.headers.getOrElse(Map.empty).map { case (k, v) => (k.toString, v) }
 
@@ -58,8 +73,8 @@ private[otel4s] trait EventAttributeSources {
         ApiGatewayProxyEventAttributes()
     }
 
-  implicit def apiGatewayProxyEventV2: EventSpanAttributes[ApiGatewayProxyEventV2] =
-    new EventSpanAttributes[ApiGatewayProxyEventV2] {
+  implicit def apiGatewayProxyEventV2: EventAttributeSource[ApiGatewayProxyEventV2] =
+    new EventAttributeSource[ApiGatewayProxyEventV2] {
       def contextCarrier(e: ApiGatewayProxyEventV2): Map[String, String] =
         e.headers.map { case (k, v) => (k.toString, v) }
 
@@ -69,8 +84,8 @@ private[otel4s] trait EventAttributeSources {
         ApiGatewayProxyEventAttributes()
     }
 
-  implicit def s3BatchEvent: EventSpanAttributes[S3BatchEvent] =
-    new EventSpanAttributes[S3BatchEvent] {
+  implicit def s3BatchEvent: EventAttributeSource[S3BatchEvent] =
+    new EventAttributeSource[S3BatchEvent] {
       def contextCarrier(e: S3BatchEvent): Map[String, String] =
         Map.empty
 
@@ -79,5 +94,4 @@ private[otel4s] trait EventAttributeSources {
       def attributes(e: S3BatchEvent): Attributes =
         S3BatchEventAttributes(e)
     }
-
 }

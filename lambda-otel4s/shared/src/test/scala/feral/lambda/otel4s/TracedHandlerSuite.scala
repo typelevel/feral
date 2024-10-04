@@ -123,8 +123,8 @@ object SharedTracedHandlerSuite {
     implicit val encoder: Encoder[TestEvent] =
       Encoder.forProduct2("traceId", "payload")(ev => (ev.traceId, ev.payload))
 
-    implicit val attr: EventSpanAttributes[TestEvent] =
-      new EventSpanAttributes[TestEvent] {
+    implicit val attr: EventAttributeSource[TestEvent] =
+      new EventAttributeSource[TestEvent] {
 
         override def contextCarrier(e: TestEvent): Map[String, String] =
           Map("trace_id" -> e.traceId)
