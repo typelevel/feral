@@ -22,7 +22,15 @@ class ScheduledEventSuite extends FunSuite {
   test("Decoding of change of state of abnormality detection alarms") {
     assertEquals(
       abnormalityDetectionEvent.as[ScheduledEvent].toTry.get,
-      abnormalityDetectionResult)
+      abnormalityDetectionResult
+    )
+  }
+
+  test("Decoding change of state of compound alarm with suppressor alarm") {
+    assertEquals(
+      compoundAlarmSuppressorEvent.as[ScheduledEvent].toTry.get,
+      compoundAlarmSuppressorResult
+    )
   }
 
   // Alarm status changes based on a single metric
@@ -89,8 +97,8 @@ class ScheduledEventSuite extends FunSuite {
       alarmName = "ServerCpuTooHigh",
       operation = None,
       configuration = ScheduledEventConfiguration(
-        description = "Goes into alarm when server CPU utilization is too high!",
-        metrics = List(
+        description =Some( "Goes into alarm when server CPU utilization is too high!"),
+        metrics = Some(List(
           ScheduledEventMetric(
             id = "30b6c6b2-a864-43a2-4877-c09a1afc3b87",
             metricStat = Some(
@@ -107,7 +115,11 @@ class ScheduledEventSuite extends FunSuite {
             expression = None,
             label = None
           )
-        )
+        )),
+        alarmRule = None,
+        actionsSuppressor = None,
+        actionsSuppressorWaitPeriod = None,
+        actionsSuppressorExtensionPeriod = None
       ),
       previousState = Some(
         ScheduledEventPreviousState(
@@ -125,7 +137,9 @@ class ScheduledEventSuite extends FunSuite {
           reasonData =
             "{\"version\":\"1.0\",\"queryDate\":\"2019-10-02T17:04:40.985+0000\",\"startDate\":\"2019-10-02T16:59:00.000+0000\",\"statistic\":\"Average\",\"period\":300,\"recentDatapoints\":[99.50160229693434],\"threshold\":50.0}",
           timestamp = OffsetDateTime.parse("2019-10-02T17:04:40.989+0000", formatter),
-          value = "ALARM"
+          value = "ALARM",
+          actionsSuppressedBy = None,
+          actionsSuppressedReason = None
         ))
     ),
     `replay-name` = None
@@ -216,8 +230,8 @@ class ScheduledEventSuite extends FunSuite {
       alarmName = "TotalNetworkTrafficTooHigh",
       operation = None,
       configuration = ScheduledEventConfiguration(
-        description = "Goes into alarm if total network traffic exceeds 10Kb",
-        metrics = List(
+        description = Some("Goes into alarm if total network traffic exceeds 10Kb"),
+        metrics = Some(List(
           ScheduledEventMetric(
             expression = Some("SUM(METRICS())"),
             id = "e1",
@@ -257,7 +271,11 @@ class ScheduledEventSuite extends FunSuite {
             expression = None,
             label = None
           )
-        )
+        )),
+        alarmRule = None,
+        actionsSuppressor = None,
+        actionsSuppressorWaitPeriod = None,
+        actionsSuppressorExtensionPeriod = None
       ),
       previousState = Some(
         ScheduledEventPreviousState(
@@ -273,7 +291,9 @@ class ScheduledEventSuite extends FunSuite {
           reasonData =
             "{\"version\":\"1.0\",\"queryDate\":\"2019-10-02T17:20:48.551+0000\",\"startDate\":\"2019-10-02T17:10:00.000+0000\",\"period\":300,\"recentDatapoints\":[45628.0],\"threshold\":10000.0}",
           timestamp = OffsetDateTime.parse("2019-10-02T17:20:48.554+0000", formatter),
-          value = "ALARM"
+          value = "ALARM",
+          actionsSuppressedBy = None,
+          actionsSuppressedReason = None
         ))
     ),
     `replay-name` = None
@@ -345,8 +365,8 @@ class ScheduledEventSuite extends FunSuite {
       alarmName = "EC2 CPU Utilization Anomaly",
       operation = None,
       configuration = ScheduledEventConfiguration(
-        description = "Goes into alarm if CPU Utilization is out of band",
-        metrics = List(
+        description = Some("Goes into alarm if CPU Utilization is out of band"),
+        metrics = Some(List(
           ScheduledEventMetric(
             id = "m1",
             metricStat = Some(
@@ -370,7 +390,11 @@ class ScheduledEventSuite extends FunSuite {
             returnData = true,
             metricStat = None
           )
-        )
+        )),
+        alarmRule = None,
+        actionsSuppressor = None,
+        actionsSuppressorWaitPeriod = None,
+        actionsSuppressorExtensionPeriod = None
       ),
       state = Some(
         ScheduledEventState(
@@ -379,7 +403,9 @@ class ScheduledEventSuite extends FunSuite {
           reasonData =
             "{\"version\":\"1.0\",\"queryDate\":\"2019-10-03T16:00:04.650+0000\",\"startDate\":\"2019-10-03T15:58:00.000+0000\",\"period\":60,\"recentDatapoints\":[0.0],\"recentLowerThresholds\":[0.020599444741798756],\"recentUpperThresholds\":[0.3006915352732461]}",
           timestamp = OffsetDateTime.parse("2019-10-03T16:00:04.653+0000", formatter),
-          value = "ALARM"
+          value = "ALARM",
+          actionsSuppressedBy = None,
+          actionsSuppressedReason = None
         )),
       previousState = Some(
         ScheduledEventPreviousState(
@@ -390,6 +416,89 @@ class ScheduledEventSuite extends FunSuite {
           timestamp = OffsetDateTime.parse("2019-10-03T15:59:04.672+0000", formatter),
           value = "OK"
         ))
+    ),
+    `replay-name` = None
+  )
+
+  // Change of state of combined alarm with suppressor alarm
+  private def compoundAlarmSuppressorEvent = json"""
+    {
+      "version": "0",
+      "id": "d3dfc86d-384d-24c8-0345-9f7986db0b80",
+      "detail-type": "CloudWatch Alarm State Change",
+      "source": "aws.cloudwatch",
+      "account": "123456789012",
+      "time": "2022-07-22T15:57:45Z",
+      "region": "us-east-1",
+      "resources": [
+          "arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"
+      ],
+      "detail": {
+          "alarmName": "ServiceAggregatedAlarm",
+          "state": {
+              "actionsSuppressedBy": "WaitPeriod",
+              "actionsSuppressedReason": "Actions suppressed by WaitPeriod",
+              "value": "ALARM",
+              "reason": "arn:aws:cloudwatch:us-east-1:123456789012:alarm:SuppressionDemo.EventBridge.FirstChild transitioned to ALARM at Friday 22 July, 2022 15:57:45 UTC",
+              "reasonData": "{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"ALARM\",\"timestamp\":\"2022-07-22T15:57:45.394+0000\"}}]}",
+              "timestamp": "2022-07-22T15:57:45.394+0000"
+          },
+          "previousState": {
+              "value": "OK",
+              "reason": "arn:aws:cloudwatch:us-east-1:123456789012:alarm:SuppressionDemo.EventBridge.Main was created and its alarm rule evaluates to OK",
+              "reasonData": "{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:57.770+0000\"}},{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:54.191+0000\"}}]}",
+              "timestamp": "2022-07-22T15:56:14.552+0000"
+          },
+          "configuration": {
+              "alarmRule": "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)",
+              "actionsSuppressor": "ServiceMaintenanceAlarm",
+              "actionsSuppressorWaitPeriod": 120,
+              "actionsSuppressorExtensionPeriod": 180
+          }
+      }
+  }
+  """
+
+  private def compoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
+    id = "d3dfc86d-384d-24c8-0345-9f7986db0b80",
+    version = "0",
+    account = "123456789012",
+    time = Instant.parse("2022-07-22T15:57:45Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"),
+    source = "aws.cloudwatch",
+    `detail-type` = "CloudWatch Alarm State Change",
+    detail = ScheduledEventDetail(
+      alarmName = "ServiceAggregatedAlarm",
+      operation = None,
+      state = Some(
+        ScheduledEventState(
+          actionsSuppressedBy = Some("WaitPeriod"),
+          actionsSuppressedReason = Some("Actions suppressed by WaitPeriod"),
+          value = "ALARM",
+          reason =
+            "arn:aws:cloudwatch:us-east-1:123456789012:alarm:SuppressionDemo.EventBridge.FirstChild transitioned to ALARM at Friday 22 July, 2022 15:57:45 UTC",
+          reasonData = "{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"ALARM\",\"timestamp\":\"2022-07-22T15:57:45.394+0000\"}}]}",
+          timestamp = OffsetDateTime.parse("2022-07-22T15:57:45.394+0000", formatter)
+        )
+      ),
+      previousState = Some(
+        ScheduledEventPreviousState(
+          value = "OK",
+          reason =
+            "arn:aws:cloudwatch:us-east-1:123456789012:alarm:SuppressionDemo.EventBridge.Main was created and its alarm rule evaluates to OK",
+          reasonData = Some("{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:57.770+0000\"}},{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:54.191+0000\"}}]}"),
+          timestamp = OffsetDateTime.parse("2022-07-22T15:56:14.552+0000", formatter)
+        )
+      ),
+      configuration = ScheduledEventConfiguration(
+        alarmRule = Some("ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)"),
+        actionsSuppressor = Some("ServiceMaintenanceAlarm"),
+        actionsSuppressorWaitPeriod = Some(120),
+        actionsSuppressorExtensionPeriod = Some(180),
+        metrics = None,
+        description = None
+      ),
     ),
     `replay-name` = None
   )

@@ -115,25 +115,41 @@ object ScheduledEventDetail {
 }
 
 sealed abstract class ScheduledEventConfiguration {
-  def description: String
-  def metrics: List[ScheduledEventMetric]
+  def description: Option[String]
+  def metrics: Option[List[ScheduledEventMetric]]
+  def alarmRule: Option[String]
+  def actionsSuppressor: Option[String]
+  def actionsSuppressorWaitPeriod: Option[Int]
+  def actionsSuppressorExtensionPeriod: Option[Int]
 }
 
 object ScheduledEventConfiguration {
   def apply(
-      description: String,
-      metrics: List[ScheduledEventMetric]
+      description: Option[String],
+      metrics: Option[List[ScheduledEventMetric]],
+      alarmRule: Option[String],
+      actionsSuppressor: Option[String],
+      actionsSuppressorWaitPeriod: Option[Int],
+      actionsSuppressorExtensionPeriod: Option[Int]
   ): ScheduledEventConfiguration =
-    new Impl(description, metrics)
+    new Impl(description, metrics, alarmRule, actionsSuppressor, actionsSuppressorWaitPeriod, actionsSuppressorExtensionPeriod)
 
-  implicit val decoder: Decoder[ScheduledEventConfiguration] = Decoder.forProduct2(
+  implicit val decoder: Decoder[ScheduledEventConfiguration] = Decoder.forProduct6(
     "description",
-    "metrics"
+    "metrics",
+    "alarmRule",
+    "actionsSuppressor",
+    "actionsSuppressorWaitPeriod",
+    "actionsSuppressorExtensionPeriod"
   )(ScheduledEventConfiguration.apply)
 
   private final case class Impl(
-      description: String,
-      metrics: List[ScheduledEventMetric]
+                                 description: Option[String],
+                                 metrics: Option[List[ScheduledEventMetric]],
+                                 alarmRule: Option[String],
+                                 actionsSuppressor: Option[String],
+                                 actionsSuppressorWaitPeriod: Option[Int],
+                                 actionsSuppressorExtensionPeriod: Option[Int]
   ) extends ScheduledEventConfiguration {
     override def productPrefix = "ScheduledEventConfiguration"
   }
@@ -239,6 +255,8 @@ sealed abstract class ScheduledEventState {
   def reasonData: String
   def timestamp: OffsetDateTime
   def value: String
+  def actionsSuppressedBy: Option[String]
+  def actionsSuppressedReason: Option[String]
 }
 
 object ScheduledEventState {
@@ -246,22 +264,28 @@ object ScheduledEventState {
       reason: String,
       reasonData: String,
       timestamp: OffsetDateTime,
-      value: String
+      value: String,
+      actionsSuppressedBy: Option[String],
+      actionsSuppressedReason: Option[String]
   ): ScheduledEventState =
-    new Impl(reason, reasonData, timestamp, value)
+    new Impl(reason, reasonData, timestamp, value, actionsSuppressedBy, actionsSuppressedReason)
 
-  implicit val decoder: Decoder[ScheduledEventState] = Decoder.forProduct4(
+  implicit val decoder: Decoder[ScheduledEventState] = Decoder.forProduct6(
     "reason",
     "reasonData",
     "timestamp",
-    "value"
+    "value",
+    "actionsSuppressedBy",
+    "actionsSuppressedReason"
   )(ScheduledEventState.apply)
 
   private final case class Impl(
       reason: String,
       reasonData: String,
       timestamp: OffsetDateTime,
-      value: String
+      value: String,
+      actionsSuppressedBy: Option[String],
+      actionsSuppressedReason: Option[String]
   ) extends ScheduledEventState {
     override def productPrefix = "ScheduledEventState"
   }
