@@ -97,25 +97,26 @@ class ScheduledEventSuite extends FunSuite {
       alarmName = "ServerCpuTooHigh",
       operation = None,
       configuration = ScheduledEventConfiguration(
-        description =Some( "Goes into alarm when server CPU utilization is too high!"),
-        metrics = Some(List(
-          ScheduledEventMetric(
-            id = "30b6c6b2-a864-43a2-4877-c09a1afc3b87",
-            metricStat = Some(
-              ScheduledEventMetricStat(
-                metric = Metric(
-                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                  name = "CPUUtilization",
-                  namespace = "AWS/EC2"
-                ),
-                period = 300,
-                stat = "Average"
-              )),
-            returnData = true,
-            expression = None,
-            label = None
-          )
-        )),
+        description = Some("Goes into alarm when server CPU utilization is too high!"),
+        metrics = Some(
+          List(
+            ScheduledEventMetric(
+              id = "30b6c6b2-a864-43a2-4877-c09a1afc3b87",
+              metricStat = Some(
+                ScheduledEventMetricStat(
+                  metric = Metric(
+                    dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                    name = "CPUUtilization",
+                    namespace = "AWS/EC2"
+                  ),
+                  period = 300,
+                  stat = "Average"
+                )),
+              returnData = true,
+              expression = None,
+              label = None
+            )
+          )),
         alarmRule = None,
         actionsSuppressor = None,
         actionsSuppressorWaitPeriod = None,
@@ -231,47 +232,48 @@ class ScheduledEventSuite extends FunSuite {
       operation = None,
       configuration = ScheduledEventConfiguration(
         description = Some("Goes into alarm if total network traffic exceeds 10Kb"),
-        metrics = Some(List(
-          ScheduledEventMetric(
-            expression = Some("SUM(METRICS())"),
-            id = "e1",
-            label = Some("Total Network Traffic"),
-            returnData = true,
-            metricStat = None
-          ),
-          ScheduledEventMetric(
-            id = "m1",
-            metricStat = Some(
-              ScheduledEventMetricStat(
-                metric = Metric(
-                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                  name = "NetworkIn",
-                  namespace = "AWS/EC2"
-                ),
-                period = 300,
-                stat = "Maximum"
-              )),
-            returnData = false,
-            expression = None,
-            label = None
-          ),
-          ScheduledEventMetric(
-            id = "m2",
-            metricStat = Some(
-              ScheduledEventMetricStat(
-                metric = Metric(
-                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                  name = "NetworkOut",
-                  namespace = "AWS/EC2"
-                ),
-                period = 300,
-                stat = "Maximum"
-              )),
-            returnData = false,
-            expression = None,
-            label = None
-          )
-        )),
+        metrics = Some(
+          List(
+            ScheduledEventMetric(
+              expression = Some("SUM(METRICS())"),
+              id = "e1",
+              label = Some("Total Network Traffic"),
+              returnData = true,
+              metricStat = None
+            ),
+            ScheduledEventMetric(
+              id = "m1",
+              metricStat = Some(
+                ScheduledEventMetricStat(
+                  metric = Metric(
+                    dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                    name = "NetworkIn",
+                    namespace = "AWS/EC2"
+                  ),
+                  period = 300,
+                  stat = "Maximum"
+                )),
+              returnData = false,
+              expression = None,
+              label = None
+            ),
+            ScheduledEventMetric(
+              id = "m2",
+              metricStat = Some(
+                ScheduledEventMetricStat(
+                  metric = Metric(
+                    dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                    name = "NetworkOut",
+                    namespace = "AWS/EC2"
+                  ),
+                  period = 300,
+                  stat = "Maximum"
+                )),
+              returnData = false,
+              expression = None,
+              label = None
+            )
+          )),
         alarmRule = None,
         actionsSuppressor = None,
         actionsSuppressorWaitPeriod = None,
@@ -366,31 +368,32 @@ class ScheduledEventSuite extends FunSuite {
       operation = None,
       configuration = ScheduledEventConfiguration(
         description = Some("Goes into alarm if CPU Utilization is out of band"),
-        metrics = Some(List(
-          ScheduledEventMetric(
-            id = "m1",
-            metricStat = Some(
-              ScheduledEventMetricStat(
-                metric = Metric(
-                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                  name = "CPUUtilization",
-                  namespace = "AWS/EC2"
-                ),
-                period = 60,
-                stat = "Average"
-              )),
-            returnData = true,
-            expression = None,
-            label = None
-          ),
-          ScheduledEventMetric(
-            id = "ad1",
-            expression = Some("ANOMALY_DETECTION_BAND(m1, 0.8)"),
-            label = Some("CPUUtilization (expected)"),
-            returnData = true,
-            metricStat = None
-          )
-        )),
+        metrics = Some(
+          List(
+            ScheduledEventMetric(
+              id = "m1",
+              metricStat = Some(
+                ScheduledEventMetricStat(
+                  metric = Metric(
+                    dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                    name = "CPUUtilization",
+                    namespace = "AWS/EC2"
+                  ),
+                  period = 60,
+                  stat = "Average"
+                )),
+              returnData = true,
+              expression = None,
+              label = None
+            ),
+            ScheduledEventMetric(
+              id = "ad1",
+              expression = Some("ANOMALY_DETECTION_BAND(m1, 0.8)"),
+              label = Some("CPUUtilization (expected)"),
+              returnData = true,
+              metricStat = None
+            )
+          )),
         alarmRule = None,
         actionsSuppressor = None,
         actionsSuppressorWaitPeriod = None,
@@ -478,7 +481,8 @@ class ScheduledEventSuite extends FunSuite {
           value = "ALARM",
           reason =
             "arn:aws:cloudwatch:us-east-1:123456789012:alarm:SuppressionDemo.EventBridge.FirstChild transitioned to ALARM at Friday 22 July, 2022 15:57:45 UTC",
-          reasonData = "{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"ALARM\",\"timestamp\":\"2022-07-22T15:57:45.394+0000\"}}]}",
+          reasonData =
+            "{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"ALARM\",\"timestamp\":\"2022-07-22T15:57:45.394+0000\"}}]}",
           timestamp = OffsetDateTime.parse("2022-07-22T15:57:45.394+0000", formatter)
         )
       ),
@@ -487,7 +491,8 @@ class ScheduledEventSuite extends FunSuite {
           value = "OK",
           reason =
             "arn:aws:cloudwatch:us-east-1:123456789012:alarm:SuppressionDemo.EventBridge.Main was created and its alarm rule evaluates to OK",
-          reasonData = Some("{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:57.770+0000\"}},{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:54.191+0000\"}}]}"),
+          reasonData = Some(
+            "{\"triggeringAlarms\":[{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:57.770+0000\"}},{\"arn\":\"arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh\",\"state\":{\"value\":\"OK\",\"timestamp\":\"2022-07-14T16:28:54.191+0000\"}}]}"),
           timestamp = OffsetDateTime.parse("2022-07-22T15:56:14.552+0000", formatter)
         )
       ),
@@ -498,7 +503,7 @@ class ScheduledEventSuite extends FunSuite {
         actionsSuppressorExtensionPeriod = Some(180),
         metrics = None,
         description = None
-      ),
+      )
     ),
     `replay-name` = None
   )
