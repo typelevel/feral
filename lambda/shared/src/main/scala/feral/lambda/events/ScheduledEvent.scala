@@ -141,28 +141,36 @@ object ScheduledEventConfiguration {
 
 sealed abstract class ScheduledEventMetric {
   def id: String
-  def metricStat: ScheduledEventMetricStat
   def returnData: Boolean
+  def expression: Option[String]
+  def label: Option[String]
+  def metricStat: Option[ScheduledEventMetricStat]
 }
 
 object ScheduledEventMetric {
   def apply(
              id: String,
-             metricStat: ScheduledEventMetricStat,
-             returnData: Boolean
+             returnData: Boolean,
+              expression: Option[String],
+              label: Option[String],
+             metricStat: Option[ScheduledEventMetricStat],
            ): ScheduledEventMetric =
-    new Impl(id, metricStat, returnData)
+    new Impl(id, returnData, expression, label, metricStat)
 
-  implicit val decoder: Decoder[ScheduledEventMetric] = Decoder.forProduct3(
+  implicit val decoder: Decoder[ScheduledEventMetric] = Decoder.forProduct5(
     "id",
-    "metricStat",
-    "returnData"
+    "returnData",
+    "expression",
+    "label",
+    "metricStat"
   )(ScheduledEventMetric.apply)
 
   private final case class Impl(
                                  id: String,
-                                 metricStat: ScheduledEventMetricStat,
-                                 returnData: Boolean
+                                 returnData: Boolean,
+                                 expression: Option[String],
+                                 label: Option[String],
+                                 metricStat: Option[ScheduledEventMetricStat],
   ) extends ScheduledEventMetric {
     override def productPrefix = "ScheduledEventMetric"
   }
