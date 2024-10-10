@@ -20,7 +20,9 @@ class ScheduledEventSuite extends FunSuite {
   }
 
   test("Decoding of change of state of abnormality detection alarms") {
-    assertEquals(abnormalityDetectionEvent.as[ScheduledEvent].toTry.get, abnormalityDetectionResult)
+    assertEquals(
+      abnormalityDetectionEvent.as[ScheduledEvent].toTry.get,
+      abnormalityDetectionResult)
   }
 
   // Alarm status changes based on a single metric
@@ -91,39 +93,46 @@ class ScheduledEventSuite extends FunSuite {
         metrics = List(
           ScheduledEventMetric(
             id = "30b6c6b2-a864-43a2-4877-c09a1afc3b87",
-            metricStat = Some(ScheduledEventMetricStat(
-              metric = Metric(
-                dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                name = "CPUUtilization",
-                namespace = "AWS/EC2"
-              ),
-              period = 300,
-              stat = "Average"
-            )),
+            metricStat = Some(
+              ScheduledEventMetricStat(
+                metric = Metric(
+                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                  name = "CPUUtilization",
+                  namespace = "AWS/EC2"
+                ),
+                period = 300,
+                stat = "Average"
+              )),
             returnData = true,
             expression = None,
             label = None
           )
         )
       ),
-      previousState = Some(ScheduledEventPreviousState(
-        reason = "Threshold Crossed: 1 out of the last 1 datapoints [0.0666851903306472 (01/10/19 13:46:00)] was not greater than the threshold (50.0) (minimum 1 datapoint for ALARM -> OK transition).",
-        reasonData = Some("{\"version\":\"1.0\",\"queryDate\":\"2019-10-01T13:56:40.985+0000\",\"startDate\":\"2019-10-01T13:46:00.000+0000\",\"statistic\":\"Average\",\"period\":300,\"recentDatapoints\":[0.0666851903306472],\"threshold\":50.0}"),
-        timestamp = OffsetDateTime.parse("2019-10-01T13:56:40.987+0000", formatter),
-        value = "OK"
-      )),
-      state = Some(ScheduledEventState(
-        reason = "Threshold Crossed: 1 out of the last 1 datapoints [99.50160229693434 (02/10/19 16:59:00)] was greater than the threshold (50.0) (minimum 1 datapoint for OK -> ALARM transition).",
-        reasonData = "{\"version\":\"1.0\",\"queryDate\":\"2019-10-02T17:04:40.985+0000\",\"startDate\":\"2019-10-02T16:59:00.000+0000\",\"statistic\":\"Average\",\"period\":300,\"recentDatapoints\":[99.50160229693434],\"threshold\":50.0}",
-        timestamp = OffsetDateTime.parse("2019-10-02T17:04:40.989+0000", formatter),
-        value = "ALARM"
-      ))
+      previousState = Some(
+        ScheduledEventPreviousState(
+          reason =
+            "Threshold Crossed: 1 out of the last 1 datapoints [0.0666851903306472 (01/10/19 13:46:00)] was not greater than the threshold (50.0) (minimum 1 datapoint for ALARM -> OK transition).",
+          reasonData = Some(
+            "{\"version\":\"1.0\",\"queryDate\":\"2019-10-01T13:56:40.985+0000\",\"startDate\":\"2019-10-01T13:46:00.000+0000\",\"statistic\":\"Average\",\"period\":300,\"recentDatapoints\":[0.0666851903306472],\"threshold\":50.0}"),
+          timestamp = OffsetDateTime.parse("2019-10-01T13:56:40.987+0000", formatter),
+          value = "OK"
+        )),
+      state = Some(
+        ScheduledEventState(
+          reason =
+            "Threshold Crossed: 1 out of the last 1 datapoints [99.50160229693434 (02/10/19 16:59:00)] was greater than the threshold (50.0) (minimum 1 datapoint for OK -> ALARM transition).",
+          reasonData =
+            "{\"version\":\"1.0\",\"queryDate\":\"2019-10-02T17:04:40.985+0000\",\"startDate\":\"2019-10-02T16:59:00.000+0000\",\"statistic\":\"Average\",\"period\":300,\"recentDatapoints\":[99.50160229693434],\"threshold\":50.0}",
+          timestamp = OffsetDateTime.parse("2019-10-02T17:04:40.989+0000", formatter),
+          value = "ALARM"
+        ))
     ),
-  `replay-name` = None
+    `replay-name` = None
   )
 
   // Decoding of alarm state changes based on metrics formulas
-  private def metricsFormulaEvent =json"""
+  private def metricsFormulaEvent = json"""
     {
         "version": "0",
         "id": "2dde0eb1-528b-d2d5-9ca6-6d590caf2329",
@@ -199,7 +208,8 @@ class ScheduledEventSuite extends FunSuite {
     account = "123456789012",
     time = Instant.parse("2019-10-02T17:20:48Z"),
     region = "us-east-1",
-    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh"),
+    resources =
+      List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh"),
     source = "aws.cloudwatch",
     `detail-type` = "CloudWatch Alarm State Change",
     detail = ScheduledEventDetail(
@@ -217,54 +227,60 @@ class ScheduledEventSuite extends FunSuite {
           ),
           ScheduledEventMetric(
             id = "m1",
-            metricStat = Some(ScheduledEventMetricStat(
-              metric = Metric(
-                dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                name = "NetworkIn",
-                namespace = "AWS/EC2"
-              ),
-              period = 300,
-              stat = "Maximum"
-            )),
+            metricStat = Some(
+              ScheduledEventMetricStat(
+                metric = Metric(
+                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                  name = "NetworkIn",
+                  namespace = "AWS/EC2"
+                ),
+                period = 300,
+                stat = "Maximum"
+              )),
             returnData = false,
             expression = None,
             label = None
           ),
           ScheduledEventMetric(
             id = "m2",
-            metricStat = Some(ScheduledEventMetricStat(
-              metric = Metric(
-                dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                name = "NetworkOut",
-                namespace = "AWS/EC2"
-              ),
-              period = 300,
-              stat = "Maximum"
-            )),
+            metricStat = Some(
+              ScheduledEventMetricStat(
+                metric = Metric(
+                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                  name = "NetworkOut",
+                  namespace = "AWS/EC2"
+                ),
+                period = 300,
+                stat = "Maximum"
+              )),
             returnData = false,
             expression = None,
             label = None
           )
         )
       ),
-      previousState = Some(ScheduledEventPreviousState(
-        reason = "Unchecked: Initial alarm creation",
-        reasonData = None,
-        timestamp = OffsetDateTime.parse("2019-10-02T17:20:03.642+0000", formatter),
-        value = "INSUFFICIENT_DATA"
-      )),
-      state = Some(ScheduledEventState(
-        reason = "Threshold Crossed: 1 out of the last 1 datapoints [45628.0 (02/10/19 17:10:00)] was greater than the threshold (10000.0) (minimum 1 datapoint for OK -> ALARM transition).",
-        reasonData = "{\"version\":\"1.0\",\"queryDate\":\"2019-10-02T17:20:48.551+0000\",\"startDate\":\"2019-10-02T17:10:00.000+0000\",\"period\":300,\"recentDatapoints\":[45628.0],\"threshold\":10000.0}",
-        timestamp = OffsetDateTime.parse("2019-10-02T17:20:48.554+0000", formatter),
-        value = "ALARM"
-      ))
+      previousState = Some(
+        ScheduledEventPreviousState(
+          reason = "Unchecked: Initial alarm creation",
+          reasonData = None,
+          timestamp = OffsetDateTime.parse("2019-10-02T17:20:03.642+0000", formatter),
+          value = "INSUFFICIENT_DATA"
+        )),
+      state = Some(
+        ScheduledEventState(
+          reason =
+            "Threshold Crossed: 1 out of the last 1 datapoints [45628.0 (02/10/19 17:10:00)] was greater than the threshold (10000.0) (minimum 1 datapoint for OK -> ALARM transition).",
+          reasonData =
+            "{\"version\":\"1.0\",\"queryDate\":\"2019-10-02T17:20:48.551+0000\",\"startDate\":\"2019-10-02T17:10:00.000+0000\",\"period\":300,\"recentDatapoints\":[45628.0],\"threshold\":10000.0}",
+          timestamp = OffsetDateTime.parse("2019-10-02T17:20:48.554+0000", formatter),
+          value = "ALARM"
+        ))
     ),
     `replay-name` = None
   )
 
   // Abnormality detection alarm status change
-  private def abnormalityDetectionEvent =json"""
+  private def abnormalityDetectionEvent = json"""
     {
         "version": "0",
         "id": "daafc9f1-bddd-c6c9-83af-74971fcfc4ef",
@@ -321,7 +337,8 @@ class ScheduledEventSuite extends FunSuite {
     account = "123456789012",
     time = Instant.parse("2019-10-03T16:00:04Z"),
     region = "us-east-1",
-    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:EC2 CPU Utilization Anomaly"),
+    resources =
+      List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:EC2 CPU Utilization Anomaly"),
     source = "aws.cloudwatch",
     `detail-type` = "CloudWatch Alarm State Change",
     detail = ScheduledEventDetail(
@@ -332,15 +349,16 @@ class ScheduledEventSuite extends FunSuite {
         metrics = List(
           ScheduledEventMetric(
             id = "m1",
-            metricStat = Some(ScheduledEventMetricStat(
-              metric = Metric(
-                dimensions = Map("InstanceId" -> "i-12345678901234567"),
-                name = "CPUUtilization",
-                namespace = "AWS/EC2"
-              ),
-              period = 60,
-              stat = "Average"
-            )),
+            metricStat = Some(
+              ScheduledEventMetricStat(
+                metric = Metric(
+                  dimensions = Map("InstanceId" -> "i-12345678901234567"),
+                  name = "CPUUtilization",
+                  namespace = "AWS/EC2"
+                ),
+                period = 60,
+                stat = "Average"
+              )),
             returnData = true,
             expression = None,
             label = None
@@ -354,18 +372,24 @@ class ScheduledEventSuite extends FunSuite {
           )
         )
       ),
-      state = Some(ScheduledEventState(
-        reason = "Thresholds Crossed: 1 out of the last 1 datapoints [0.0 (03/10/19 15:58:00)] was less than the lower thresholds [0.020599444741798756] or greater than the upper thresholds [0.3006915352732461] (minimum 1 datapoint for OK -> ALARM transition).",
-        reasonData = "{\"version\":\"1.0\",\"queryDate\":\"2019-10-03T16:00:04.650+0000\",\"startDate\":\"2019-10-03T15:58:00.000+0000\",\"period\":60,\"recentDatapoints\":[0.0],\"recentLowerThresholds\":[0.020599444741798756],\"recentUpperThresholds\":[0.3006915352732461]}",
-        timestamp = OffsetDateTime.parse("2019-10-03T16:00:04.653+0000", formatter),
-        value = "ALARM",
-      )),
-      previousState = Some(ScheduledEventPreviousState(
-        reason = "Thresholds Crossed: 1 out of the last 1 datapoints [0.166666666664241 (03/10/19 15:57:00)] was not less than the lower thresholds [0.0206719426210418] or not greater than the upper thresholds [0.30076870222143803] (minimum 1 datapoint for ALARM -> OK transition).",
-        reasonData = Some("{\"version\":\"1.0\",\"queryDate\":\"2019-10-03T15:59:04.670+0000\",\"startDate\":\"2019-10-03T15:57:00.000+0000\",\"period\":60,\"recentDatapoints\":[0.166666666664241],\"recentLowerThresholds\":[0.0206719426210418],\"recentUpperThresholds\":[0.30076870222143803]}"),
-        timestamp = OffsetDateTime.parse("2019-10-03T15:59:04.672+0000", formatter),
-        value = "OK"
-      ))
+      state = Some(
+        ScheduledEventState(
+          reason =
+            "Thresholds Crossed: 1 out of the last 1 datapoints [0.0 (03/10/19 15:58:00)] was less than the lower thresholds [0.020599444741798756] or greater than the upper thresholds [0.3006915352732461] (minimum 1 datapoint for OK -> ALARM transition).",
+          reasonData =
+            "{\"version\":\"1.0\",\"queryDate\":\"2019-10-03T16:00:04.650+0000\",\"startDate\":\"2019-10-03T15:58:00.000+0000\",\"period\":60,\"recentDatapoints\":[0.0],\"recentLowerThresholds\":[0.020599444741798756],\"recentUpperThresholds\":[0.3006915352732461]}",
+          timestamp = OffsetDateTime.parse("2019-10-03T16:00:04.653+0000", formatter),
+          value = "ALARM"
+        )),
+      previousState = Some(
+        ScheduledEventPreviousState(
+          reason =
+            "Thresholds Crossed: 1 out of the last 1 datapoints [0.166666666664241 (03/10/19 15:57:00)] was not less than the lower thresholds [0.0206719426210418] or not greater than the upper thresholds [0.30076870222143803] (minimum 1 datapoint for ALARM -> OK transition).",
+          reasonData = Some(
+            "{\"version\":\"1.0\",\"queryDate\":\"2019-10-03T15:59:04.670+0000\",\"startDate\":\"2019-10-03T15:57:00.000+0000\",\"period\":60,\"recentDatapoints\":[0.166666666664241],\"recentLowerThresholds\":[0.0206719426210418],\"recentUpperThresholds\":[0.30076870222143803]}"),
+          timestamp = OffsetDateTime.parse("2019-10-03T15:59:04.672+0000", formatter),
+          value = "OK"
+        ))
     ),
     `replay-name` = None
   )
