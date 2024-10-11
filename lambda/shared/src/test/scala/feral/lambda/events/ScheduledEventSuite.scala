@@ -16,12 +16,12 @@
 
 package feral.lambda.events
 
-import java.time.Instant
-
+import io.circe.Json
+import io.circe.JsonObject
 import io.circe.literal._
-import io.circe.{Json, JsonObject}
-
 import munit.FunSuite
+
+import java.time.Instant
 
 class ScheduledEventSuite extends FunSuite {
 

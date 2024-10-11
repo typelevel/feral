@@ -16,9 +16,10 @@
 
 package feral.lambda.events
 
-import java.time.Instant
+import io.circe.Decoder
+import io.circe.JsonObject
 
-import io.circe.{Decoder, JsonObject}
+import java.time.Instant
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/aws-lambda/trigger/eventbridge.d.ts
 // https://github.com/aws/aws-lambda-java-libs/blob/main/aws-lambda-java-events/src/main/java/com/amazonaws/services/lambda/runtime/events/ScheduledEvent.java
