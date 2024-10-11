@@ -59,6 +59,13 @@ class ScheduledEventSuite extends FunSuite {
     )
   }
 
+  test("Decoding of alarm deletion based on metrics formulas") {
+    assertEquals(
+      metricsFormulaDeletionEvent.as[ScheduledEvent].toTry.get,
+      metricsFormulaDeletionResult
+    )
+  }
+
   // Alarm status changes based on a single metric
   private def singleMetricEvent = json"""
     {
@@ -973,6 +980,167 @@ class ScheduledEventSuite extends FunSuite {
           "insufficientDataActions" -> Json.arr()
         )
         .toJson
+    ),
+    `replay-name` = None
+  )
+
+  private def metricsFormulaDeletionEvent = json"""
+   {
+      "version": "0",
+      "id": "f171d220-9e1c-c252-5042-2677347a83ed",
+      "detail-type": "CloudWatch Alarm Configuration Change",
+      "source": "aws.cloudwatch",
+      "account": "123456789012",
+      "time": "2022-03-03T17:07:13Z",
+      "region": "us-east-1",
+      "resources": [
+          "arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh"
+      ],
+      "detail": {
+          "alarmName": "TotalNetworkTrafficTooHigh",
+          "operation": "delete",
+          "state": {
+              "value": "INSUFFICIENT_DATA",
+              "timestamp": "2022-03-03T17:06:17.672+0000"
+          },
+          "configuration": {
+              "evaluationPeriods": 1,
+              "threshold": 10000,
+              "comparisonOperator": "GreaterThanThreshold",
+              "treatMissingData": "ignore",
+              "metrics": [{
+                      "id": "m1",
+                      "metricStat": {
+                          "metric": {
+                              "namespace": "AWS/EC2",
+                              "name": "NetworkIn",
+                              "dimensions": {
+                                  "InstanceId": "i-12345678901234567"
+                              }
+                          },
+                          "period": 300,
+                          "stat": "Maximum"
+                      },
+                      "returnData": false
+                  },
+                  {
+                      "id": "m2",
+                      "metricStat": {
+                          "metric": {
+                              "namespace": "AWS/EC2",
+                              "name": "NetworkOut",
+                              "dimensions": {
+                                  "InstanceId": "i-12345678901234567"
+                              }
+                          },
+                          "period": 300,
+                          "stat": "Maximum"
+                      },
+                      "returnData": false
+                  },
+                  {
+                      "id": "e1",
+                      "expression": "SUM(METRICS())",
+                      "label": "Total Network Traffic",
+                      "returnData": true
+                  }
+              ],
+              "alarmName": "TotalNetworkTrafficTooHigh",
+              "description": "Goes into alarm if total network traffic exceeds 10Kb",
+              "actionsEnabled": true,
+              "timestamp": "2022-03-03T17:06:17.672+0000",
+              "okActions": [],
+              "alarmActions": [],
+              "insufficientDataActions": []
+
+          }
+      }
+  }
+  """
+
+  private def metricsFormulaDeletionResult: ScheduledEvent = ScheduledEvent(
+    id = "f171d220-9e1c-c252-5042-2677347a83ed",
+    version = "0",
+    account = "123456789012",
+    time = Instant.parse("2022-03-03T17:07:13Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh"),
+    source = "aws.cloudwatch",
+    `detail-type` = "CloudWatch Alarm Configuration Change",
+    detail = JsonObject.apply(
+      "alarmName" -> Json.fromString("TotalNetworkTrafficTooHigh"),
+      "operation" -> Json.fromString("delete"),
+      "state" -> JsonObject
+        .apply(
+          "value" -> Json.fromString("INSUFFICIENT_DATA"),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:17.672+0000")
+        )
+        .toJson,
+      "configuration" -> JsonObject
+        .apply(
+          "evaluationPeriods" -> Json.fromInt(1),
+          "threshold" -> Json.fromInt(10000),
+          "comparisonOperator" -> Json.fromString("GreaterThanThreshold"),
+          "treatMissingData" -> Json.fromString("ignore"),
+          "metrics" -> Json.arr(
+            JsonObject
+              .apply(
+                "id" -> Json.fromString("m1"),
+                "metricStat" -> JsonObject
+                  .apply(
+                    "metric" -> JsonObject
+                      .apply(
+                        "namespace" -> Json.fromString("AWS/EC2"),
+                        "name" -> Json.fromString("NetworkIn"),
+                        "dimensions" -> JsonObject
+                          .apply("InstanceId" -> Json.fromString("i-12345678901234567"))
+                          .toJson
+                      )
+                      .toJson,
+                    "period" -> Json.fromInt(300),
+                    "stat" -> Json.fromString("Maximum")
+                  )
+                  .toJson,
+                "returnData" -> Json.fromBoolean(false)
+              )
+              .toJson,
+            JsonObject
+              .apply(
+                "id" -> Json.fromString("m2"),
+                "metricStat" -> JsonObject
+                  .apply(
+                    "metric" -> JsonObject
+                      .apply(
+                        "namespace" -> Json.fromString("AWS/EC2"),
+                        "name" -> Json.fromString("NetworkOut"),
+                        "dimensions" -> JsonObject
+                          .apply("InstanceId" -> Json.fromString("i-12345678901234567"))
+                          .toJson
+                      )
+                      .toJson,
+                    "period" -> Json.fromInt(300),
+                    "stat" -> Json.fromString("Maximum")
+                  )
+                  .toJson,
+                "returnData" -> Json.fromBoolean(false)
+              )
+              .toJson,
+            JsonObject
+              .apply(
+                "id" -> Json.fromString("e1"),
+                "expression" -> Json.fromString("SUM(METRICS())"),
+                "label" -> Json.fromString("Total Network Traffic"),
+                "returnData" -> Json.fromBoolean(true)
+              ).toJson
+          ),
+          "alarmName" -> Json.fromString("TotalNetworkTrafficTooHigh"),
+          "description" -> Json.fromString("Goes into alarm if total network traffic exceeds 10Kb"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:17.672+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
+        ).toJson
     ),
     `replay-name` = None
   )
