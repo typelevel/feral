@@ -24,17 +24,24 @@ class ScheduledEventSuite extends FunSuite {
     )
   }
 
-  test("Decoding change of state of compound alarm with suppressor alarm") {
+  test("Decoding of change of state of compound alarm with suppressor alarm") {
     assertEquals(
-      compoundAlarmSuppressorEvent.as[ScheduledEvent].toTry.get,
-      compoundAlarmSuppressorResult
+      stateChangeCompoundAlarmSuppressorEvent.as[ScheduledEvent].toTry.get,
+      stateChangeCompoundAlarmSuppressorResult
     )
   }
 
-  test("Decoding the creation of compound alarms") {
+  test("Decoding of creation of compound alarms") {
     assertEquals(
       compoundAlarmCreationEvent.as[ScheduledEvent].toTry.get,
       compoundAlarmCreationResult
+    )
+  }
+
+  test("Decoding of creation of compound alarm with suppressor alarm") {
+    assertEquals(
+      createCompoundAlarmSuppressorEvent.as[ScheduledEvent].toTry.get,
+      createCompoundAlarmSuppressorResult
     )
   }
 
@@ -446,7 +453,7 @@ class ScheduledEventSuite extends FunSuite {
   )
 
   // Change of state of combined alarm with suppressor alarm
-  private def compoundAlarmSuppressorEvent = json"""
+  private def stateChangeCompoundAlarmSuppressorEvent = json"""
     {
       "version": "0",
       "id": "d3dfc86d-384d-24c8-0345-9f7986db0b80",
@@ -484,7 +491,7 @@ class ScheduledEventSuite extends FunSuite {
   }
   """
 
-  private def compoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
+  private def stateChangeCompoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
     id = "d3dfc86d-384d-24c8-0345-9f7986db0b80",
     version = "0",
     account = "123456789012",
@@ -594,6 +601,78 @@ class ScheduledEventSuite extends FunSuite {
           "description" -> Json.fromString("Aggregated monitor for instance"),
           "actionsEnabled" -> Json.fromBoolean(true),
           "timestamp" -> Json.fromString("2022-03-03T17:06:22.289+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
+        )
+        .toJson
+    ),
+    `replay-name` = None
+  )
+
+  private def createCompoundAlarmSuppressorEvent = json"""
+    {
+        "version": "0",
+        "id": "454773e1-09f7-945b-aa2c-590af1c3f8e0",
+        "detail-type": "CloudWatch Alarm Configuration Change",
+        "source": "aws.cloudwatch",
+        "account": "123456789012",
+        "time": "2022-07-14T13:59:46Z",
+        "region": "us-east-1",
+        "resources": [
+            "arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"
+        ],
+        "detail": {
+            "alarmName": "ServiceAggregatedAlarm",
+            "operation": "create",
+            "state": {
+                "value": "INSUFFICIENT_DATA",
+                "timestamp": "2022-07-14T13:59:46.425+0000"
+            },
+            "configuration": {
+                "alarmRule": "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)",
+                "actionsSuppressor": "ServiceMaintenanceAlarm",
+                "actionsSuppressorWaitPeriod": 120,
+                "actionsSuppressorExtensionPeriod": 180,
+                "alarmName": "ServiceAggregatedAlarm",
+                "actionsEnabled": true,
+                "timestamp": "2022-07-14T13:59:46.425+0000",
+                "okActions": [],
+                "alarmActions": [],
+                "insufficientDataActions": []
+            }
+        }
+    }
+  """
+
+  private def createCompoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
+    id = "454773e1-09f7-945b-aa2c-590af1c3f8e0",
+    version = "0",
+    account = "123456789012",
+    time = Instant.parse("2022-07-14T13:59:46Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"),
+    source = "aws.cloudwatch",
+    `detail-type` = "CloudWatch Alarm Configuration Change",
+    detail = JsonObject.apply(
+      "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+      "operation" -> Json.fromString("create"),
+      "state" -> JsonObject
+        .apply(
+          "value" -> Json.fromString("INSUFFICIENT_DATA"),
+          "timestamp" -> Json.fromString("2022-07-14T13:59:46.425+0000")
+        )
+        .toJson,
+      "configuration" -> JsonObject
+        .apply(
+          "alarmRule" -> Json.fromString(
+            "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)"),
+          "actionsSuppressor" -> Json.fromString("ServiceMaintenanceAlarm"),
+          "actionsSuppressorWaitPeriod" -> Json.fromInt(120),
+          "actionsSuppressorExtensionPeriod" -> Json.fromInt(180),
+          "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-07-14T13:59:46.425+0000"),
           "okActions" -> Json.arr(),
           "alarmActions" -> Json.arr(),
           "insufficientDataActions" -> Json.arr()
