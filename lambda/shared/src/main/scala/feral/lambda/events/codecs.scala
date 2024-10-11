@@ -23,8 +23,7 @@ import io.circe.KeyDecoder
 import io.circe.KeyEncoder
 import org.typelevel.ci.CIString
 
-import java.time.{Instant, OffsetDateTime}
-import java.time.format.DateTimeFormatter
+import java.time.Instant
 import scala.util.Try
 
 private object codecs {
@@ -37,12 +36,6 @@ private object codecs {
         val nanos = round((millis % 1000) * 1e6).toLongExact
         Instant.ofEpochSecond(seconds, nanos)
       }
-    }
-
-  implicit def decodeOffsetDateTime: Decoder[OffsetDateTime] =
-    Decoder.decodeString.emapTry { str =>
-      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-      Try(OffsetDateTime.parse(str, formatter))
     }
 
   implicit def decodeIpAddress: Decoder[IpAddress] =
