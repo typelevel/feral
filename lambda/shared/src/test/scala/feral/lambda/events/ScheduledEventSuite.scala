@@ -9,6 +9,10 @@ import munit.FunSuite
 
 class ScheduledEventSuite extends FunSuite {
 
+  test("Decoding of a simple event") {
+    assertEquals(simpleEvent.as[ScheduledEvent].toTry.get, simpleResult)
+  }
+
   test("Decoding of alarm status changes based on a single metric") {
     assertEquals(singleMetricEvent.as[ScheduledEvent].toTry.get, singleMetricResult)
   }
@@ -73,6 +77,34 @@ class ScheduledEventSuite extends FunSuite {
     )
   }
 
+  private def simpleEvent = json"""
+  {
+    "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
+    "detail-type": "Scheduled Event",
+    "source": "aws.events",
+    "account": "123456789012",
+    "time": "1970-01-01T00:00:00Z",
+    "region": "us-east-1",
+    "resources": [
+      "arn:aws:events:us-east-1:123456789012:rule/ExampleRule"
+    ],
+    "detail": {}
+  }
+  """
+
+  private def simpleResult: ScheduledEvent = ScheduledEvent(
+    id = "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
+    version = None,
+    account = "123456789012",
+    time = Instant.parse("1970-01-01T00:00:00Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:events:us-east-1:123456789012:rule/ExampleRule"),
+    source = "aws.events",
+    `detail-type` = "Scheduled Event",
+    detail = JsonObject.empty,
+    `replay-name` = None
+  )
+
   // Alarm status changes based on a single metric
   private def singleMetricEvent = json"""
     {
@@ -126,7 +158,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def singleMetricResult: ScheduledEvent = ScheduledEvent(
     id = "c4c1c1c9-6542-e61b-6ef0-8c4d36933a92",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2019-10-02T17:04:40Z"),
     region = "us-east-1",
@@ -263,7 +295,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def metricsFormulaResult: ScheduledEvent = ScheduledEvent(
     id = "2dde0eb1-528b-d2d5-9ca6-6d590caf2329",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2019-10-02T17:20:48Z"),
     region = "us-east-1",
@@ -408,7 +440,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def abnormalityDetectionResult: ScheduledEvent = ScheduledEvent(
     id = "daafc9f1-bddd-c6c9-83af-74971fcfc4ef",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2019-10-03T16:00:04Z"),
     region = "us-east-1",
@@ -521,7 +553,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def stateChangeCompoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
     id = "d3dfc86d-384d-24c8-0345-9f7986db0b80",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-07-22T15:57:45Z"),
     region = "us-east-1",
@@ -605,7 +637,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def compoundAlarmCreationResult: ScheduledEvent = ScheduledEvent(
     id = "91535fdd-1e9c-849d-624b-9a9f2b1d09d0",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-03-03T17:06:22Z"),
     region = "us-east-1",
@@ -675,7 +707,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def createCompoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
     id = "454773e1-09f7-945b-aa2c-590af1c3f8e0",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-07-14T13:59:46Z"),
     region = "us-east-1",
@@ -796,7 +828,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def metricAlarmUpdateResult: ScheduledEvent = ScheduledEvent(
     id = "bc7d3391-47f8-ae47-f457-1b4d06118d50",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-03-03T17:06:34Z"),
     region = "us-east-1",
@@ -940,7 +972,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def updateCompoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
     id = "4c6f4177-6bd5-c0ca-9f05-b4151c54568b",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-07-14T13:59:56Z"),
     region = "us-east-1",
@@ -1067,7 +1099,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def metricsFormulaDeletionResult: ScheduledEvent = ScheduledEvent(
     id = "f171d220-9e1c-c252-5042-2677347a83ed",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-03-03T17:07:13Z"),
     region = "us-east-1",
@@ -1190,7 +1222,7 @@ class ScheduledEventSuite extends FunSuite {
 
   private def combinedAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
     id = "e34592a1-46c0-b316-f614-1b17a87be9dc",
-    version = "0",
+    version = Some("0"),
     account = "123456789012",
     time = Instant.parse("2022-07-14T14:00:01Z"),
     region = "us-east-1",

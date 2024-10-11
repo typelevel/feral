@@ -8,7 +8,7 @@ import io.circe.{Decoder, JsonObject}
 // https://github.com/aws/aws-lambda-java-libs/blob/main/aws-lambda-java-events/src/main/java/com/amazonaws/services/lambda/runtime/events/ScheduledEvent.java
 sealed abstract class ScheduledEvent {
   def id: String
-  def version: String
+  def version: Option[String]
   def account: String
   def time: Instant
   def region: String
@@ -23,7 +23,7 @@ object ScheduledEvent {
 
   def apply(
       id: String,
-      version: String,
+      version: Option[String],
       account: String,
       time: Instant,
       region: String,
@@ -61,7 +61,7 @@ object ScheduledEvent {
 
   private final case class Impl(
       id: String,
-      version: String,
+      version: Option[String],
       account: String,
       time: Instant,
       region: String,
