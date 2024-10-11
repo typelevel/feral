@@ -874,7 +874,8 @@ class ScheduledEventSuite extends FunSuite {
               .toJson
           ),
           "alarmName" -> Json.fromString("ServerCpuTooHigh"),
-          "description" -> Json.fromString("Goes into alarm when server CPU utilization is too high!"),
+          "description" -> Json.fromString(
+            "Goes into alarm when server CPU utilization is too high!"),
           "actionsEnabled" -> Json.fromBoolean(true),
           "timestamp" -> Json.fromString("2022-03-03T17:06:34.267+0000"),
           "okActions" -> Json.arr(),
@@ -889,34 +890,38 @@ class ScheduledEventSuite extends FunSuite {
           "comparisonOperator" -> Json.fromString("GreaterThanThreshold"),
           "treatMissingData" -> Json.fromString("ignore"),
           "metrics" -> Json.arr(
-            JsonObject.apply(
-              "id" -> Json.fromString("d6bfa85f-893e-b052-a58b-4f9295c9111a"),
-              "metricStat" -> JsonObject
-                .apply(
-                  "metric" -> JsonObject
-                    .apply(
-                      "namespace" -> Json.fromString("AWS/EC2"),
-                      "name" -> Json.fromString("CPUUtilization"),
-                      "dimensions" -> JsonObject
-                        .apply("InstanceId" -> Json.fromString("i-12345678901234567"))
-                        .toJson
-                    )
-                    .toJson,
-                  "period" -> Json.fromInt(300),
-                  "stat" -> Json.fromString("Average")
-                )
-                .toJson,
-              "returnData" -> Json.fromBoolean(true)
-            ).toJson,
+            JsonObject
+              .apply(
+                "id" -> Json.fromString("d6bfa85f-893e-b052-a58b-4f9295c9111a"),
+                "metricStat" -> JsonObject
+                  .apply(
+                    "metric" -> JsonObject
+                      .apply(
+                        "namespace" -> Json.fromString("AWS/EC2"),
+                        "name" -> Json.fromString("CPUUtilization"),
+                        "dimensions" -> JsonObject
+                          .apply("InstanceId" -> Json.fromString("i-12345678901234567"))
+                          .toJson
+                      )
+                      .toJson,
+                    "period" -> Json.fromInt(300),
+                    "stat" -> Json.fromString("Average")
+                  )
+                  .toJson,
+                "returnData" -> Json.fromBoolean(true)
+              )
+              .toJson
           ),
           "alarmName" -> Json.fromString("ServerCpuTooHigh"),
-          "description" -> Json.fromString("Goes into alarm when server CPU utilization is too high!"),
+          "description" -> Json.fromString(
+            "Goes into alarm when server CPU utilization is too high!"),
           "actionsEnabled" -> Json.fromBoolean(true),
           "timestamp" -> Json.fromString("2022-03-03T17:06:13.757+0000"),
           "okActions" -> Json.arr(),
           "alarmActions" -> Json.arr(),
           "insufficientDataActions" -> Json.arr()
-        ).toJson
+        )
+        .toJson
     ),
     `replay-name` = None
   )
@@ -1103,7 +1108,8 @@ class ScheduledEventSuite extends FunSuite {
     account = "123456789012",
     time = Instant.parse("2022-03-03T17:07:13Z"),
     region = "us-east-1",
-    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh"),
+    resources =
+      List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:TotalNetworkTrafficTooHigh"),
     source = "aws.cloudwatch",
     `detail-type` = "CloudWatch Alarm Configuration Change",
     detail = JsonObject.apply(
@@ -1170,16 +1176,19 @@ class ScheduledEventSuite extends FunSuite {
                 "expression" -> Json.fromString("SUM(METRICS())"),
                 "label" -> Json.fromString("Total Network Traffic"),
                 "returnData" -> Json.fromBoolean(true)
-              ).toJson
+              )
+              .toJson
           ),
           "alarmName" -> Json.fromString("TotalNetworkTrafficTooHigh"),
-          "description" -> Json.fromString("Goes into alarm if total network traffic exceeds 10Kb"),
+          "description" -> Json.fromString(
+            "Goes into alarm if total network traffic exceeds 10Kb"),
           "actionsEnabled" -> Json.fromBoolean(true),
           "timestamp" -> Json.fromString("2022-03-03T17:06:17.672+0000"),
           "okActions" -> Json.arr(),
           "alarmActions" -> Json.arr(),
           "insufficientDataActions" -> Json.arr()
-        ).toJson
+        )
+        .toJson
     ),
     `replay-name` = None
   )
