@@ -45,6 +45,13 @@ class ScheduledEventSuite extends FunSuite {
     )
   }
 
+  test("Decoding of metric alarm updates") {
+    assertEquals(
+      metricAlarmUpdateEvent.as[ScheduledEvent].toTry.get,
+      metricAlarmUpdateResult
+    )
+  }
+
   // Alarm status changes based on a single metric
   private def singleMetricEvent = json"""
     {
@@ -678,6 +685,185 @@ class ScheduledEventSuite extends FunSuite {
           "insufficientDataActions" -> Json.arr()
         )
         .toJson
+    ),
+    `replay-name` = None
+  )
+
+  private def metricAlarmUpdateEvent = json"""
+    {
+
+        "version": "0",
+        "id": "bc7d3391-47f8-ae47-f457-1b4d06118d50",
+        "detail-type": "CloudWatch Alarm Configuration Change",
+        "source": "aws.cloudwatch",
+        "account": "123456789012",
+        "time": "2022-03-03T17:06:34Z",
+        "region": "us-east-1",
+        "resources": [
+            "arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh"
+        ],
+        "detail": {
+            "alarmName": "ServerCpuTooHigh",
+            "operation": "update",
+            "state": {
+                "value": "INSUFFICIENT_DATA",
+                "timestamp": "2022-03-03T17:06:13.757+0000"
+            },
+            "configuration": {
+                "evaluationPeriods": 1,
+                "threshold": 80,
+                "comparisonOperator": "GreaterThanThreshold",
+                "treatMissingData": "ignore",
+                "metrics": [
+                    {
+                        "id": "86bfa85f-b14c-ebf7-8916-7da014ce23c0",
+                        "metricStat": {
+                            "metric": {
+                                "namespace": "AWS/EC2",
+                                "name": "CPUUtilization",
+                                "dimensions": {
+                                    "InstanceId": "i-12345678901234567"
+                                }
+                            },
+                            "period": 300,
+                            "stat": "Average"
+                        },
+                        "returnData": true
+                    }
+                ],
+                "alarmName": "ServerCpuTooHigh",
+                "description": "Goes into alarm when server CPU utilization is too high!",
+                "actionsEnabled": true,
+                "timestamp": "2022-03-03T17:06:34.267+0000",
+                "okActions": [],
+                "alarmActions": [],
+                "insufficientDataActions": []
+            },
+            "previousConfiguration": {
+                "evaluationPeriods": 1,
+                "threshold": 70,
+                "comparisonOperator": "GreaterThanThreshold",
+                "treatMissingData": "ignore",
+                "metrics": [
+                    {
+                        "id": "d6bfa85f-893e-b052-a58b-4f9295c9111a",
+                        "metricStat": {
+                            "metric": {
+                                "namespace": "AWS/EC2",
+                                "name": "CPUUtilization",
+                                "dimensions": {
+                                    "InstanceId": "i-12345678901234567"
+                                }
+                            },
+                            "period": 300,
+                            "stat": "Average"
+                        },
+                        "returnData": true
+                    }
+                ],
+                "alarmName": "ServerCpuTooHigh",
+                "description": "Goes into alarm when server CPU utilization is too high!",
+                "actionsEnabled": true,
+                "timestamp": "2022-03-03T17:06:13.757+0000",
+                "okActions": [],
+                "alarmActions": [],
+                "insufficientDataActions": []
+            }
+        }
+    }
+  """
+
+  private def metricAlarmUpdateResult: ScheduledEvent = ScheduledEvent(
+    id = "bc7d3391-47f8-ae47-f457-1b4d06118d50",
+    version = "0",
+    account = "123456789012",
+    time = Instant.parse("2022-03-03T17:06:34Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServerCpuTooHigh"),
+    source = "aws.cloudwatch",
+    `detail-type` = "CloudWatch Alarm Configuration Change",
+    detail = JsonObject.apply(
+      "alarmName" -> Json.fromString("ServerCpuTooHigh"),
+      "operation" -> Json.fromString("update"),
+      "state" -> JsonObject
+        .apply(
+          "value" -> Json.fromString("INSUFFICIENT_DATA"),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:13.757+0000")
+        )
+        .toJson,
+      "configuration" -> JsonObject
+        .apply(
+          "evaluationPeriods" -> Json.fromInt(1),
+          "threshold" -> Json.fromInt(80),
+          "comparisonOperator" -> Json.fromString("GreaterThanThreshold"),
+          "treatMissingData" -> Json.fromString("ignore"),
+          "metrics" -> Json.arr(
+            JsonObject
+              .apply(
+                "id" -> Json.fromString("86bfa85f-b14c-ebf7-8916-7da014ce23c0"),
+                "metricStat" -> JsonObject
+                  .apply(
+                    "metric" -> JsonObject
+                      .apply(
+                        "namespace" -> Json.fromString("AWS/EC2"),
+                        "name" -> Json.fromString("CPUUtilization"),
+                        "dimensions" -> JsonObject
+                          .apply("InstanceId" -> Json.fromString("i-12345678901234567"))
+                          .toJson
+                      )
+                      .toJson,
+                    "period" -> Json.fromInt(300),
+                    "stat" -> Json.fromString("Average")
+                  )
+                  .toJson,
+                "returnData" -> Json.fromBoolean(true)
+              )
+              .toJson
+          ),
+          "alarmName" -> Json.fromString("ServerCpuTooHigh"),
+          "description" -> Json.fromString("Goes into alarm when server CPU utilization is too high!"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:34.267+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
+        )
+        .toJson,
+      "previousConfiguration" -> JsonObject
+        .apply(
+          "evaluationPeriods" -> Json.fromInt(1),
+          "threshold" -> Json.fromInt(70),
+          "comparisonOperator" -> Json.fromString("GreaterThanThreshold"),
+          "treatMissingData" -> Json.fromString("ignore"),
+          "metrics" -> Json.arr(
+            JsonObject.apply(
+              "id" -> Json.fromString("d6bfa85f-893e-b052-a58b-4f9295c9111a"),
+              "metricStat" -> JsonObject
+                .apply(
+                  "metric" -> JsonObject
+                    .apply(
+                      "namespace" -> Json.fromString("AWS/EC2"),
+                      "name" -> Json.fromString("CPUUtilization"),
+                      "dimensions" -> JsonObject
+                        .apply("InstanceId" -> Json.fromString("i-12345678901234567"))
+                        .toJson
+                    )
+                    .toJson,
+                  "period" -> Json.fromInt(300),
+                  "stat" -> Json.fromString("Average")
+                )
+                .toJson,
+              "returnData" -> Json.fromBoolean(true)
+            ).toJson,
+          ),
+          "alarmName" -> Json.fromString("ServerCpuTooHigh"),
+          "description" -> Json.fromString("Goes into alarm when server CPU utilization is too high!"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:13.757+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
+        ).toJson
     ),
     `replay-name` = None
   )
