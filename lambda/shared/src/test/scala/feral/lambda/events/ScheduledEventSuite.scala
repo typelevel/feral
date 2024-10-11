@@ -31,6 +31,13 @@ class ScheduledEventSuite extends FunSuite {
     )
   }
 
+  test("Decoding the creation of compound alarms") {
+    assertEquals(
+      compoundAlarmCreationEvent.as[ScheduledEvent].toTry.get,
+      compoundAlarmCreationResult
+    )
+  }
+
   // Alarm status changes based on a single metric
   private def singleMetricEvent = json"""
     {
@@ -521,6 +528,75 @@ class ScheduledEventSuite extends FunSuite {
           "actionsSuppressor" -> Json.fromString("ServiceMaintenanceAlarm"),
           "actionsSuppressorWaitPeriod" -> Json.fromInt(120),
           "actionsSuppressorExtensionPeriod" -> Json.fromInt(180)
+        )
+        .toJson
+    ),
+    `replay-name` = None
+  )
+
+  // Creating compound alarms
+  private def compoundAlarmCreationEvent = json"""
+    {
+      "version": "0",
+      "id": "91535fdd-1e9c-849d-624b-9a9f2b1d09d0",
+      "detail-type": "CloudWatch Alarm Configuration Change",
+      "source": "aws.cloudwatch",
+      "account": "123456789012",
+      "time": "2022-03-03T17:06:22Z",
+      "region": "us-east-1",
+      "resources": [
+          "arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"
+      ],
+      "detail": {
+          "alarmName": "ServiceAggregatedAlarm",
+          "operation": "create",
+          "state": {
+              "value": "INSUFFICIENT_DATA",
+              "timestamp": "2022-03-03T17:06:22.289+0000"
+          },
+          "configuration": {
+              "alarmRule": "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)",
+              "alarmName": "ServiceAggregatedAlarm",
+              "description": "Aggregated monitor for instance",
+              "actionsEnabled": true,
+              "timestamp": "2022-03-03T17:06:22.289+0000",
+              "okActions": [],
+              "alarmActions": [],
+              "insufficientDataActions": []
+          }
+      }
+  }
+  """
+
+  private def compoundAlarmCreationResult: ScheduledEvent = ScheduledEvent(
+    id = "91535fdd-1e9c-849d-624b-9a9f2b1d09d0",
+    version = "0",
+    account = "123456789012",
+    time = Instant.parse("2022-03-03T17:06:22Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"),
+    source = "aws.cloudwatch",
+    `detail-type` = "CloudWatch Alarm Configuration Change",
+    detail = JsonObject.apply(
+      "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+      "operation" -> Json.fromString("create"),
+      "state" -> JsonObject
+        .apply(
+          "value" -> Json.fromString("INSUFFICIENT_DATA"),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:22.289+0000")
+        )
+        .toJson,
+      "configuration" -> JsonObject
+        .apply(
+          "alarmRule" -> Json.fromString(
+            "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)"),
+          "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+          "description" -> Json.fromString("Aggregated monitor for instance"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-03-03T17:06:22.289+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
         )
         .toJson
     ),
