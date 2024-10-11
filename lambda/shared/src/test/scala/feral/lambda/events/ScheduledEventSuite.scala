@@ -52,6 +52,13 @@ class ScheduledEventSuite extends FunSuite {
     )
   }
 
+  test("Decoding of updates of compound alarms with suppressor alarms") {
+    assertEquals(
+      updateCompoundAlarmSuppressorEvent.as[ScheduledEvent].toTry.get,
+      updateCompoundAlarmSuppressorResult
+    )
+  }
+
   // Alarm status changes based on a single metric
   private def singleMetricEvent = json"""
     {
@@ -864,6 +871,108 @@ class ScheduledEventSuite extends FunSuite {
           "alarmActions" -> Json.arr(),
           "insufficientDataActions" -> Json.arr()
         ).toJson
+    ),
+    `replay-name` = None
+  )
+
+  // Update compound alarm with suppressor alarm
+  private def updateCompoundAlarmSuppressorEvent = json"""
+    {
+        "version": "0",
+        "id": "4c6f4177-6bd5-c0ca-9f05-b4151c54568b",
+        "detail-type": "CloudWatch Alarm Configuration Change",
+        "source": "aws.cloudwatch",
+        "account": "123456789012",
+        "time": "2022-07-14T13:59:56Z",
+        "region": "us-east-1",
+        "resources": [
+            "arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"
+        ],
+        "detail": {
+            "alarmName": "ServiceAggregatedAlarm",
+            "operation": "update",
+            "state": {
+                "actionsSuppressedBy": "WaitPeriod",
+                "value": "ALARM",
+                "timestamp": "2022-07-14T13:59:46.425+0000"
+            },
+            "configuration": {
+                "alarmRule": "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)",
+                "actionsSuppressor": "ServiceMaintenanceAlarm",
+                "actionsSuppressorWaitPeriod": 120,
+                "actionsSuppressorExtensionPeriod": 360,
+                "alarmName": "ServiceAggregatedAlarm",
+                "actionsEnabled": true,
+                "timestamp": "2022-07-14T13:59:56.290+0000",
+                "okActions": [],
+                "alarmActions": [],
+                "insufficientDataActions": []
+            },
+            "previousConfiguration": {
+                "alarmRule": "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)",
+                "actionsSuppressor": "ServiceMaintenanceAlarm",
+                "actionsSuppressorWaitPeriod": 120,
+                "actionsSuppressorExtensionPeriod": 180,
+                "alarmName": "ServiceAggregatedAlarm",
+                "actionsEnabled": true,
+                "timestamp": "2022-07-14T13:59:46.425+0000",
+                "okActions": [],
+                "alarmActions": [],
+                "insufficientDataActions": []
+            }
+        }
+    }
+  """
+
+  private def updateCompoundAlarmSuppressorResult: ScheduledEvent = ScheduledEvent(
+    id = "4c6f4177-6bd5-c0ca-9f05-b4151c54568b",
+    version = "0",
+    account = "123456789012",
+    time = Instant.parse("2022-07-14T13:59:56Z"),
+    region = "us-east-1",
+    resources = List("arn:aws:cloudwatch:us-east-1:123456789012:alarm:ServiceAggregatedAlarm"),
+    source = "aws.cloudwatch",
+    `detail-type` = "CloudWatch Alarm Configuration Change",
+    detail = JsonObject.apply(
+      "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+      "operation" -> Json.fromString("update"),
+      "state" -> JsonObject
+        .apply(
+          "actionsSuppressedBy" -> Json.fromString("WaitPeriod"),
+          "value" -> Json.fromString("ALARM"),
+          "timestamp" -> Json.fromString("2022-07-14T13:59:46.425+0000")
+        )
+        .toJson,
+      "configuration" -> JsonObject
+        .apply(
+          "alarmRule" -> Json.fromString(
+            "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)"),
+          "actionsSuppressor" -> Json.fromString("ServiceMaintenanceAlarm"),
+          "actionsSuppressorWaitPeriod" -> Json.fromInt(120),
+          "actionsSuppressorExtensionPeriod" -> Json.fromInt(360),
+          "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-07-14T13:59:56.290+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
+        )
+        .toJson,
+      "previousConfiguration" -> JsonObject
+        .apply(
+          "alarmRule" -> Json.fromString(
+            "ALARM(ServerCpuTooHigh) OR ALARM(TotalNetworkTrafficTooHigh)"),
+          "actionsSuppressor" -> Json.fromString("ServiceMaintenanceAlarm"),
+          "actionsSuppressorWaitPeriod" -> Json.fromInt(120),
+          "actionsSuppressorExtensionPeriod" -> Json.fromInt(180),
+          "alarmName" -> Json.fromString("ServiceAggregatedAlarm"),
+          "actionsEnabled" -> Json.fromBoolean(true),
+          "timestamp" -> Json.fromString("2022-07-14T13:59:46.425+0000"),
+          "okActions" -> Json.arr(),
+          "alarmActions" -> Json.arr(),
+          "insufficientDataActions" -> Json.arr()
+        )
+        .toJson
     ),
     `replay-name` = None
   )
