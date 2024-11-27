@@ -195,7 +195,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.3"
     )
   )
   .enablePlugins(NoPublishPlugin)
