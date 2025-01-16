@@ -58,7 +58,7 @@ val natchezVersion = "0.3.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
-val otel4sVersion = "0.10.0"
+val otel4sVersion = "0.11.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -211,7 +211,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.6.0",
       "org.tpolecat" %%% "skunk-core" % "0.6.4",
-      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.9.0"
+      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.10.0"
     )
   )
   .settings(commonSettings)
