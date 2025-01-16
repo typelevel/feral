@@ -27,10 +27,10 @@ import feral.lambda.events.SqsRecord
 import feral.lambda.otel4s._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.otel4s.middleware.trace.client.ClientMiddleware
 import org.typelevel.otel4s.oteljava.OtelJava
 import org.typelevel.otel4s.trace.Tracer
 import org.typelevel.scalaccompat.annotation.unused
-import org.http4s.otel4s.middleware.trace.client.ClientMiddleware
 
 object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
 
