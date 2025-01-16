@@ -30,21 +30,19 @@ import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.otel4s.oteljava.OtelJava
 import org.typelevel.otel4s.trace.Tracer
 import org.typelevel.scalaccompat.annotation.unused
+import org.http4s.otel4s.middleware.trace.client.ClientMiddleware
 
 object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
-
-  // Could be http4s-otel4s-middleware ClientMiddleware for example
-  def clientMiddleware(client: Client[IO]): Client[IO] = client
 
   def handler =
     OtelJava.autoConfigured[IO]().map(_.tracerProvider).evalMap(_.get("tracer")).flatMap {
       implicit tracer: Tracer[IO] =>
+        val middleware = ClientMiddleware.default[IO].build
         for {
-          client <- EmberClientBuilder.default[IO].build
-          tracedClient = clientMiddleware(client)
+          client <- EmberClientBuilder.default[IO].build.map(middleware)
         } yield { implicit inv: Invocation[IO, SqsEvent] =>
           TracedHandler[IO, SqsEvent, INothing](
-            handleEvent[IO](tracedClient)
+            handleEvent[IO](client)
           )
         }
     }
