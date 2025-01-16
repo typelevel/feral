@@ -21,8 +21,7 @@ import feral.lambda.events.S3BatchEvent
 import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attributes
 
-import LambdaMessageAttributes._
-import LambdaContextAttributes._
+import OtelAttributes._
 
 object SqsEventAttributes {
   def apply(): Attributes =
