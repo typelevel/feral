@@ -16,12 +16,41 @@
 
 package feral.lambda.otel4s
 
+import feral.lambda.Context
 import org.typelevel.otel4s.AttributeKey
+import org.typelevel.otel4s.Attributes
 
 /**
- * Temporary aliases for Lambda message-specific attributes in otel4s-semconv-experimental
+ * Temporary aliases for Lambda platform attributes in otel4s-semconv-experimental
  */
-private[otel4s] object LambdaMessageAttributes {
+object OtelAttributes {
+  val FaasInvocationId = AttributeKey.string("faas.invocation_id")
+  val FaasTrigger = AttributeKey.string("faas.trigger")
+  object FaasTriggerValue {
+    object Pubsub {
+      val value = "pubsub"
+    }
+    object Datasource {
+      val value = "datasource"
+    }
+    object Http {
+      val value = "http"
+    }
+  }
+
+  // ARN
+  val CloudResourceId = AttributeKey.string("cloud.resource_id")
+  val FaasInstance = AttributeKey.string("faas.instance")
+  val FaasMaxMemory = AttributeKey.long("faas.max_memory")
+  val FaasName = AttributeKey.string("faas.name")
+  val FaasVersion = AttributeKey.string("faas.version")
+  val CloudProvider = AttributeKey.string("cloud.provider")
+  object CloudProviderValue {
+    object Aws {
+      val value = "aws"
+    }
+  }
+
   val MessagingSystem = AttributeKey.string("messaging.system")
   object MessagingSystemValue {
     object AwsSqs {
