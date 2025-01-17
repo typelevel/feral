@@ -70,37 +70,39 @@ class S3EventSuite extends FunSuite {
   }
   """
 
-  def result = S3Event(records = List(
-    S3EventRecord(
-      eventVersion = "2.1",
-      eventSource = "aws:s3",
-      awsRegion = "us-west-2",
-      eventTime = Instant.ofEpochSecond(0),
-      eventName = "ObjectCreated:Put",
-      userIdentity = S3UserIdentity("AIDAJDPLRKLG7UEXAMPLE"),
-      requestParameters = S3RequestParameters(ip"127.0.0.1"),
-      responseElements = S3ResponseElements(
-        "C3D13FE58DE4C810",
-        "FMyUVURIY8/IgAtTv8xRjskZQpcIZ9KG4V5Wp6S7S/JRWeUWerMUE5JgHvANOjpD"
-      ),
-      s3 = S3(
-        s3SchemaVersion = "1.0",
-        configurationId = "testConfigRule": String,
-        bucket = S3Bucket(
-          name = "mybucket",
-          ownerIdentity = S3UserIdentity("A3NL1KOZZKExample"),
-          arn = "arn:aws:s3:::mybucket"
-        ),
-        `object` = S3Object(
-          key = "HappyFace.jpg",
-          size = 1024L,
-          eTag = "d41d8cd98f00b204e9800998ecf8427e",
-          versionId = Option("096fKKXTRTtl3on89fVO.nfljtsv6qko"),
-          sequencer = "0055AED6DCD90281E5"
+  def result =
+    S3Event(records =
+      List(
+        S3EventRecord(
+          eventVersion = "2.1",
+          eventSource = "aws:s3",
+          awsRegion = "us-west-2",
+          eventTime = Instant.ofEpochSecond(0),
+          eventName = "ObjectCreated:Put",
+          userIdentity = S3UserIdentity("AIDAJDPLRKLG7UEXAMPLE"),
+          requestParameters = S3RequestParameters(ip"127.0.0.1"),
+          responseElements = S3ResponseElements(
+            "C3D13FE58DE4C810",
+            "FMyUVURIY8/IgAtTv8xRjskZQpcIZ9KG4V5Wp6S7S/JRWeUWerMUE5JgHvANOjpD"
+          ),
+          s3 = S3(
+            s3SchemaVersion = "1.0",
+            configurationId = "testConfigRule": String,
+            bucket = S3Bucket(
+              name = "mybucket",
+              ownerIdentity = S3UserIdentity("A3NL1KOZZKExample"),
+              arn = "arn:aws:s3:::mybucket"
+            ),
+            `object` = S3Object(
+              key = "HappyFace.jpg",
+              size = 1024L,
+              eTag = "d41d8cd98f00b204e9800998ecf8427e",
+              versionId = Option("096fKKXTRTtl3on89fVO.nfljtsv6qko"),
+              sequencer = "0055AED6DCD90281E5"
+            )
+          ),
+          glacierEventData = None
         )
-      ),
-      glacierEventData = None
-    )
-  ))
+      ))
 
 }
