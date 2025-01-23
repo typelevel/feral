@@ -36,32 +36,29 @@ private[lambda] trait ContextCompanionPlatform {
       context.identity.toOption.map { identity =>
         CognitoIdentity(identity.cognitoIdentityId, identity.cognitoIdentityPoolId)
       },
-      context
-        .clientContext
-        .toOption
-        .map { clientContext =>
-          ClientContext(
-            ClientContextClient(
-              clientContext.client.installationId,
-              clientContext.client.appTitle,
-              clientContext.client.appVersionName,
-              clientContext.client.appVersionCode,
-              clientContext.client.appPackageName
-            ),
-            ClientContextEnv(
-              clientContext.env.platformVersion,
-              clientContext.env.platform,
-              clientContext.env.make,
-              clientContext.env.model,
-              clientContext.env.locale
-            ),
-            clientContext
-              .custom
-              .toOption
-              .flatMap(decodeJs[JsonObject](_).toOption)
-              .getOrElse(JsonObject.empty)
-          )
-        },
+      context.clientContext.toOption.map { clientContext =>
+        ClientContext(
+          ClientContextClient(
+            clientContext.client.installationId,
+            clientContext.client.appTitle,
+            clientContext.client.appVersionName,
+            clientContext.client.appVersionCode,
+            clientContext.client.appPackageName
+          ),
+          ClientContextEnv(
+            clientContext.env.platformVersion,
+            clientContext.env.platform,
+            clientContext.env.make,
+            clientContext.env.model,
+            clientContext.env.locale
+          ),
+          clientContext
+            .custom
+            .toOption
+            .flatMap(decodeJs[JsonObject](_).toOption)
+            .getOrElse(JsonObject.empty)
+        )
+      },
       Sync[F].delay(context.getRemainingTimeInMillis().millis)
     )
 }
