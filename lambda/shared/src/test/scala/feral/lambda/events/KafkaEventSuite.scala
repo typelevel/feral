@@ -16,7 +16,7 @@
 
 package feral.lambda.events
 
-import io.circe.literal.*
+import io.circe.literal._
 import munit.FunSuite
 import scodec.bits.ByteVector
 

@@ -16,7 +16,8 @@
 
 package feral.lambda.events
 
-import io.circe.{Decoder, KeyDecoder}
+import io.circe.Decoder
+import io.circe.KeyDecoder
 import scodec.bits.ByteVector
 
 import java.time.Instant
