@@ -31,10 +31,10 @@ sealed abstract class MSKEvent {
 
 object MSKEvent {
   def apply(
-             records: Map[TopicPartition, List[KafkaRecord]],
-             eventSource: String,
-             eventSourceArn: String,
-             bootstrapServers: String
+      records: Map[TopicPartition, List[KafkaRecord]],
+      eventSource: String,
+      eventSourceArn: String,
+      bootstrapServers: String
   ): MSKEvent =
     Impl(records, eventSource, eventSourceArn, bootstrapServers)
 
@@ -47,10 +47,10 @@ object MSKEvent {
     )(MSKEvent.apply)
 
   private final case class Impl(
-                                 records: Map[TopicPartition, List[KafkaRecord]],
-                                 eventSource: String,
-                                 eventSourceArn: String,
-                                 bootstrapServers: String
+      records: Map[TopicPartition, List[KafkaRecord]],
+      eventSource: String,
+      eventSourceArn: String,
+      bootstrapServers: String
   ) extends MSKEvent {
     override def productPrefix = "KafkaEvent"
   }
@@ -64,10 +64,10 @@ sealed abstract class KafkaEvent {
 
 object KafkaEvent {
   def apply(
-             records: Map[TopicPartition, List[KafkaRecord]],
-             eventSource: String,
-             bootstrapServers: String
-           ): KafkaEvent =
+      records: Map[TopicPartition, List[KafkaRecord]],
+      eventSource: String,
+      bootstrapServers: String
+  ): KafkaEvent =
     Impl(records, eventSource, bootstrapServers)
 
   private[events] implicit val decoder: Decoder[KafkaEvent] =
@@ -78,10 +78,10 @@ object KafkaEvent {
     )(KafkaEvent.apply)
 
   private final case class Impl(
-                                 records: Map[TopicPartition, List[KafkaRecord]],
-                                 eventSource: String,
-                                 bootstrapServers: String
-                               ) extends KafkaEvent {
+      records: Map[TopicPartition, List[KafkaRecord]],
+      eventSource: String,
+      bootstrapServers: String
+  ) extends KafkaEvent {
     override def productPrefix = "KafkaEvent"
   }
 }

@@ -29,17 +29,19 @@ class KafkaEventSuite extends FunSuite {
   }
 
   test("decoderSelfManageKafkaEvent") {
-      assertEquals(selfManagedKafkaEvent.as[KafkaEvent].toTry.get, selfManagedKafkaResult)
+    assertEquals(selfManagedKafkaEvent.as[KafkaEvent].toTry.get, selfManagedKafkaResult)
   }
 
   test("topicPartitionDecoder") {
-    assertEquals(topicPartitionSample.as[Map[TopicPartition, Int]].toTry.get, topicPartitionResult)
+    assertEquals(
+      topicPartitionSample.as[Map[TopicPartition, Int]].toTry.get,
+      topicPartitionResult)
   }
 
   def topicPartitionSample = json"""{"my-topic-0":0}"""
   def topicPartitionResult = Map(TopicPartition("my-topic", 0) -> 0)
 
-  def selfManagedKafkaEvent =json"""
+  def selfManagedKafkaEvent = json"""
   {
     "eventSource": "SelfManagedKafka",
     "bootstrapServers":"b-2.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092,b-1.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092",
