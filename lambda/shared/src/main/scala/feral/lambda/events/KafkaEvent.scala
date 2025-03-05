@@ -22,41 +22,71 @@ import scodec.bits.ByteVector
 
 import java.time.Instant
 
-sealed abstract class KafkaEvent {
-  def records: Map[TopicPartition, List[KafkaEventRecord]]
+sealed abstract class MSKEvent {
+  def records: Map[TopicPartition, List[KafkaRecord]]
   def eventSource: String
   def eventSourceArn: String
   def bootstrapServers: String
 }
 
-object KafkaEvent {
+object MSKEvent {
   def apply(
-      records: Map[TopicPartition, List[KafkaEventRecord]],
-      eventSource: String,
-      eventSourceArn: String,
-      bootstrapServers: String
-  ): KafkaEvent =
+             records: Map[TopicPartition, List[KafkaRecord]],
+             eventSource: String,
+             eventSourceArn: String,
+             bootstrapServers: String
+  ): MSKEvent =
     Impl(records, eventSource, eventSourceArn, bootstrapServers)
 
-  private[events] implicit val decoder: Decoder[KafkaEvent] =
+  private[events] implicit val decoder: Decoder[MSKEvent] =
     Decoder.forProduct4(
       "records",
       "eventSource",
       "eventSourceArn",
       "bootstrapServers"
-    )(KafkaEvent.apply)
+    )(MSKEvent.apply)
 
   private final case class Impl(
-      records: Map[TopicPartition, List[KafkaEventRecord]],
-      eventSource: String,
-      eventSourceArn: String,
-      bootstrapServers: String
-  ) extends KafkaEvent {
+                                 records: Map[TopicPartition, List[KafkaRecord]],
+                                 eventSource: String,
+                                 eventSourceArn: String,
+                                 bootstrapServers: String
+  ) extends MSKEvent {
     override def productPrefix = "KafkaEvent"
   }
 }
 
-sealed abstract class KafkaEventRecord {
+sealed abstract class KafkaEvent {
+  def records: Map[TopicPartition, List[KafkaRecord]]
+  def eventSource: String
+  def bootstrapServers: String
+}
+
+object KafkaEvent {
+  def apply(
+             records: Map[TopicPartition, List[KafkaRecord]],
+             eventSource: String,
+             bootstrapServers: String
+           ): KafkaEvent =
+    Impl(records, eventSource, bootstrapServers)
+
+  private[events] implicit val decoder: Decoder[KafkaEvent] =
+    Decoder.forProduct3(
+      "records",
+      "eventSource",
+      "bootstrapServers"
+    )(KafkaEvent.apply)
+
+  private final case class Impl(
+                                 records: Map[TopicPartition, List[KafkaRecord]],
+                                 eventSource: String,
+                                 bootstrapServers: String
+                               ) extends KafkaEvent {
+    override def productPrefix = "KafkaEvent"
+  }
+}
+
+sealed abstract class KafkaRecord {
   def topic: String
   def partition: Int
   def offset: Long
@@ -67,7 +97,7 @@ sealed abstract class KafkaEventRecord {
   def headers: List[Map[String, ByteVector]]
 }
 
-object KafkaEventRecord {
+object KafkaRecord {
   def apply(
       topic: String,
       partition: Int,
@@ -77,7 +107,7 @@ object KafkaEventRecord {
       key: ByteVector,
       value: ByteVector,
       headers: List[Map[String, List[Int]]]
-  ): KafkaEventRecord = {
+  ): KafkaRecord = {
     val byteHeaders = headers.map { header =>
       header.map { case (k, v) => (k, ByteVector(v.map(_.toByte).toArray)) }
     }
@@ -86,7 +116,7 @@ object KafkaEventRecord {
 
   import codecs.decodeInstant
   import io.circe.scodec.decodeByteVector
-  private[events] implicit val decoder: Decoder[KafkaEventRecord] =
+  private[events] implicit val decoder: Decoder[KafkaRecord] =
     Decoder.forProduct8(
       "topic",
       "partition",
@@ -96,7 +126,7 @@ object KafkaEventRecord {
       "key",
       "value",
       "headers"
-    )(KafkaEventRecord.apply)
+    )(KafkaRecord.apply)
 
   private final case class Impl(
       topic: String,
@@ -107,7 +137,7 @@ object KafkaEventRecord {
       key: ByteVector,
       value: ByteVector,
       headers: List[Map[String, ByteVector]]
-  ) extends KafkaEventRecord {
+  ) extends KafkaRecord {
     override def productPrefix = "KafkaEventRecord"
   }
 }
