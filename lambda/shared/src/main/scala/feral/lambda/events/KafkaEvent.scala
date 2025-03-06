@@ -22,11 +22,8 @@ import scodec.bits.ByteVector
 
 import java.time.Instant
 
-sealed abstract class MSKEvent {
-  def records: Map[TopicPartition, List[KafkaRecord]]
-  def eventSource: String
+sealed abstract class MSKEvent extends KafkaEvent {
   def eventSourceArn: String
-  def bootstrapServers: String
 }
 
 object MSKEvent {

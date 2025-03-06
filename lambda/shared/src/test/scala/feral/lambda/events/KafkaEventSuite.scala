@@ -32,6 +32,10 @@ class KafkaEventSuite extends FunSuite {
     assertEquals(selfManagedKafkaEvent.as[KafkaEvent].toTry.get, selfManagedKafkaResult)
   }
 
+  test("mskEventDecodesAsKafkaEvent") {
+    assertEquals(mksSampleEvent.as[KafkaEvent].toTry.get, MSKResultAsKafkaEvent)
+  }
+
   test("topicPartitionDecoder") {
     assertEquals(
       topicPartitionSample.as[Map[TopicPartition, Int]].toTry.get,
@@ -39,7 +43,7 @@ class KafkaEventSuite extends FunSuite {
   }
 
   def topicPartitionSample = json"""{"my-topic-0":0}"""
-  def topicPartitionResult = Map(TopicPartition("my-topic", 0) -> 0)
+  def topicPartitionResult: Map[TopicPartition, Int] = Map(TopicPartition("my-topic", 0) -> 0)
 
   def selfManagedKafkaEvent = json"""
   {
@@ -77,7 +81,7 @@ class KafkaEventSuite extends FunSuite {
   }
 }"""
 
-  def selfManagedKafkaResult = KafkaEvent(
+  def selfManagedKafkaResult: KafkaEvent = KafkaEvent(
     records = Map(
       TopicPartition("mytopic", 0) -> List(KafkaRecord(
         topic = "mytopic",
@@ -134,7 +138,7 @@ class KafkaEventSuite extends FunSuite {
   }
 """
 
-  def MSKResult = MSKEvent(
+  def MSKResult: MSKEvent = MSKEvent(
     records = Map(
       TopicPartition("mytopic", 0) -> List(KafkaRecord(
         topic = "mytopic",
@@ -150,6 +154,24 @@ class KafkaEventSuite extends FunSuite {
     eventSource = "aws:kafka",
     eventSourceArn =
       "arn:aws:kafka:us-east-1:123456789012:cluster/vpc-2priv-2pub/751d2973-a626-431c-9d4e-d7975eb44dd7-2",
+    bootstrapServers =
+      "b-2.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092,b-1.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092"
+  )
+
+  def MSKResultAsKafkaEvent: KafkaEvent = KafkaEvent(
+    records = Map(
+      TopicPartition("mytopic", 0) -> List(KafkaRecord(
+        topic = "mytopic",
+        partition = 0,
+        offset = 15,
+        timestamp = Instant.ofEpochMilli(1545084650987L),
+        timestampType = "CREATE_TIME",
+        headers =
+          List(Map("headerKey" -> List(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
+        key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
+        value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
+      ))),
+    eventSource = "aws:kafka",
     bootstrapServers =
       "b-2.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092,b-1.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092"
   )
