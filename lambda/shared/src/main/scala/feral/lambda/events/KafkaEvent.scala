@@ -16,6 +16,9 @@
 
 package feral.lambda.events
 
+import cats.implicits._
+import com.comcast.ip4s.Host
+import com.comcast.ip4s.SocketAddress
 import io.circe.Decoder
 import io.circe.KeyDecoder
 import scodec.bits.ByteVector
@@ -31,10 +34,12 @@ object MSKEvent {
       records: Map[TopicPartition, List[KafkaRecord]],
       eventSource: String,
       eventSourceArn: String,
-      bootstrapServers: String
-  ): MSKEvent =
+      bootstrapServers: List[SocketAddress[Host]]
+  ): MSKEvent = {
     Impl(records, eventSource, eventSourceArn, bootstrapServers)
+  }
 
+  import feral.lambda.events.KafkaEvent.bootstrapServersDecoder
   private[events] implicit val decoder: Decoder[MSKEvent] =
     Decoder.forProduct4(
       "records",
@@ -47,7 +52,7 @@ object MSKEvent {
       records: Map[TopicPartition, List[KafkaRecord]],
       eventSource: String,
       eventSourceArn: String,
-      bootstrapServers: String
+      bootstrapServers: List[SocketAddress[Host]]
   ) extends MSKEvent {
     override def productPrefix = "KafkaEvent"
   }
@@ -56,16 +61,28 @@ object MSKEvent {
 sealed abstract class KafkaEvent {
   def records: Map[TopicPartition, List[KafkaRecord]]
   def eventSource: String
-  def bootstrapServers: String
+  def bootstrapServers: List[SocketAddress[Host]]
 }
 
 object KafkaEvent {
   def apply(
       records: Map[TopicPartition, List[KafkaRecord]],
       eventSource: String,
-      bootstrapServers: String
-  ): KafkaEvent =
+      bootstrapServers: List[SocketAddress[Host]]
+  ): KafkaEvent = {
     Impl(records, eventSource, bootstrapServers)
+  }
+
+  private[events] implicit val bootstrapServersDecoder: Decoder[List[SocketAddress[Host]]] =
+    Decoder
+      .decodeString
+      .emap(str =>
+        str
+          .split(",")
+          .toList
+          .map(SocketAddress.fromString)
+          .sequence
+          .toRight(s"Failed to parse bootstrap servers: $str"))
 
   private[events] implicit val decoder: Decoder[KafkaEvent] =
     Decoder.forProduct3(
@@ -77,7 +94,7 @@ object KafkaEvent {
   private final case class Impl(
       records: Map[TopicPartition, List[KafkaRecord]],
       eventSource: String,
-      bootstrapServers: String
+      bootstrapServers: List[SocketAddress[Host]]
   ) extends KafkaEvent {
     override def productPrefix = "KafkaEvent"
   }
@@ -88,7 +105,7 @@ sealed abstract class KafkaRecord {
   def partition: Int
   def offset: Long
   def timestamp: Instant
-  def timestampType: String
+  def timestampType: TimestampType
   def key: ByteVector
   def value: ByteVector
   def headers: List[Map[String, ByteVector]]
@@ -100,7 +117,7 @@ object KafkaRecord {
       partition: Int,
       offset: Long,
       timestamp: Instant,
-      timestampType: String,
+      timestampType: TimestampType,
       key: ByteVector,
       value: ByteVector,
       headers: List[Map[String, List[Int]]]
@@ -130,7 +147,7 @@ object KafkaRecord {
       partition: Int,
       offset: Long,
       timestamp: Instant,
-      timestampType: String,
+      timestampType: TimestampType,
       key: ByteVector,
       value: ByteVector,
       headers: List[Map[String, ByteVector]]
@@ -165,5 +182,17 @@ object TopicPartition {
       partition: Int
   ) extends TopicPartition {
     override def productPrefix = "TopicPartition"
+  }
+}
+
+sealed trait TimestampType
+case object CREATE_TIME extends TimestampType
+case object LOG_APPEND_TIME extends TimestampType
+
+object TimestampType {
+  implicit val decoder: Decoder[TimestampType] = Decoder.decodeString.emap {
+    case "CREATE_TIME" => Right(CREATE_TIME)
+    case "LOG_APPEND_TIME" => Right(LOG_APPEND_TIME)
+    case other => Left(s"Unknown timestamp type: $other")
   }
 }
