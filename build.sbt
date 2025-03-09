@@ -146,6 +146,9 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .dependsOn(lambda % "compile->compile;test->test")
+  .jsSettings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
