@@ -32,25 +32,22 @@ sealed abstract class MSKEvent extends KafkaEvent {
 object MSKEvent {
   def apply(
       records: Map[TopicPartition, List[KafkaRecord]],
-      eventSource: String,
       eventSourceArn: String,
       bootstrapServers: List[SocketAddress[Host]]
   ): MSKEvent = {
-    Impl(records, eventSource, eventSourceArn, bootstrapServers)
+    Impl(records, eventSourceArn, bootstrapServers)
   }
 
   import feral.lambda.events.KafkaEvent.bootstrapServersDecoder
   private[events] implicit val decoder: Decoder[MSKEvent] =
-    Decoder.forProduct4(
+    Decoder.forProduct3(
       "records",
-      "eventSource",
       "eventSourceArn",
       "bootstrapServers"
     )(MSKEvent.apply)
 
   private final case class Impl(
       records: Map[TopicPartition, List[KafkaRecord]],
-      eventSource: String,
       eventSourceArn: String,
       bootstrapServers: List[SocketAddress[Host]]
   ) extends MSKEvent {
@@ -60,17 +57,15 @@ object MSKEvent {
 
 sealed abstract class KafkaEvent {
   def records: Map[TopicPartition, List[KafkaRecord]]
-  def eventSource: String
   def bootstrapServers: List[SocketAddress[Host]]
 }
 
 object KafkaEvent {
   def apply(
       records: Map[TopicPartition, List[KafkaRecord]],
-      eventSource: String,
       bootstrapServers: List[SocketAddress[Host]]
   ): KafkaEvent = {
-    Impl(records, eventSource, bootstrapServers)
+    Impl(records, bootstrapServers)
   }
 
   private[events] implicit val bootstrapServersDecoder: Decoder[List[SocketAddress[Host]]] =
@@ -85,15 +80,13 @@ object KafkaEvent {
           .toRight(s"Failed to parse bootstrap servers: $str"))
 
   private[events] implicit val decoder: Decoder[KafkaEvent] =
-    Decoder.forProduct3(
+    Decoder.forProduct2(
       "records",
-      "eventSource",
       "bootstrapServers"
     )(KafkaEvent.apply)
 
   private final case class Impl(
       records: Map[TopicPartition, List[KafkaRecord]],
-      eventSource: String,
       bootstrapServers: List[SocketAddress[Host]]
   ) extends KafkaEvent {
     override def productPrefix = "KafkaEvent"
