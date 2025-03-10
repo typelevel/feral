@@ -17,6 +17,8 @@
 package feral.lambda.events
 
 import com.comcast.ip4s.SocketAddress
+import feral.lambda.events.KafkaEvent.TopicPartition
+import feral.lambda.events.KafkaRecord.CREATE_TIME
 import io.circe.literal._
 import munit.FunSuite
 import scodec.bits.ByteVector
@@ -92,7 +94,7 @@ class KafkaEventSuite extends FunSuite {
         timestamp = Instant.ofEpochMilli(1545084650987L),
         timestampType = CREATE_TIME,
         headers =
-          List(Map("headerKey" -> List(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
+          List(("headerKey", ByteVector(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
         key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
         value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
       ))),
@@ -154,7 +156,7 @@ class KafkaEventSuite extends FunSuite {
         timestamp = Instant.ofEpochMilli(1545084650987L),
         timestampType = CREATE_TIME,
         headers =
-          List(Map("headerKey" -> List(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
+          List(("headerKey", ByteVector(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
         key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
         value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
       ))),
