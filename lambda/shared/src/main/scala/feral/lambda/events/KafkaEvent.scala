@@ -192,9 +192,11 @@ object KafkaRecord {
     override def productPrefix = "KafkaEventRecord"
   }
 
-  sealed trait TimestampType
-  case object CREATE_TIME extends TimestampType
-  case object LOG_APPEND_TIME extends TimestampType
+  sealed abstract class TimestampType
+  object TimestampType {
+    case object CreateTime extends TimestampType
+    case object LogAppendTime extends TimestampType
+  }
 
   object TimestampType {
     implicit val decoder: Decoder[TimestampType] = Decoder.decodeString.emap {
