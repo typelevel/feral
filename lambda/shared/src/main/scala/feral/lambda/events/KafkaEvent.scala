@@ -19,6 +19,7 @@ package feral.lambda.events
 import cats.implicits._
 import com.comcast.ip4s.Host
 import com.comcast.ip4s.SocketAddress
+import feral.lambda.events.KafkaRecord.TimestampType
 import io.circe.Decoder
 import io.circe.KeyDecoder
 import scodec.bits.ByteVector
@@ -130,7 +131,7 @@ sealed abstract class KafkaRecord {
   def partition: Int
   def offset: Long
   def timestamp: Instant
-  def timestampType: KafkaRecord.TimestampType
+  def timestampType: TimestampType
   def key: ByteVector
   def value: ByteVector
   def headers: List[(String, ByteVector)]
@@ -196,12 +197,10 @@ object KafkaRecord {
   object TimestampType {
     case object CreateTime extends TimestampType
     case object LogAppendTime extends TimestampType
-  }
 
-  object TimestampType {
     implicit val decoder: Decoder[TimestampType] = Decoder.decodeString.emap {
-      case "CREATE_TIME" => Right(CREATE_TIME)
-      case "LOG_APPEND_TIME" => Right(LOG_APPEND_TIME)
+      case "CREATE_TIME" => Right(TimestampType.CreateTime)
+      case "LOG_APPEND_TIME" => Right(TimestampType.LogAppendTime)
       case other => Left(s"Unknown timestamp type: $other")
     }
   }
