@@ -26,11 +26,11 @@ import scodec.bits.ByteVector
 
 import java.time.Instant
 
-sealed abstract class MSKEvent extends KafkaEvent {
+sealed abstract class MskEvent extends KafkaEvent {
   def eventSourceArn: String
 }
 
-object MSKEvent {
+object MskEvent {
   import KafkaEvent.TopicPartition
   import KafkaEvent.bootstrapServersDecoder
 
@@ -38,23 +38,23 @@ object MSKEvent {
       records: Map[TopicPartition, List[KafkaRecord]],
       eventSourceArn: String,
       bootstrapServers: List[SocketAddress[Host]]
-  ): MSKEvent = {
+  ): MskEvent = {
     Impl(records, eventSourceArn, bootstrapServers)
   }
 
-  private[events] implicit val decoder: Decoder[MSKEvent] =
+  private[events] implicit val decoder: Decoder[MskEvent] =
     Decoder.forProduct3(
       "records",
       "eventSourceArn",
       "bootstrapServers"
-    )(MSKEvent.apply)
+    )(MskEvent.apply)
 
   private final case class Impl(
       records: Map[KafkaEvent.TopicPartition, List[KafkaRecord]],
       eventSourceArn: String,
       bootstrapServers: List[SocketAddress[Host]]
-  ) extends MSKEvent {
-    override def productPrefix = "KafkaEvent"
+  ) extends MskEvent {
+    override def productPrefix = "MskEvent"
   }
 
 }
@@ -79,8 +79,7 @@ object KafkaEvent {
         str
           .split(",")
           .toList
-          .map(SocketAddress.fromString)
-          .sequence
+          .traverse(SocketAddress.fromString)
           .toRight(s"Failed to parse bootstrap servers: $str"))
 
   private[events] implicit val decoder: Decoder[KafkaEvent] =
@@ -155,9 +154,7 @@ object KafkaRecord {
   }
 
   private[events] implicit val headersDecoder: Decoder[List[(String, ByteVector)]] = {
-    val byteHeadersDecoder: Decoder[ByteVector] = Decoder.decodeList(Decoder.decodeInt).map {
-      list => ByteVector(list.map(_.toByte).toArray)
-    }
+    val byteHeadersDecoder: Decoder[ByteVector] = Decoder.decodeArray(Decoder.decodeByte, Array).map(ByteVector(_))
     Decoder
       .decodeList(
         Decoder.decodeMap(

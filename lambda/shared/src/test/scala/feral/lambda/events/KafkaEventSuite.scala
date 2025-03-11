@@ -28,7 +28,7 @@ import java.time.Instant
 class KafkaEventSuite extends FunSuite {
 
   test("decoderMSKEvent") {
-    assertEquals(mksSampleEvent.as[MSKEvent].toTry.get, MSKResult)
+    assertEquals(mskSampleEvent.as[MskEvent].toTry.get, MSKResult)
   }
 
   test("decoderSelfManageKafkaEvent") {
@@ -36,7 +36,7 @@ class KafkaEventSuite extends FunSuite {
   }
 
   test("mskEventDecodesAsKafkaEvent") {
-    assertEquals(mksSampleEvent.as[KafkaEvent].toTry.get, selfManagedKafkaResult)
+    assertEquals(mskSampleEvent.as[KafkaEvent].toTry.get, selfManagedKafkaResult)
   }
 
   test("topicPartitionDecoder") {
@@ -108,7 +108,7 @@ class KafkaEventSuite extends FunSuite {
     )
   )
 
-  def mksSampleEvent =
+  def mskSampleEvent =
     json"""
   {
      "eventSource":"aws:kafka",
@@ -147,7 +147,7 @@ class KafkaEventSuite extends FunSuite {
   }
 """
 
-  def MSKResult: MSKEvent = MSKEvent(
+  def MSKResult: MskEvent = MskEvent(
     records = Map(
       TopicPartition("mytopic", 0) -> List(KafkaRecord(
         topic = "mytopic",
