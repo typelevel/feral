@@ -16,7 +16,7 @@
 
 package feral.lambda.events
 
-import cats.implicits._
+import cats.syntax.all._
 import com.comcast.ip4s.Host
 import com.comcast.ip4s.SocketAddress
 import feral.lambda.events.KafkaRecord.TimestampType
