@@ -107,7 +107,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0"
-    )
+    ),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .jvmSettings(
     Test / fork := true,
@@ -145,6 +146,9 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .dependsOn(lambda % "compile->compile;test->test")
+  .jsSettings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
