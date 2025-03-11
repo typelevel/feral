@@ -188,7 +188,7 @@ object KafkaRecord {
       value: ByteVector,
       headers: List[(String, ByteVector)]
   ) extends KafkaRecord {
-    override def productPrefix = "KafkaEventRecord"
+    override def productPrefix = "KafkaRecord"
   }
 
   sealed abstract class TimestampType
