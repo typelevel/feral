@@ -154,7 +154,8 @@ object KafkaRecord {
   }
 
   private[events] implicit val headersDecoder: Decoder[List[(String, ByteVector)]] = {
-    val byteHeadersDecoder: Decoder[ByteVector] = Decoder.decodeArray(Decoder.decodeByte, Array).map(ByteVector(_))
+    val byteHeadersDecoder: Decoder[ByteVector] =
+      Decoder.decodeArray(Decoder.decodeByte, Array).map(ByteVector(_))
     Decoder
       .decodeList(
         Decoder.decodeMap(
