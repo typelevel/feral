@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Typelevel
+ * Copyright 2025 Typelevel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ sealed abstract class CloudWatchLogsEvent {
 }
 
 object CloudWatchLogsEvent {
-  def apply(awslogs: CloudWatchLogsEventData): CloudWatchLogsEvent =
-    new Impl(awslogs)
+  def apply(awslogs: CloudWatchLogsEventData): CloudWatchLogsEvent = new Impl(awslogs)
 
   implicit val decoder: Decoder[CloudWatchLogsEvent] =
     Decoder.forProduct1("awslogs")(CloudWatchLogsEvent.apply)
@@ -39,8 +38,7 @@ sealed abstract class CloudWatchLogsEventData {
 }
 
 object CloudWatchLogsEventData {
-  def apply(data: String): CloudWatchLogsEventData =
-    new Impl(data)
+  def apply(data: String): CloudWatchLogsEventData = new Impl(data)
 
   implicit val decoder: Decoder[CloudWatchLogsEventData] =
     Decoder.forProduct1("data")(CloudWatchLogsEventData.apply)
