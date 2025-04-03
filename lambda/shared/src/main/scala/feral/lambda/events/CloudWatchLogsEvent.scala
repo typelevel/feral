@@ -23,12 +23,15 @@ sealed abstract class CloudWatchLogsEvent {
 }
 
 object CloudWatchLogsEvent {
-  def apply(awslogs: CloudWatchLogsEventData): CloudWatchLogsEvent = new Impl(awslogs)
+  def apply(awslogs: CloudWatchLogsEventData): CloudWatchLogsEvent = new Impl(
+    awslogs
+  )
 
   implicit val decoder: Decoder[CloudWatchLogsEvent] =
     Decoder.forProduct1("awslogs")(CloudWatchLogsEvent.apply)
 
-  private final case class Impl(awslogs: CloudWatchLogsEventData) extends CloudWatchLogsEvent {
+  private final case class Impl(awslogs: CloudWatchLogsEventData)
+      extends CloudWatchLogsEvent {
     override def productPrefix = "CloudWatchLogsEvent"
   }
 }
@@ -66,16 +69,24 @@ object CloudWatchLogsDecodedData {
       messageType: String,
       logEvents: List[CloudWatchLogsLogEvent]
   ): CloudWatchLogsDecodedData =
-    new Impl(owner, logGroup, logStream, subscriptionFilters, messageType, logEvents)
+    new Impl(
+      owner,
+      logGroup,
+      logStream,
+      subscriptionFilters,
+      messageType,
+      logEvents
+    )
 
-  implicit val decoder: Decoder[CloudWatchLogsDecodedData] = Decoder.forProduct6(
-    "owner",
-    "logGroup",
-    "logStream",
-    "subscriptionFilters",
-    "messageType",
-    "logEvents"
-  )(CloudWatchLogsDecodedData.apply)
+  implicit val decoder: Decoder[CloudWatchLogsDecodedData] =
+    Decoder.forProduct6(
+      "owner",
+      "logGroup",
+      "logStream",
+      "subscriptionFilters",
+      "messageType",
+      "logEvents"
+    )(CloudWatchLogsDecodedData.apply)
 
   private final case class Impl(
       owner: String,
