@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Typelevel
+ * Copyright 2025 Typelevel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import io.circe.Json
 import io.circe.jawn.decode
 import munit.CatsEffectSuite
 import scodec.bits.ByteVector
+
 import java.io.ByteArrayInputStream
 import java.util.zip.GZIPInputStream
 import scala.io.Source
@@ -41,7 +42,7 @@ class CloudWatchLogsEventSuite extends CatsEffectSuite {
         extractedFields = None
       ),
       CloudWatchLogsLogEvent(
-        id = "eventId2", 
+        id = "eventId2",
         timestamp = 1440442987001L,
         message = "[ERROR] Second test message",
         extractedFields = None
@@ -51,7 +52,9 @@ class CloudWatchLogsEventSuite extends CatsEffectSuite {
 
   private val sampleEventJson = Json.obj(
     "awslogs" -> Json.obj(
-      "data" -> Json.fromString("H4sIAAAAAAAAAHWPwQqCQBCGX0Xm7EFtK+smZBEUgXoLCdMhFtKV3akI8d0bLYmibvPPN3wz00CJxmQnTO41whwWQRIctmEcB6sQbFC3CjW3XW8kxpOpP+OC22d1Wml1qZkQGtoMsScxaczKN3plG8zlaHIta5KqWsozoTYw3/djzwhpLwivWFGHGpAFe7DL68JlBUk+l7KSN7tCOEJ4M3/qOI49vMHj+zCKdlFqLaU2ZHV2a4Ct/an0/ivdX8oYc1UVX860fQDQiMdxRQEAAA==")
+      "data" -> Json.fromString(
+        "H4sIAAAAAAAAAHWPwQqCQBCGX0Xm7EFtK+smZBEUgXoLCdMhFtKV3akI8d0bLYmibvPPN3wz00CJxmQnTO41whwWQRIctmEcB6sQbFC3CjW3XW8kxpOpP+OC22d1Wml1qZkQGtoMsScxaczKN3plG8zlaHIta5KqWsozoTYw3/djzwhpLwivWFGHGpAFe7DL68JlBUk+l7KSN7tCOEJ4M3/qOI49vMHj+zCKdlFqLaU2ZHV2a4Ct/an0/ivdX8oYc1UVX860fQDQiMdxRQEAAA=="
+      )
     )
   )
 
@@ -59,7 +62,13 @@ class CloudWatchLogsEventSuite extends CatsEffectSuite {
     val result = decode[CloudWatchLogsEvent](sampleEventJson.noSpaces)
     assertEquals(
       result,
-      Right(CloudWatchLogsEvent(CloudWatchLogsEventData("H4sIAAAAAAAAAHWPwQqCQBCGX0Xm7EFtK+smZBEUgXoLCdMhFtKV3akI8d0bLYmibvPPN3wz00CJxmQnTO41whwWQRIctmEcB6sQbFC3CjW3XW8kxpOpP+OC22d1Wml1qZkQGtoMsScxaczKN3plG8zlaHIta5KqWsozoTYw3/djzwhpLwivWFGHGpAFe7DL68JlBUk+l7KSN7tCOEJ4M3/qOI49vMHj+zCKdlFqLaU2ZHV2a4Ct/an0/ivdX8oYc1UVX860fQDQiMdxRQEAAA==")))
+      Right(
+        CloudWatchLogsEvent(
+          CloudWatchLogsEventData(
+            "H4sIAAAAAAAAAHWPwQqCQBCGX0Xm7EFtK+smZBEUgXoLCdMhFtKV3akI8d0bLYmibvPPN3wz00CJxmQnTO41whwWQRIctmEcB6sQbFC3CjW3XW8kxpOpP+OC22d1Wml1qZkQGtoMsScxaczKN3plG8zlaHIta5KqWsozoTYw3/djzwhpLwivWFGHGpAFe7DL68JlBUk+l7KSN7tCOEJ4M3/qOI49vMHj+zCKdlFqLaU2ZHV2a4Ct/an0/ivdX8oYc1UVX860fQDQiMdxRQEAAA=="
+          )
+        )
+      )
     )
   }
 
@@ -87,12 +96,13 @@ class CloudWatchLogsEventSuite extends CatsEffectSuite {
         assertEquals(decodedData.subscriptionFilters, sampleDecodedData.subscriptionFilters)
         assertEquals(decodedData.messageType, sampleDecodedData.messageType)
         assertEquals(decodedData.logEvents.size, sampleDecodedData.logEvents.size)
-        
-        sampleDecodedData.logEvents.zip(decodedData.logEvents).foreach { case (expected, actual) =>
-          assertEquals(actual.id, expected.id)
-          assertEquals(actual.timestamp, expected.timestamp)
-          assertEquals(actual.message, expected.message)
-          assertEquals(actual.extractedFields, expected.extractedFields)
+
+        sampleDecodedData.logEvents.zip(decodedData.logEvents).foreach {
+          case (expected, actual) =>
+            assertEquals(actual.id, expected.id)
+            assertEquals(actual.timestamp, expected.timestamp)
+            assertEquals(actual.message, expected.message)
+            assertEquals(actual.extractedFields, expected.extractedFields)
         }
       }
     } yield ()
