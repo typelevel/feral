@@ -72,9 +72,13 @@ class CloudWatchLogsEventSuite extends CatsEffectSuite {
     )
   }
 
-  test("CloudWatchLogsEvent should decode base64 and gzip data into CloudWatchLogsDecodedData") {
+  test(
+    "CloudWatchLogsEvent should decode base64 and gzip data into CloudWatchLogsDecodedData"
+  ) {
     val testIO = for {
-      event <- IO.fromEither(decode[CloudWatchLogsEvent](sampleEventJson.noSpaces))
+      event <- IO.fromEither(
+        decode[CloudWatchLogsEvent](sampleEventJson.noSpaces)
+      )
       decodedData <- event.awslogs.data match {
         case data =>
           ByteVector.fromBase64(data) match {
@@ -82,20 +86,28 @@ class CloudWatchLogsEventSuite extends CatsEffectSuite {
               IO {
                 val bis = new ByteArrayInputStream(bytes.toArray)
                 val gzis = new GZIPInputStream(bis)
-                val decompressed = Source.fromInputStream(gzis, "UTF-8").mkString
+                val decompressed =
+                  Source.fromInputStream(gzis, "UTF-8").mkString
                 gzis.close()
                 decode[CloudWatchLogsDecodedData](decompressed)
               }.flatMap(IO.fromEither)
-            case None => IO.raiseError(new IllegalArgumentException("Invalid base64 data"))
+            case None =>
+              IO.raiseError(new IllegalArgumentException("Invalid base64 data"))
           }
       }
       _ <- IO {
         assertEquals(decodedData.owner, sampleDecodedData.owner)
         assertEquals(decodedData.logGroup, sampleDecodedData.logGroup)
         assertEquals(decodedData.logStream, sampleDecodedData.logStream)
-        assertEquals(decodedData.subscriptionFilters, sampleDecodedData.subscriptionFilters)
+        assertEquals(
+          decodedData.subscriptionFilters,
+          sampleDecodedData.subscriptionFilters
+        )
         assertEquals(decodedData.messageType, sampleDecodedData.messageType)
-        assertEquals(decodedData.logEvents.size, sampleDecodedData.logEvents.size)
+        assertEquals(
+          decodedData.logEvents.size,
+          sampleDecodedData.logEvents.size
+        )
 
         sampleDecodedData.logEvents.zip(decodedData.logEvents).foreach {
           case (expected, actual) =>
