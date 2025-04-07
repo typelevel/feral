@@ -50,9 +50,9 @@ val Scala213 = "2.13.15"
 val Scala3 = "3.3.4"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.5.4"
+val catsEffectVersion = "3.6.0"
 val circeVersion = "0.14.10"
-val fs2Version = "3.11.0"
+val fs2Version = "3.12.0"
 val http4sVersion = "0.23.28"
 val natchezVersion = "0.3.6"
 val munitVersion = "0.7.29"
@@ -211,7 +211,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.6.0",
       "org.tpolecat" %%% "skunk-core" % "0.6.4",
-      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.10.0"
+      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.12.0-beta.3"
     )
   )
   .settings(commonSettings)
