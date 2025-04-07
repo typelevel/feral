@@ -58,7 +58,7 @@ val natchezVersion = "0.3.6"
 val munitVersion = "0.7.29"
 val munitCEVersion = "1.0.7"
 val scalacheckEffectVersion = "1.0.4"
-val otel4sVersion = "0.11.0"
+val otel4sVersion = "0.12.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
