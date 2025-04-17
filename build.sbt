@@ -45,7 +45,7 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
-val Scala212 = "2.12.19"
+val Scala212 = "2.12.20"
 val Scala213 = "2.13.16"
 val Scala3 = "3.3.4"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
@@ -110,7 +110,8 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0"
-    )
+    ),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .jvmSettings(
     Test / fork := true,
@@ -148,6 +149,9 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(commonSettings)
   .dependsOn(lambda % "compile->compile;test->test")
+  .jsSettings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
 
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
