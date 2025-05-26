@@ -113,7 +113,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
+      "com.amazonaws" % "aws-lambda-java-core" % "1.3.0",
       "co.fs2" %%% "fs2-io" % fs2Version
     )
   )
