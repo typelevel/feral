@@ -55,7 +55,7 @@ val circeVersion = "0.14.15"
 val fs2Version = "3.12.2"
 val http4sVersion = "0.23.32"
 val natchezVersion = "0.3.6"
-val munitVersion = "0.7.29"
+val munitVersion = "1.2.0"
 val munitCEVersion = "2.1.0"
 val scalacheckEffectVersion = "1.0.4"
 
