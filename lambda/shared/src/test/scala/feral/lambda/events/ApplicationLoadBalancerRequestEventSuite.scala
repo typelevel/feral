@@ -17,8 +17,6 @@
 package feral.lambda.events
 
 import munit.FunSuite
-import io.circe.literal._
-import org.typelevel.ci.CIString
 
 class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
   import ApplicationLoadBalancerRequestEventSuite._
