@@ -1,2 +1,4 @@
 # Scala Steward: Reformat with scalafmt 3.8.6
 dafb4253a1caafadc35472efab12e9d6e23671a9
+# bpholt: run prePR after cherry-picking a bunch of otherwise failing update PRs
+c47bdbdcabdb6bdeb67e75f777f35a32265cd7b5
