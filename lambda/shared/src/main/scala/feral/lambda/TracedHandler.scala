@@ -24,7 +24,7 @@ import natchez.EntryPoint
 import natchez.Span
 import natchez.Trace
 
-object TracedHandler {
+object TracedHandler extends TracedHandlerPlatform {
 
   def apply[Event, Result](entryPoint: EntryPoint[IO])(
       handler: Trace[IO] => IO[Option[Result]])(

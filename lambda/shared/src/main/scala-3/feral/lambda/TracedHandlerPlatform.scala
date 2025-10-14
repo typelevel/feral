@@ -1,0 +1,43 @@
+/*
+ * Copyright 2021 Typelevel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package feral.lambda
+
+import cats.effect.{Trace as _, *}
+import cats.mtl.Local
+import cats.syntax.all.*
+import natchez.*
+import natchez.mtl.*
+
+trait TracedHandlerPlatform:
+  def local[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
+      handler: Trace[F] ?=> F[Option[Result]])(
+      using Invocation[F, Event],
+      KernelSource[Event],
+      Local[F, Span[F]]): F[Option[Result]] =
+    for
+      event <- Invocation[F, Event].event
+      context <- Invocation[F, Event].context
+      kernel = KernelSource[Event].extract(event)
+      result <- entryPoint
+        .continueOrElseRoot(context.functionName, kernel)
+        .use:
+          Local[F, Span[F]].scope:
+            Trace[F].put(
+              AwsTags.arn(context.invokedFunctionArn),
+              AwsTags.requestId(context.awsRequestId)
+            ) >> handler
+    yield result
