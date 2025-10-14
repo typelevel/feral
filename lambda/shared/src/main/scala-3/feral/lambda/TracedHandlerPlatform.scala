@@ -23,7 +23,7 @@ import natchez.*
 import natchez.mtl.*
 
 trait TracedHandlerPlatform:
-  def local[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
+  def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
       handler: Trace[F] ?=> F[Option[Result]])(
       using Invocation[F, Event],
       KernelSource[Event],

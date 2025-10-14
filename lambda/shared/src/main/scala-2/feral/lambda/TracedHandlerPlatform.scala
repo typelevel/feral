@@ -23,11 +23,11 @@ import natchez._
 import natchez.mtl._
 
 trait TracedHandlerPlatform {
-  def local[F[_] : MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])
-                                                   (handler: Trace[F] => F[Option[Result]])
-                                                   (implicit inv: Invocation[F, Event],
-                                                    KS: KernelSource[Event],
-                                                    L: Local[F, Span[F]]): F[Option[Result]] =
+  def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
+      handler: Trace[F] => F[Option[Result]])(
+      implicit inv: Invocation[F, Event],
+      KS: KernelSource[Event],
+      L: Local[F, Span[F]]): F[Option[Result]] =
     for {
       event <- inv.event
       context <- inv.context
@@ -36,7 +36,7 @@ trait TracedHandlerPlatform {
         Local[F, Span[F]].scope {
           Trace[F].put(
             AwsTags.arn(context.invokedFunctionArn),
-            AwsTags.requestId(context.awsRequestId),
+            AwsTags.requestId(context.awsRequestId)
           ) >> handler(Trace[F])
         }
       }

@@ -18,44 +18,66 @@ package feral.lambda
 
 import cats.data.Kleisli
 import cats.effect.IO
-import cats.effect.kernel.MonadCancelThrow
+import cats.effect.{Trace => _, _}
+import cats.mtl.Local
 import cats.syntax.all._
-import natchez.EntryPoint
-import natchez.Span
-import natchez.Trace
+import fs2.compat.NotGiven
+import natchez._
 
 object TracedHandler extends TracedHandlerPlatform {
 
-  def apply[Event, Result](entryPoint: EntryPoint[IO])(
+  def apply[Event, Result](
+      entryPoint: EntryPoint[IO],
       handler: Trace[IO] => IO[Option[Result]])(
       implicit inv: Invocation[IO, Event],
-      KS: KernelSource[Event]): IO[Option[Result]] = for {
-    event <- inv.event
-    context <- inv.context
-    kernel = KS.extract(event)
-    result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
-      span.put(
-        AwsTags.arn(context.invokedFunctionArn),
-        AwsTags.requestId(context.awsRequestId)
-      ) >> Trace.ioTrace(span) >>= handler
-    }
-  } yield result
+      KS: KernelSource[Event],
+      @annotation.unused NotLocal: NotGiven[Local[IO, Span[IO]]]): IO[Option[Result]] =
+    for {
+      event <- inv.event
+      context <- inv.context
+      kernel = KS.extract(event)
+      result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
+        span.put(
+          AwsTags.arn(context.invokedFunctionArn),
+          AwsTags.requestId(context.awsRequestId)
+        ) >> Trace.ioTrace(span) >>= handler
+      }
+    } yield result
 
   def apply[F[_]: MonadCancelThrow, Event, Result](
       entryPoint: EntryPoint[F],
       handler: Kleisli[F, Span[F], Option[Result]])(
-      // inv first helps bind Event for KernelSource. h/t @bpholt
       implicit inv: Invocation[F, Event],
-      KS: KernelSource[Event]): F[Option[Result]] = for {
-    event <- inv.event
-    context <- inv.context
-    kernel = KS.extract(event)
-    result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
-      span.put(
-        AwsTags.arn(context.invokedFunctionArn),
-        AwsTags.requestId(context.awsRequestId)
-      ) >> handler(span)
-    }
-  } yield result
+      KS: KernelSource[Event],
+      @annotation.unused NotLocal: NotGiven[Local[IO, Span[IO]]]): F[Option[Result]] =
+    for {
+      event <- inv.event
+      context <- inv.context
+      kernel = KS.extract(event)
+      result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use { span =>
+        span.put(
+          AwsTags.arn(context.invokedFunctionArn),
+          AwsTags.requestId(context.awsRequestId)
+        ) >> handler(span)
+      }
+    } yield result
+
+  @deprecated("use variant with Local tracing semantics", "0.3.2")
+  def apply[Event, Result](
+      entryPoint: EntryPoint[IO],
+      handler: Trace[IO] => IO[Option[Result]],
+      inv: Invocation[IO, Event],
+      KS: KernelSource[Event]): IO[Option[Result]] =
+    apply(entryPoint, handler)(inv, KS, implicitly)
+
+  @deprecated("use variant with Local tracing semantics", "0.3.2")
+  def apply[F[_], Event, Result](
+      entryPoint: EntryPoint[F],
+      handler: Kleisli[F, Span[F], Option[Result]],
+      M: MonadCancel[F, Throwable],
+      inv: Invocation[F, Event],
+      KS: KernelSource[Event]): F[Option[Result]] = {
+    apply(entryPoint, handler)(M, inv, KS, implicitly)
+  }
 
 }
