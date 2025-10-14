@@ -138,8 +138,7 @@ object ApplicationLoadBalancerRequestEvent {
         e.multiValueHeaders,
         e.body,
         e.isBase64Encoded
-      )
-    )
+      ))
 
   private final case class Impl(
       requestContext: ApplicationLoadBalancerRequestContext,
