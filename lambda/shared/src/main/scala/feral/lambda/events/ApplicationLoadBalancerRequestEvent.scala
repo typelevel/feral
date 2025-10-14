@@ -16,36 +16,140 @@
 
 package feral.lambda.events
 
-package feral.lambda.events
-
 import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto._
+import org.typelevel.ci.CIString
 
-final case class ApplicationLoadBalancerRequestContext(
-                                                        elb: ApplicationLoadBalancerRequestContext.Elb
-                                                      )
-object ApplicationLoadBalancerRequestContext {
-  final case class Elb(targetGroupArn: String)
-  implicit val elbDecoder: Decoder[Elb] = deriveDecoder
-  implicit val elbEncoder: Encoder[Elb] = deriveEncoder
-
-  implicit val decoder: Decoder[ApplicationLoadBalancerRequestContext] = deriveDecoder
-  implicit val encoder: Encoder[ApplicationLoadBalancerRequestContext] = deriveEncoder
+sealed abstract class ApplicationLoadBalancerElbContext {
+  def targetGroupArn: String
 }
 
-final case class ApplicationLoadBalancerRequestEvent(
-                                                      requestContext: ApplicationLoadBalancerRequestContext,
-                                                      httpMethod: String,
-                                                      path: String,
-                                                      queryStringParameters: Option[Map[String, Option[String]]],
-                                                      headers: Option[Map[String, Option[String]]],
-                                                      multiValueQueryStringParameters: Option[Map[String, Option[List[String]]]],
-                                                      multiValueHeaders: Option[Map[String, Option[List[String]]]],
-                                                      body: Option[String], // because can be null
-                                                      isBase64Encoded: Boolean
-                                                    )
+object ApplicationLoadBalancerElbContext {
+  def apply(targetGroupArn: String): ApplicationLoadBalancerElbContext =
+    Impl(targetGroupArn)
+
+  implicit val decoder: Decoder[ApplicationLoadBalancerElbContext] =
+    Decoder.forProduct1("targetGroupArn")(ApplicationLoadBalancerElbContext.apply)
+  implicit val encoder: Encoder[ApplicationLoadBalancerElbContext] =
+    Encoder.forProduct1("targetGroupArn")(_.targetGroupArn)
+
+  private final case class Impl(targetGroupArn: String)
+      extends ApplicationLoadBalancerElbContext
+}
+
+sealed abstract class ApplicationLoadBalancerRequestContext {
+  def elb: ApplicationLoadBalancerElbContext
+}
+
+object ApplicationLoadBalancerRequestContext {
+  def apply(elb: ApplicationLoadBalancerElbContext): ApplicationLoadBalancerRequestContext =
+    Impl(elb)
+
+  implicit val decoder: Decoder[ApplicationLoadBalancerRequestContext] =
+    Decoder.forProduct1("elb")(ApplicationLoadBalancerRequestContext.apply)
+  implicit val encoder: Encoder[ApplicationLoadBalancerRequestContext] =
+    Encoder.forProduct1("elb")(_.elb)
+
+  private final case class Impl(elb: ApplicationLoadBalancerElbContext)
+      extends ApplicationLoadBalancerRequestContext
+}
+
+sealed abstract class ApplicationLoadBalancerRequestEvent {
+  def requestContext: ApplicationLoadBalancerRequestContext
+  def httpMethod: String
+  def path: String
+  def queryStringParameters: Option[Map[String, String]]
+  def headers: Option[Map[CIString, String]]
+  def multiValueQueryStringParameters: Option[Map[String, List[String]]]
+  def multiValueHeaders: Option[Map[CIString, List[String]]]
+  def body: Option[String]
+  def isBase64Encoded: Boolean
+}
 
 object ApplicationLoadBalancerRequestEvent {
-  implicit val decoder: Decoder[ApplicationLoadBalancerRequestEvent] = deriveDecoder
-  implicit val encoder: Encoder[ApplicationLoadBalancerRequestEvent] = deriveEncoder
+  private implicit val ciStringKeyDecoder: io.circe.KeyDecoder[CIString] =
+    io.circe.KeyDecoder.instance(s => Some(CIString(s)))
+  private implicit val ciStringKeyEncoder: io.circe.KeyEncoder[CIString] =
+    io.circe.KeyEncoder.instance(_.toString)
+
+  implicit val mapStringDecoder: Decoder[Map[CIString, String]] =
+    Decoder.decodeMap[CIString, String]
+  implicit val mapListDecoder: Decoder[Map[CIString, List[String]]] =
+    Decoder.decodeMap[CIString, List[String]]
+  implicit val mapStringEncoder: Encoder[Map[CIString, String]] =
+    Encoder.encodeMap[CIString, String]
+  implicit val mapListEncoder: Encoder[Map[CIString, List[String]]] =
+    Encoder.encodeMap[CIString, List[String]]
+
+  def apply(
+      requestContext: ApplicationLoadBalancerRequestContext,
+      httpMethod: String,
+      path: String,
+      queryStringParameters: Option[Map[String, String]],
+      headers: Option[Map[CIString, String]],
+      multiValueQueryStringParameters: Option[Map[String, List[String]]],
+      multiValueHeaders: Option[Map[CIString, List[String]]],
+      body: Option[String],
+      isBase64Encoded: Boolean
+  ): ApplicationLoadBalancerRequestEvent =
+    Impl(
+      requestContext,
+      httpMethod,
+      path,
+      queryStringParameters,
+      headers,
+      multiValueQueryStringParameters,
+      multiValueHeaders,
+      body,
+      isBase64Encoded
+    )
+
+  implicit val decoder: Decoder[ApplicationLoadBalancerRequestEvent] =
+    Decoder.forProduct9(
+      "requestContext",
+      "httpMethod",
+      "path",
+      "queryStringParameters",
+      "headers",
+      "multiValueQueryStringParameters",
+      "multiValueHeaders",
+      "body",
+      "isBase64Encoded"
+    )(ApplicationLoadBalancerRequestEvent.apply)
+
+  implicit val encoder: Encoder[ApplicationLoadBalancerRequestEvent] =
+    Encoder.forProduct9(
+      "requestContext",
+      "httpMethod",
+      "path",
+      "queryStringParameters",
+      "headers",
+      "multiValueQueryStringParameters",
+      "multiValueHeaders",
+      "body",
+      "isBase64Encoded"
+    )(e =>
+      (
+        e.requestContext,
+        e.httpMethod,
+        e.path,
+        e.queryStringParameters,
+        e.headers,
+        e.multiValueQueryStringParameters,
+        e.multiValueHeaders,
+        e.body,
+        e.isBase64Encoded
+      )
+    )
+
+  private final case class Impl(
+      requestContext: ApplicationLoadBalancerRequestContext,
+      httpMethod: String,
+      path: String,
+      queryStringParameters: Option[Map[String, String]],
+      headers: Option[Map[CIString, String]],
+      multiValueQueryStringParameters: Option[Map[String, List[String]]],
+      multiValueHeaders: Option[Map[CIString, List[String]]],
+      body: Option[String],
+      isBase64Encoded: Boolean
+  ) extends ApplicationLoadBalancerRequestEvent
 }
