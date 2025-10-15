@@ -46,18 +46,18 @@ ThisBuild / githubWorkflowBuildPreamble +=
   )
 
 val Scala212 = "2.12.20"
-val Scala213 = "2.13.16"
-val Scala3 = "3.3.4"
+val Scala213 = "2.13.17"
+val Scala3 = "3.3.6"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.5.4"
-val circeVersion = "0.14.10"
-val fs2Version = "3.11.0"
-val http4sVersion = "0.23.28"
-val natchezVersion = "0.3.6"
-val munitVersion = "0.7.29"
-val munitCEVersion = "1.0.7"
-val scalacheckEffectVersion = "1.0.4"
+val catsEffectVersion = "3.5.7"
+val circeVersion = "0.14.15"
+val fs2Version = "3.12.2"
+val http4sVersion = "0.23.32"
+val natchezVersion = "0.3.8"
+val munitVersion = "1.2.0"
+val munitCEVersion = "2.1.0"
+val scalacheckEffectVersion = "2.1.0-RC1"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -92,10 +92,10 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
-      "com.comcast" %%% "ip4s-core" % "3.6.0",
-      "org.scodec" %%% "scodec-bits" % "1.2.1",
+      "com.comcast" %%% "ip4s-core" % "3.7.0",
+      "org.scodec" %%% "scodec-bits" % "1.2.4",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
     mimaBinaryIssueFilters ++= Seq(
@@ -113,7 +113,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
+      "com.amazonaws" % "aws-lambda-java-core" % "1.4.0",
       "co.fs2" %%% "fs2-io" % fs2Version
     )
   )
@@ -165,10 +165,10 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.http4s" %%% "http4s-circe" % http4sVersion,
       "org.http4s" %%% "http4s-dsl" % http4sVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
       "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
-      "com.eed3si9n.expecty" %%% "expecty" % "0.16.0" % Test,
+      "com.eed3si9n.expecty" %%% "expecty" % "0.17.0" % Test,
       "io.circe" %%% "circe-testing" % circeVersion % Test
     )
   )
@@ -182,7 +182,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
-      "org.tpolecat" %%% "natchez-http4s" % "0.6.0",
+      "org.tpolecat" %%% "natchez-http4s" % "0.6.1",
       "org.tpolecat" %%% "skunk-core" % "0.6.4"
     )
   )
@@ -195,7 +195,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.1"
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.3"
     )
   )
   .enablePlugins(NoPublishPlugin)
@@ -248,7 +248,7 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.scodec" %%% "scodec-bits" % "1.2.0",
       "org.http4s" %%% "http4s-server" % http4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     ),
     tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
   )
@@ -261,7 +261,7 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "com.google.cloud.functions" % "functions-framework-api" % "1.1.0" % Provided,
+      "com.google.cloud.functions" % "functions-framework-api" % "1.1.4" % Provided,
       "co.fs2" %%% "fs2-io" % fs2Version
     )
   )

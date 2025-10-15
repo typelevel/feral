@@ -87,17 +87,18 @@ class KafkaEventSuite extends FunSuite {
 
   def selfManagedKafkaResult: KafkaEvent = KafkaEvent(
     records = Map(
-      TopicPartition("mytopic", 0) -> List(KafkaRecord(
-        topic = "mytopic",
-        partition = 0,
-        offset = 15,
-        timestamp = Instant.ofEpochMilli(1545084650987L),
-        timestampType = CreateTime,
-        headers =
-          List(("headerKey", ByteVector(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
-        key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
-        value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
-      ))),
+      TopicPartition("mytopic", 0) -> List(
+        KafkaRecord(
+          topic = "mytopic",
+          partition = 0,
+          offset = 15,
+          timestamp = Instant.ofEpochMilli(1545084650987L),
+          timestampType = CreateTime,
+          headers =
+            List(("headerKey", ByteVector(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
+          key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
+          value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
+        ))),
     bootstrapServers = List(
       SocketAddress
         .fromString("b-2.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092")
@@ -149,17 +150,18 @@ class KafkaEventSuite extends FunSuite {
 
   def MSKResult: MskEvent = MskEvent(
     records = Map(
-      TopicPartition("mytopic", 0) -> List(KafkaRecord(
-        topic = "mytopic",
-        partition = 0,
-        offset = 15,
-        timestamp = Instant.ofEpochMilli(1545084650987L),
-        timestampType = CreateTime,
-        headers =
-          List(("headerKey", ByteVector(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
-        key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
-        value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
-      ))),
+      TopicPartition("mytopic", 0) -> List(
+        KafkaRecord(
+          topic = "mytopic",
+          partition = 0,
+          offset = 15,
+          timestamp = Instant.ofEpochMilli(1545084650987L),
+          timestampType = CreateTime,
+          headers =
+            List(("headerKey", ByteVector(104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101))),
+          key = ByteVector.fromBase64("abcDEFghiJKLmnoPQRstuVWXyz1234==").get,
+          value = ByteVector.fromBase64("SGVsbG8sIHRoaXMgaXMgYSB0ZXN0Lg==").get
+        ))),
     eventSourceArn =
       "arn:aws:kafka:us-east-1:123456789012:cluster/vpc-2priv-2pub/751d2973-a626-431c-9d4e-d7975eb44dd7-2",
     bootstrapServers = List(

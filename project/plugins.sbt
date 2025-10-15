@@ -1,5 +1,5 @@
-val sbtlTlV = "0.8.0"
+val sbtlTlV = "0.8.2"
 addSbtPlugin("org.typelevel" % "sbt-typelevel" % sbtlTlV)
 addSbtPlugin("org.typelevel" % "sbt-typelevel-scalafix" % sbtlTlV)
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.16.0")
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.12.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.20.1")
+addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
