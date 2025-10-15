@@ -21,9 +21,8 @@ import smithy4s.ShapeId
 import smithy4s.schema.Schema
 
 /**
- * AWS Region type using smithy4s patterns.
- * This implementation is based on smithy4s.aws.kernel.AwsRegion
- * and demonstrates integration with smithy4s for AWS types.
+ * AWS Region type using smithy4s patterns. This implementation is based on
+ * smithy4s.aws.kernel.AwsRegion and demonstrates integration with smithy4s for AWS types.
  */
 object AwsRegion extends Newtype[String] {
 

@@ -19,29 +19,29 @@ package feral.lambda.aws
 import munit.FunSuite
 
 class AwsRegionSuite extends FunSuite {
-  
+
   test("AwsRegion should create region from string") {
     val region = AwsRegion("us-east-1")
     assertEquals(region.value, "us-east-1")
   }
-  
+
   test("AwsRegion should provide common regions") {
     assertEquals(AwsRegion.US_EAST_1.value, "us-east-1")
     assertEquals(AwsRegion.US_WEST_2.value, "us-west-2")
     assertEquals(AwsRegion.EU_WEST_1.value, "eu-west-1")
     assertEquals(AwsRegion.AP_SOUTHEAST_1.value, "ap-southeast-1")
   }
-  
+
   test("AwsRegion should provide government regions") {
     assertEquals(AwsRegion.US_GOV_EAST_1.value, "us-gov-east-1")
     assertEquals(AwsRegion.US_GOV_WEST_1.value, "us-gov-west-1")
   }
-  
+
   test("AwsRegion should provide isolated cloud regions") {
     assertEquals(AwsRegion.US_ISO_EAST_1.value, "us-iso-east-1")
     assertEquals(AwsRegion.US_ISOB_EAST_1.value, "us-isob-east-1")
   }
-  
+
   test("AwsRegion should have smithy4s schema") {
     assert(AwsRegion.schema != null)
     assertEquals(AwsRegion.id.namespace, "feral.lambda.aws")

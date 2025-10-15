@@ -21,8 +21,8 @@ import smithy4s.ShapeId
 import smithy4s.schema.Schema
 
 /**
- * AWS ARN (Amazon Resource Name) type using smithy4s patterns.
- * This demonstrates how smithy4s can be integrated for AWS ARN handling.
+ * AWS ARN (Amazon Resource Name) type using smithy4s patterns. This demonstrates how smithy4s
+ * can be integrated for AWS ARN handling.
  */
 object AwsArn extends Newtype[String] {
 
@@ -30,20 +30,21 @@ object AwsArn extends Newtype[String] {
   val schema = Schema.bijection(Schema.string, apply, value).withId(id)
 
   /**
-   * Parse an ARN string and extract its components.
-   * ARN format: arn:partition:service:region:account-id:resource
+   * Parse an ARN string and extract its components. ARN format:
+   * arn:partition:service:region:account-id:resource
    */
   def parse(arn: String): Option[AwsArnComponents] = {
     val arnPattern = """arn:([^:]+):([^:]+):([^:]*):([^:]*):(.+)""".r
     arn match {
       case arnPattern(partition, service, region, accountId, resource) =>
-        Some(AwsArnComponents(
-          partition = partition,
-          service = service,
-          region = if (region.nonEmpty) Some(region) else None,
-          accountId = if (accountId.nonEmpty) Some(accountId) else None,
-          resource = resource
-        ))
+        Some(
+          AwsArnComponents(
+            partition = partition,
+            service = service,
+            region = if (region.nonEmpty) Some(region) else None,
+            accountId = if (accountId.nonEmpty) Some(accountId) else None,
+            resource = resource
+          ))
       case _ => None
     }
   }
@@ -54,7 +55,8 @@ object AwsArn extends Newtype[String] {
   def fromComponents(components: AwsArnComponents): Type = {
     val region = components.region.getOrElse("")
     val accountId = components.accountId.getOrElse("")
-    val arnString = s"arn:${components.partition}:${components.service}:$region:$accountId:${components.resource}"
+    val arnString =
+      s"arn:${components.partition}:${components.service}:$region:$accountId:${components.resource}"
     apply(arnString)
   }
 
@@ -99,9 +101,9 @@ object AwsArn extends Newtype[String] {
  * Components of an AWS ARN
  */
 case class AwsArnComponents(
-  partition: String,
-  service: String,
-  region: Option[String],
-  accountId: Option[String],
-  resource: String
+    partition: String,
+    service: String,
+    region: Option[String],
+    accountId: Option[String],
+    resource: String
 )
