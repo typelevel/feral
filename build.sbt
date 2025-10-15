@@ -96,9 +96,13 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "org.scodec" %%% "scodec-bits" % "1.2.4",
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
     mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[IncompatibleMethTypeProblem]("feral.lambda.ClientContext#Impl.*"),
+      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.ClientContext#Impl.*")
     )
   )
   .settings(commonSettings)
