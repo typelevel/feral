@@ -58,6 +58,7 @@ val natchezVersion = "0.3.8"
 val munitVersion = "1.2.0"
 val munitCEVersion = "2.1.0"
 val scalacheckEffectVersion = "2.1.0-RC1"
+val smithy4sVersion = "0.18.43"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -93,7 +94,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-scodec" % circeVersion,
       "io.circe" %%% "circe-jawn" % circeVersion,
       "com.comcast" %%% "ip4s-core" % "3.7.0",
-      "org.scodec" %%% "scodec-bits" % "1.2.4",
+      "com.disneystreaming.smithy4s" %%% "smithy4s-core" % smithy4sVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "io.circe" %%% "circe-literal" % circeVersion % Test
