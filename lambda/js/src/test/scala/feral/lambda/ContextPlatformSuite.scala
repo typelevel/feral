@@ -19,7 +19,7 @@ package feral.lambda
 import cats.effect._
 import cats.syntax.all._
 import io.circe.JsonObject
-import io.circe.jawn
+import io.circe.scalajs._
 import munit.CatsEffectSuite
 import munit.Compare
 import munit.ScalaCheckEffectSuite
@@ -31,8 +31,6 @@ import scala.scalajs._
 import scala.scalajs.js.JSConverters._
 
 class ContextPlatformSuite extends CatsEffectSuite with ScalaCheckEffectSuite {
-
-  override def scalaCheckInitialSeed = "Knv3rf_mveQ7dlnyIzRvKi0xdjT6D--8sOcl_v2-1uH="
 
   private val genCognitoIdentity: Gen[facade.CognitoIdentity] =
     for {
@@ -181,8 +179,7 @@ class ContextPlatformSuite extends CatsEffectSuite with ScalaCheckEffectSuite {
     override def isEqual(obtained: JsonObject, expected: js.UndefOr[js.Any]): Boolean =
       expected
         .toOption
-        .map(js.JSON.stringify(_))
-        .flatMap(jawn.parse(_).toOption)
+        .flatMap(convertJsToJson(_).toOption)
         .flatMap(_.asObject)
         .map(_.equals(obtained))
         .getOrElse(obtained.isEmpty && expected.isEmpty)
@@ -191,9 +188,9 @@ class ContextPlatformSuite extends CatsEffectSuite with ScalaCheckEffectSuite {
   private implicit val compareClientContext: Compare[ClientContext, facade.ClientContext] =
     new Compare[ClientContext, facade.ClientContext] {
       override def isEqual(obtained: ClientContext, expected: facade.ClientContext): Boolean =
-        (obtained.maybeClient, expected.client.toOption)
+        (obtained.clientOption, expected.client.toOption)
           .mapN(implicitly[Compare[ClientContextClient, facade.ClientContextClient]].isEqual)
-          .getOrElse(obtained.maybeClient.isEmpty && expected.client.isEmpty) &&
+          .getOrElse(obtained.clientOption.isEmpty && expected.client.isEmpty) &&
           implicitly[Compare[ClientContextEnv, facade.ClientContextEnv]]
             .isEqual(obtained.env, expected.env) &&
           implicitly[Compare[JsonObject, js.UndefOr[js.Any]]]

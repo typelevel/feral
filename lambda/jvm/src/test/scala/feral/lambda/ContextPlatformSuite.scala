@@ -214,9 +214,9 @@ class ContextPlatformSuite extends CatsEffectSuite with ScalaCheckEffectSuite {
   private implicit val compareClientContext: Compare[ClientContext, runtime.ClientContext] =
     new Compare[ClientContext, runtime.ClientContext] {
       override def isEqual(obtained: ClientContext, expected: runtime.ClientContext): Boolean =
-        (obtained.maybeClient, Option(expected.getClient))
+        (obtained.clientOption, Option(expected.getClient))
           .mapN(implicitly[Compare[ClientContextClient, runtime.Client]].isEqual)
-          .getOrElse(obtained.maybeClient.isEmpty && expected.getClient == null) &&
+          .getOrElse(obtained.clientOption.isEmpty && expected.getClient == null) &&
           implicitly[Compare[ClientContextEnv, util.Map[String, String]]]
             .isEqual(obtained.env, expected.getEnvironment) &&
           implicitly[Compare[JsonObject, util.Map[String, String]]]

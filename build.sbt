@@ -101,8 +101,15 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-literal" % circeVersion % Test
     ),
     mimaBinaryIssueFilters ++= Seq(
-      ProblemFilters.exclude[IncompatibleMethTypeProblem]("feral.lambda.ClientContext#Impl.*"),
-      ProblemFilters.exclude[IncompatibleResultTypeProblem]("feral.lambda.ClientContext#Impl.*")
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "feral.lambda.ClientContext.clientOption"
+      ), // ClientContext is sealed
+      ProblemFilters.exclude[IncompatibleMethTypeProblem](
+        "feral.lambda.ClientContext#Impl.*"
+      ), // ClientContext#Impl is private
+      ProblemFilters.exclude[IncompatibleResultTypeProblem](
+        "feral.lambda.ClientContext#Impl.*"
+      ) // ClientContext#Impl is private
     )
   )
   .settings(commonSettings)

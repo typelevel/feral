@@ -19,7 +19,6 @@ package feral.lambda
 import cats.Applicative
 import cats.~>
 import io.circe.JsonObject
-import org.typelevel.scalaccompat.annotation.nowarn
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -113,11 +112,11 @@ object CognitoIdentity {
 
 sealed abstract class ClientContext {
   @deprecated(
-    "Use maybeClient, because it's possible this will be populated with empty strings if no client context was received",
+    "Use clientOption, because this will be populated with empty strings if no client context was received",
     "0.3.2")
-  def client: ClientContextClient
-  @nowarn("cat=deprecation")
-  def maybeClient: Option[ClientContextClient] = Option(client)
+  def client: ClientContextClient =
+    clientOption.getOrElse(ClientContextClient("", "", "", "", ""))
+  def clientOption: Option[ClientContextClient]
   def env: ClientContextEnv
   def custom: JsonObject
 }
@@ -144,13 +143,10 @@ object ClientContext {
     Impl(client, env, custom)
 
   private final case class Impl(
-      override val maybeClient: Option[ClientContextClient],
+      override val clientOption: Option[ClientContextClient],
       env: ClientContextEnv,
       custom: JsonObject
   ) extends ClientContext {
-    override def client: ClientContextClient =
-      maybeClient.getOrElse(ClientContextClient("", "", "", "", ""))
-
     override def productPrefix = "ClientContext"
   }
 }
