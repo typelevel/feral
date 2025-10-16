@@ -38,13 +38,15 @@ private[lambda] trait ContextCompanionPlatform {
       },
       context.clientContext.toOption.map { clientContext =>
         ClientContext(
-          ClientContextClient(
-            clientContext.client.installationId,
-            clientContext.client.appTitle,
-            clientContext.client.appVersionName,
-            clientContext.client.appVersionCode,
-            clientContext.client.appPackageName
-          ),
+          clientContext.client.toOption.map { x =>
+            ClientContextClient(
+              x.installationId,
+              x.appTitle,
+              x.appVersionName,
+              x.appVersionCode,
+              x.appPackageName
+            )
+          },
           ClientContextEnv(
             clientContext.env.platformVersion,
             clientContext.env.platform,
