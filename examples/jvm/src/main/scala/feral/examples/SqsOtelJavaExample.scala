@@ -28,24 +28,38 @@ import feral.lambda.otel4s._
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.otel4s.middleware.trace.client.ClientMiddleware
+import org.http4s.otel4s.middleware.trace.client.ClientSpanDataProvider
+import org.http4s.otel4s.middleware.trace.client.UriRedactor
 import org.typelevel.otel4s.oteljava.OtelJava
 import org.typelevel.otel4s.trace.Tracer
+import org.typelevel.otel4s.trace.TracerProvider
 import org.typelevel.scalaccompat.annotation.unused
 
 object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
 
   def handler =
-    OtelJava.autoConfigured[IO]().map(_.tracerProvider).evalMap(_.get("tracer")).flatMap {
-      implicit tracer: Tracer[IO] =>
-        val middleware = ClientMiddleware.default[IO].build
-        for {
-          client <- EmberClientBuilder.default[IO].build.map(middleware)
-        } yield { implicit inv: Invocation[IO, SqsEvent] =>
-          TracedHandler[IO, SqsEvent, INothing](
-            handleEvent[IO](client)
-          )
-        }
-    }
+    OtelJava
+      .autoConfigured[IO]()
+      .evalMap { otel =>
+        implicit val tp: TracerProvider[IO] = otel.tracerProvider
+        val otelClientRedactor = new UriRedactor.OnlyRedactUserInfo {}
+        val spanDataProvider = ClientSpanDataProvider.openTelemetry(otelClientRedactor)
+        val tracer = tp.get("com.example")
+        val middleware = ClientMiddleware.builder[IO](spanDataProvider).build
+        (middleware, tracer).tupled
+      }
+      .flatMap {
+        case (middleware, tracer) =>
+          implicit val t: Tracer[IO] = tracer
+
+          for {
+            client <- EmberClientBuilder.default[IO].build.map(middleware.wrap)
+          } yield { implicit inv: Invocation[IO, SqsEvent] =>
+            TracedHandler[IO, SqsEvent, INothing](
+              handleEvent[IO](client)
+            )
+          }
+      }
 
   def handleEvent[F[_]: Monad: Tracer](
       @unused client: Client[F]
