@@ -45,6 +45,12 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
+ThisBuild / mergifyStewardConfig ~= {
+  _.map {
+    _.withMergeMinors(true).withAuthor("typelevel-steward[bot]")
+  }
+}
+
 val Scala212 = "2.12.20"
 val Scala213 = "2.13.17"
 val Scala3 = "3.3.6"
