@@ -23,6 +23,7 @@ import cats.mtl.Local
 import cats.syntax.all._
 import fs2.compat.NotGiven
 import natchez._
+import natchez.mtl._
 
 object TracedHandler extends TracedHandlerPlatform {
 
@@ -79,5 +80,27 @@ object TracedHandler extends TracedHandlerPlatform {
       KS: KernelSource[Event]): F[Option[Result]] = {
     apply(entryPoint, handler)(M, inv, KS, implicitly)
   }
+
+}
+
+private[lambda] object TracedHandlerImpl {
+  def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
+      handler: Trace[F] => F[Option[Result]])(
+      implicit inv: Invocation[F, Event],
+      KS: KernelSource[Event],
+      L: Local[F, Span[F]]): F[Option[Result]] =
+    for {
+      event <- Invocation[F, Event].event
+      context <- Invocation[F, Event].context
+      kernel = KernelSource[Event].extract(event)
+      result <- entryPoint.continueOrElseRoot(context.functionName, kernel).use {
+        Local[F, Span[F]].scope {
+          Trace[F].put(
+            AwsTags.arn(context.invokedFunctionArn),
+            AwsTags.requestId(context.awsRequestId)
+          ) >> handler(Trace[F])
+        }
+      }
+    } yield result
 
 }

@@ -18,9 +18,7 @@ package feral.lambda
 
 import cats.effect.{Trace as _, *}
 import cats.mtl.Local
-import cats.syntax.all.*
 import natchez.*
-import natchez.mtl.*
 
 trait TracedHandlerPlatform:
   def apply[F[_]: MonadCancelThrow, Event, Result](entryPoint: EntryPoint[F])(
@@ -28,16 +26,4 @@ trait TracedHandlerPlatform:
       using Invocation[F, Event],
       KernelSource[Event],
       Local[F, Span[F]]): F[Option[Result]] =
-    for
-      event <- Invocation[F, Event].event
-      context <- Invocation[F, Event].context
-      kernel = KernelSource[Event].extract(event)
-      result <- entryPoint
-        .continueOrElseRoot(context.functionName, kernel)
-        .use:
-          Local[F, Span[F]].scope:
-            Trace[F].put(
-              AwsTags.arn(context.invokedFunctionArn),
-              AwsTags.requestId(context.awsRequestId)
-            ) >> handler
-    yield result
+    TracedHandlerImpl[F, Event, Result](entryPoint) { implicit t => handler }
