@@ -185,7 +185,7 @@ lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.tpolecat" %%% "natchez-core" % natchezVersion,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     )
   )
   .settings(commonSettings)
@@ -200,7 +200,7 @@ lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "otel4s-sdk-trace-testkit" % otel4sVersion % Test,
       "org.typelevel" %%% "otel4s-semconv-experimental" % otel4sVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % munitCEVersion % Test
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     )
   )
   .settings(commonSettings)
