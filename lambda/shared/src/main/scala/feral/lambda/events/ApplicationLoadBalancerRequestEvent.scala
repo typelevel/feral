@@ -19,33 +19,20 @@ package feral.lambda.events
 import io.circe.Decoder
 import org.typelevel.ci.CIString
 
-sealed abstract class ApplicationLoadBalancerElbContext {
-  def targetGroupArn: String
-}
-
-object ApplicationLoadBalancerElbContext {
-  def apply(targetGroupArn: String): ApplicationLoadBalancerElbContext =
-    Impl(targetGroupArn)
-
-  implicit def decoder: Decoder[ApplicationLoadBalancerElbContext] =
-    Decoder.forProduct1("targetGroupArn")(ApplicationLoadBalancerElbContext.apply)
-
-  private final case class Impl(targetGroupArn: String)
-      extends ApplicationLoadBalancerElbContext
-}
+final case class Elb(targetGroupArn: String)
 
 sealed abstract class ApplicationLoadBalancerRequestContext {
-  def elb: ApplicationLoadBalancerElbContext
+  def elb: Elb
 }
 
 object ApplicationLoadBalancerRequestContext {
-  def apply(elb: ApplicationLoadBalancerElbContext): ApplicationLoadBalancerRequestContext =
+  def apply(elb: Elb): ApplicationLoadBalancerRequestContext =
     Impl(elb)
 
   implicit def decoder: Decoder[ApplicationLoadBalancerRequestContext] =
     Decoder.forProduct1("elb")(ApplicationLoadBalancerRequestContext.apply)
 
-  private final case class Impl(elb: ApplicationLoadBalancerElbContext)
+  private final case class Impl(elb: Elb)
       extends ApplicationLoadBalancerRequestContext
 }
 
