@@ -21,15 +21,21 @@ import org.typelevel.ci.CIString
 
 final case class Elb(targetGroupArn: String)
 
+object Elb {
+  implicit val decoder: Decoder[Elb] = Decoder.forProduct1("targetGroupArn")(Elb.apply)
+}
+
 sealed abstract class ApplicationLoadBalancerRequestContext {
   def elb: Elb
 }
 
 object ApplicationLoadBalancerRequestContext {
+  import feral.lambda.events.Elb._ // Ensure Decoder[Elb] is in scope
+
   def apply(elb: Elb): ApplicationLoadBalancerRequestContext =
     Impl(elb)
 
-  implicit def decoder: Decoder[ApplicationLoadBalancerRequestContext] =
+  implicit val decoder: Decoder[ApplicationLoadBalancerRequestContext] =
     Decoder.forProduct1("elb")(ApplicationLoadBalancerRequestContext.apply)
 
   private final case class Impl(elb: Elb)
@@ -46,6 +52,16 @@ sealed abstract class ApplicationLoadBalancerRequestEvent {
   def multiValueHeaders: Option[Map[CIString, List[String]]]
   def body: Option[String]
   def isBase64Encoded: Boolean
+
+  /**
+   * If isBase64Encoded is true, decodes the body from base64.
+   * Otherwise, returns the UTF-8 bytes of the body string.
+   */
+  def decodedBody: Option[Array[Byte]] =
+    body.map { b =>
+      if (isBase64Encoded) java.util.Base64.getDecoder.decode(b)
+      else b.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+    }
 }
 
 object ApplicationLoadBalancerRequestEvent {
@@ -80,7 +96,7 @@ object ApplicationLoadBalancerRequestEvent {
       isBase64Encoded
     )
 
-  implicit def decoder: Decoder[ApplicationLoadBalancerRequestEvent] =
+  implicit val decoder: Decoder[ApplicationLoadBalancerRequestEvent] =
     Decoder.forProduct9(
       "requestContext",
       "httpMethod",
