@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class SharedTracedHandlerSuite extends CatsEffectSuite {
   import SharedTracedHandlerSuite._
 
-  val fixture = ResourceFixture(TracesTestkit.inMemory[IO]())
+  val fixture = ResourceFunFixture(TracesTestkit.inMemory[IO]())
 
   fixture.test("single root span is created for single invocation") { traces =>
     traces.tracerProvider.tracer("test-tracer").get.flatMap { implicit tracer =>
