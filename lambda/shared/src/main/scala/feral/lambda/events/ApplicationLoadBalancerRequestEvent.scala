@@ -65,9 +65,9 @@ object ApplicationLoadBalancerRequestEvent {
   private implicit val ciStringKeyDecoder: io.circe.KeyDecoder[CIString] =
     io.circe.KeyDecoder.instance(s => Some(CIString(s)))
 
-  implicit val mapStringDecoder: Decoder[Map[CIString, String]] =
+  private implicit val mapStringDecoder: Decoder[Map[CIString, String]] =
     Decoder.decodeMap[CIString, String]
-  implicit val mapListDecoder: Decoder[Map[CIString, List[String]]] =
+  private implicit val mapListDecoder: Decoder[Map[CIString, List[String]]] =
     Decoder.decodeMap[CIString, List[String]]
 
   def apply(
