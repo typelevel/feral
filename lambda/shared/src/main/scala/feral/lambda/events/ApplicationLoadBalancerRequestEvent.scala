@@ -38,8 +38,7 @@ object ApplicationLoadBalancerRequestContext {
   implicit val decoder: Decoder[ApplicationLoadBalancerRequestContext] =
     Decoder.forProduct1("elb")(ApplicationLoadBalancerRequestContext.apply)
 
-  private final case class Impl(elb: Elb)
-      extends ApplicationLoadBalancerRequestContext
+  private final case class Impl(elb: Elb) extends ApplicationLoadBalancerRequestContext
 }
 
 sealed abstract class ApplicationLoadBalancerRequestEvent {
@@ -54,8 +53,8 @@ sealed abstract class ApplicationLoadBalancerRequestEvent {
   def isBase64Encoded: Boolean
 
   /**
-   * If isBase64Encoded is true, decodes the body from base64.
-   * Otherwise, returns the UTF-8 bytes of the body string.
+   * If isBase64Encoded is true, decodes the body from base64. Otherwise, returns the UTF-8
+   * bytes of the body string.
    */
   def decodedBody: Option[Array[Byte]] =
     body.map { b =>
