@@ -52,8 +52,6 @@ sealed abstract class ApplicationLoadBalancerRequestEvent {
   def multiValueHeaders: Option[Map[CIString, List[String]]]
   def body: Option[String]
   def isBase64Encoded: Boolean
-
-  @nowarn("cat=unused")
   def decodedBody: Option[Array[Byte]] =
     body.map { b =>
       if (isBase64Encoded) java.util.Base64.getDecoder.decode(b)
