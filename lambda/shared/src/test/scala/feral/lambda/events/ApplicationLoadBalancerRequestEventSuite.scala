@@ -54,11 +54,13 @@ object ApplicationLoadBalancerRequestEventSuite {
   """
 
   def withBodyEvent = {
-    val encodedBody = java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
+    val encodedBody =
+      java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
     Json.obj(
       "requestContext" -> Json.obj(
         "elb" -> Json.obj(
-          "targetGroupArn" -> Json.fromString("arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09")
+          "targetGroupArn" -> Json.fromString(
+            "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09")
         )
       ),
       "httpMethod" -> Json.fromString("POST"),
@@ -129,7 +131,8 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
 
   test("decode with only body present") {
     val decoded = withBodyEvent.as[ApplicationLoadBalancerRequestEvent].toTry.get
-    val encodedBody = java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
+    val encodedBody =
+      java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
     val expected = ApplicationLoadBalancerRequestEvent(
       requestContext = ApplicationLoadBalancerRequestContext(
         elb = Elb(
