@@ -16,8 +16,8 @@
 
 package feral.lambda.events
 
-import io.circe.literal.*
 import io.circe.Json
+import io.circe.literal._
 import munit.FunSuite
 
 object ApplicationLoadBalancerRequestEventSuite {
