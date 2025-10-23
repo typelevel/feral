@@ -16,10 +16,76 @@
 
 package feral.lambda.events
 
+import io.circe.literal.*
+import io.circe.Json
 import munit.FunSuite
 
+object ApplicationLoadBalancerRequestEventSuite {
+  def allFieldsEvent = json"""
+    {
+      "requestContext": {
+        "elb": {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
+        }
+      },
+      "httpMethod": "GET",
+      "path": "/lambda",
+      "queryStringParameters": {
+        "query": "1234ABCD"
+      },
+      "headers": {
+        "accept": "text/html,application/xhtml+xml",
+        "accept-language": "en-US,en;q=0.8",
+        "content-type": "text/plain",
+        "cookie": "cookies",
+        "host": "lambda-846800462-us-west-2.elb.amazonaws.com",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6)",
+        "x-amzn-trace-id": "Root=1-58337364-23a8c76965a2ef7629b2b5c2",
+        "x-forwarded-for": "72.21.198.64",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+      },
+      "multiValueQueryStringParameters": null,
+      "multiValueHeaders": null,
+      "body": null,
+      "isBase64Encoded": false
+    }
+  """
+
+  def withBodyEvent = json"""
+    {
+      "requestContext": {
+        "elb": {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
+        }
+      },
+      "httpMethod": "POST",
+      "path": "/submit",
+      "queryStringParameters": null,
+      "headers": null,
+      "multiValueQueryStringParameters": null,
+      "multiValueHeaders": null,
+      "body": "hello world",
+      "isBase64Encoded": true
+    }
+  """
+
+  def missingOptionalsEvent = json"""
+    {
+      "requestContext": {
+        "elb": {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
+        }
+      },
+      "httpMethod": "GET",
+      "path": "/only-required",
+      "isBase64Encoded": false
+    }
+  """
+}
+
 class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
-  import ApplicationLoadBalancerRequestEventSuite._
+  import ApplicationLoadBalancerRequestEventSuite.*
 
   test("decode with all fields populated") {
     val decoded = allFieldsEvent.as[ApplicationLoadBalancerRequestEvent].toTry.get
@@ -49,7 +115,8 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
           org.typelevel.ci.CIString("x-forwarded-for") -> "72.21.198.64",
           org.typelevel.ci.CIString("x-forwarded-port") -> "443",
           org.typelevel.ci.CIString("x-forwarded-proto") -> "https"
-        )),
+        )
+      ),
       multiValueQueryStringParameters = None,
       multiValueHeaders = None,
       body = None,
@@ -95,67 +162,23 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
     )
     assertEquals(decoded, expected)
   }
-}
 
-object ApplicationLoadBalancerRequestEventSuite {
-  import io.circe.literal._
-
-  def withBodyEvent = json"""
-    {
-      "requestContext": {
-        "elb": {
-          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
-        }
-      },
-      "httpMethod": "POST",
-      "path": "/submit",
-      "queryStringParameters": null,
-      "headers": null,
-      "multiValueQueryStringParameters": null,
-      "multiValueHeaders": null,
-      "body": "hello world",
-      "isBase64Encoded": true
-    }
-  """
-
-  def missingOptionalsEvent = json"""
-    {
-      "requestContext": {
-        "elb": {
-          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
-        }
-      },
-      "httpMethod": "GET",
-      "path": "/only-required",
-      "isBase64Encoded": false
-    }
-  """
-
-  def allFieldsEvent = json"""
-    {
-      "requestContext": {
-        "elb": {
-          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
-        }
-      },
-      "httpMethod": "GET",
-      "path": "/lambda",
-      "queryStringParameters": {
-        "query": "1234ABCD"
-      },
-      "headers": {
-        "accept": "text/html,application/xhtml+xml",
-        "accept-language": "en-US,en;q=0.8",
-        "content-type": "text/plain",
-        "cookie": "cookies",
-        "host": "lambda-846800462-us-west-2.elb.amazonaws.com",
-        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6)",
-        "x-amzn-trace-id": "Root=1-58337364-23a8c76965a2ef7629b2b5c2",
-        "x-forwarded-for": "72.21.198.64",
-        "x-forwarded-port": "443",
-        "x-forwarded-proto": "https"
-      },
-      "isBase64Encoded": false
-    }
-  """
+  test("decode base64 body correctly") {
+    val base64String =
+      java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
+    val eventJson = Json.obj(
+      "requestContext" -> Json.obj(
+        "elb" -> Json.obj(
+          "targetGroupArn" -> Json.fromString(
+            "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09")
+        )
+      ),
+      "httpMethod" -> Json.fromString("POST"),
+      "path" -> Json.fromString("/submit"),
+      "body" -> Json.fromString(base64String),
+      "isBase64Encoded" -> Json.fromBoolean(true)
+    )
+    val decoded = eventJson.as[ApplicationLoadBalancerRequestEvent].toTry.get
+    assert(decoded.decodedBody.exists(_.sameElements("hello world".getBytes("UTF-8"))))
+  }
 }

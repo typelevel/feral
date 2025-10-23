@@ -18,6 +18,7 @@ package feral.lambda.events
 
 import io.circe.Decoder
 import org.typelevel.ci.CIString
+import scala.annotation.nowarn
 
 final case class Elb(targetGroupArn: String)
 
@@ -30,7 +31,7 @@ sealed abstract class ApplicationLoadBalancerRequestContext {
 }
 
 object ApplicationLoadBalancerRequestContext {
-  import feral.lambda.events.Elb._ // Ensure Decoder[Elb] is in scope
+  import feral.lambda.events.Elb.decoder
 
   def apply(elb: Elb): ApplicationLoadBalancerRequestContext =
     Impl(elb)
@@ -52,10 +53,7 @@ sealed abstract class ApplicationLoadBalancerRequestEvent {
   def body: Option[String]
   def isBase64Encoded: Boolean
 
-  /**
-   * If isBase64Encoded is true, decodes the body from base64. Otherwise, returns the UTF-8
-   * bytes of the body string.
-   */
+  @nowarn("cat=unused")
   def decodedBody: Option[Array[Byte]] =
     body.map { b =>
       if (isBase64Encoded) java.util.Base64.getDecoder.decode(b)
