@@ -16,10 +16,10 @@
 
 package feral.lambda.events
 
+import feral.lambda.events.codecs.decodeKeyCIString
 import io.circe.Decoder
 import org.typelevel.ci.CIString
 import scodec.bits.ByteVector
-import feral.lambda.events.codecs.decodeKeyCIString
 
 sealed abstract class Elb {
   def targetGroupArn: String

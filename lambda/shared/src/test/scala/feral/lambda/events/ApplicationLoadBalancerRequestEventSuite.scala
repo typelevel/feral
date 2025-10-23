@@ -17,7 +17,7 @@
 package feral.lambda.events
 
 import io.circe.Json
-import io.circe.literal.*
+import io.circe.literal._
 import munit.FunSuite
 import scodec.bits.ByteVector
 
@@ -53,23 +53,24 @@ object ApplicationLoadBalancerRequestEventSuite {
     }
   """
 
-  def withBodyEvent = json"""
-    {
-      "requestContext": {
-        "elb": {
-          "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09"
-        }
-      },
-      "httpMethod": "POST",
-      "path": "/submit",
-      "queryStringParameters": null,
-      "headers": null,
-      "multiValueQueryStringParameters": null,
-      "multiValueHeaders": null,
-      "body": "hello world",
-      "isBase64Encoded": true
-    }
-  """
+  def withBodyEvent = {
+    val encodedBody = java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
+    Json.obj(
+      "requestContext" -> Json.obj(
+        "elb" -> Json.obj(
+          "targetGroupArn" -> Json.fromString("arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-target-group/6d0ecf831eec9f09")
+        )
+      ),
+      "httpMethod" -> Json.fromString("POST"),
+      "path" -> Json.fromString("/submit"),
+      "queryStringParameters" -> Json.Null,
+      "headers" -> Json.Null,
+      "multiValueQueryStringParameters" -> Json.Null,
+      "multiValueHeaders" -> Json.Null,
+      "body" -> Json.fromString(encodedBody),
+      "isBase64Encoded" -> Json.fromBoolean(true)
+    )
+  }
 
   def missingOptionalsEvent = json"""
     {
@@ -128,6 +129,7 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
 
   test("decode with only body present") {
     val decoded = withBodyEvent.as[ApplicationLoadBalancerRequestEvent].toTry.get
+    val encodedBody = java.util.Base64.getEncoder.encodeToString("hello world".getBytes("UTF-8"))
     val expected = ApplicationLoadBalancerRequestEvent(
       requestContext = ApplicationLoadBalancerRequestContext(
         elb = Elb(
@@ -139,7 +141,7 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
       headers = None,
       multiValueQueryStringParameters = None,
       multiValueHeaders = None,
-      body = Some("hello world"),
+      body = Some(encodedBody),
       isBase64Encoded = true
     )
     assertEquals(decoded, expected)
