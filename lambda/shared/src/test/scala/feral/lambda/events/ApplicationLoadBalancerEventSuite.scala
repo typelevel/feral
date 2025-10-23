@@ -21,7 +21,7 @@ import io.circe.literal._
 import munit.FunSuite
 import scodec.bits.ByteVector
 
-object ApplicationLoadBalancerRequestEventSuite {
+object ApplicationLoadBalancerEventSuite {
   def allFieldsEvent = json"""
     {
       "requestContext": {
@@ -88,8 +88,8 @@ object ApplicationLoadBalancerRequestEventSuite {
   """
 }
 
-class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
-  import ApplicationLoadBalancerRequestEventSuite.*
+class ApplicationLoadBalancerEventSuite extends FunSuite {
+  import ApplicationLoadBalancerEventSuite.*
 
   test("decode with all fields populated") {
     val decoded = allFieldsEvent.as[ApplicationLoadBalancerRequestEvent].toTry.get
