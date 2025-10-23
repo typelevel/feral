@@ -18,7 +18,6 @@ package feral.lambda.events
 
 import io.circe.Decoder
 import org.typelevel.ci.CIString
-import scala.annotation.nowarn
 
 final case class Elb(targetGroupArn: String)
 
