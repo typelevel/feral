@@ -53,7 +53,7 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
           implicit val t: Tracer[IO] = tracer
 
           for {
-            client <- EmberClientBuilder.default[IO].build.map(middleware.wrap)
+            client <- EmberClientBuilder.default[IO].build.map(middleware.wrapClient)
           } yield { implicit inv: Invocation[IO, SqsEvent] =>
             TracedHandler[IO, SqsEvent, INothing](
               handleEvent[IO](client)
