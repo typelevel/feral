@@ -30,7 +30,6 @@ sealed abstract class ApplicationLoadBalancerRequestContext {
 }
 
 object ApplicationLoadBalancerRequestContext {
-  import feral.lambda.events.Elb.decoder
 
   def apply(elb: Elb): ApplicationLoadBalancerRequestContext =
     Impl(elb)
