@@ -18,11 +18,19 @@ package feral.lambda.events
 
 import io.circe.Decoder
 import org.typelevel.ci.CIString
+import scodec.bits.ByteVector
+import feral.lambda.events.codecs.decodeKeyCIString
 
-final case class Elb(targetGroupArn: String)
+sealed abstract class Elb {
+  def targetGroupArn: String
+}
 
 object Elb {
+  def apply(targetGroupArn: String): Elb = Impl(targetGroupArn)
+
   implicit val decoder: Decoder[Elb] = Decoder.forProduct1("targetGroupArn")(Elb.apply)
+
+  private final case class Impl(targetGroupArn: String) extends Elb
 }
 
 sealed abstract class ApplicationLoadBalancerRequestContext {
@@ -50,21 +58,15 @@ sealed abstract class ApplicationLoadBalancerRequestEvent {
   def multiValueHeaders: Option[Map[CIString, List[String]]]
   def body: Option[String]
   def isBase64Encoded: Boolean
-  def decodedBody: Option[Array[Byte]] =
-    body.map { b =>
-      if (isBase64Encoded) java.util.Base64.getDecoder.decode(b)
-      else b.getBytes(java.nio.charset.StandardCharsets.UTF_8)
-    }
+  def bodyDecoded: Option[ByteVector] =
+    if (isBase64Encoded) body.flatMap(ByteVector.fromBase64(_)) else None
 }
 
 object ApplicationLoadBalancerRequestEvent {
-  private implicit val ciStringKeyDecoder: io.circe.KeyDecoder[CIString] =
-    io.circe.KeyDecoder.instance(s => Some(CIString(s)))
-
   private implicit val mapStringDecoder: Decoder[Map[CIString, String]] =
-    Decoder.decodeMap[CIString, String]
+    Decoder.decodeMap[CIString, String](decodeKeyCIString, Decoder.decodeString)
   private implicit val mapListDecoder: Decoder[Map[CIString, List[String]]] =
-    Decoder.decodeMap[CIString, List[String]]
+    Decoder.decodeMap[CIString, List[String]](decodeKeyCIString, Decoder.decodeList(Decoder.decodeString))
 
   def apply(
       requestContext: ApplicationLoadBalancerRequestContext,

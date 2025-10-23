@@ -17,8 +17,9 @@
 package feral.lambda.events
 
 import io.circe.Json
-import io.circe.literal._
+import io.circe.literal.*
 import munit.FunSuite
+import scodec.bits.ByteVector
 
 object ApplicationLoadBalancerRequestEventSuite {
   def allFieldsEvent = json"""
@@ -179,6 +180,6 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
       "isBase64Encoded" -> Json.fromBoolean(true)
     )
     val decoded = eventJson.as[ApplicationLoadBalancerRequestEvent].toTry.get
-    assert(decoded.decodedBody.exists(_.sameElements("hello world".getBytes("UTF-8"))))
+    assert(decoded.bodyDecoded.exists(_ == ByteVector.encodeUtf8("hello world").getOrElse(ByteVector.empty)))
   }
 }
