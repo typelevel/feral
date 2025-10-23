@@ -180,6 +180,9 @@ class ApplicationLoadBalancerRequestEventSuite extends FunSuite {
       "isBase64Encoded" -> Json.fromBoolean(true)
     )
     val decoded = eventJson.as[ApplicationLoadBalancerRequestEvent].toTry.get
-    assert(decoded.bodyDecoded.exists(_ == ByteVector.encodeUtf8("hello world").getOrElse(ByteVector.empty)))
+    assert(
+      decoded
+        .bodyDecoded
+        .exists(_ == ByteVector.encodeUtf8("hello world").getOrElse(ByteVector.empty)))
   }
 }

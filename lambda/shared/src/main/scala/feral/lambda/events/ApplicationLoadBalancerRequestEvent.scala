@@ -66,7 +66,9 @@ object ApplicationLoadBalancerRequestEvent {
   private implicit val mapStringDecoder: Decoder[Map[CIString, String]] =
     Decoder.decodeMap[CIString, String](decodeKeyCIString, Decoder.decodeString)
   private implicit val mapListDecoder: Decoder[Map[CIString, List[String]]] =
-    Decoder.decodeMap[CIString, List[String]](decodeKeyCIString, Decoder.decodeList(Decoder.decodeString))
+    Decoder.decodeMap[CIString, List[String]](
+      decodeKeyCIString,
+      Decoder.decodeList(Decoder.decodeString))
 
   def apply(
       requestContext: ApplicationLoadBalancerRequestContext,
