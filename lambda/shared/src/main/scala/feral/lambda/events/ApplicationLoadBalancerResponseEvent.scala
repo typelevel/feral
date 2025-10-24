@@ -16,7 +16,10 @@
 
 package feral.lambda.events
 
-import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
+import io.circe.Decoder
+import io.circe.Encoder
+import io.circe.KeyDecoder
+import io.circe.KeyEncoder
 import org.typelevel.ci.CIString
 
 sealed abstract class ApplicationLoadBalancerResponseEvent {
