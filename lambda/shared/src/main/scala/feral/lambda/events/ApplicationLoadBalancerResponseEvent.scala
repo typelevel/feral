@@ -16,7 +16,7 @@
 
 package feral.lambda.events
 
-import io.circe.{Encoder, Decoder}
+import io.circe.{Decoder, Encoder}
 import org.typelevel.ci.CIString
 
 sealed abstract class ApplicationLoadBalancerResponseEvent {
@@ -60,8 +60,7 @@ object ApplicationLoadBalancerResponseEvent {
         x.multiValueHeaders,
         x.body,
         x.isBase64Encoded
-      )
-    )
+      ))
 
   implicit val decoder: Decoder[ApplicationLoadBalancerResponseEvent] =
     Decoder.forProduct6(
@@ -82,4 +81,3 @@ object ApplicationLoadBalancerResponseEvent {
       isBase64Encoded: Boolean
   ) extends ApplicationLoadBalancerResponseEvent
 }
-
