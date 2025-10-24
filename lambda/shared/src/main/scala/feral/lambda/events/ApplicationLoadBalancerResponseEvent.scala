@@ -16,7 +16,7 @@
 
 package feral.lambda.events
 
-import io.circe.{Decoder, Encoder}
+import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
 import org.typelevel.ci.CIString
 
 sealed abstract class ApplicationLoadBalancerResponseEvent {
@@ -29,6 +29,9 @@ sealed abstract class ApplicationLoadBalancerResponseEvent {
 }
 
 object ApplicationLoadBalancerResponseEvent {
+  implicit val ciStringKeyEncoder: KeyEncoder[CIString] = KeyEncoder.encodeKeyString.contramap(_.toString)
+  implicit val ciStringKeyDecoder: KeyDecoder[CIString] = KeyDecoder.decodeKeyString.map(CIString(_))
+
   private implicit val mapStringEncoder: Encoder[Map[CIString, String]] =
     Encoder.encodeMap[CIString, String]
   private implicit val mapListEncoder: Encoder[Map[CIString, List[String]]] =
