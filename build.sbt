@@ -58,7 +58,7 @@ val natchezVersion = "0.3.8"
 val munitVersion = "1.2.0"
 val munitCEVersion = "2.1.0"
 val scalacheckEffectVersion = "2.1.0-RC1"
-val otel4sVersion = "0.13.2"
+val otel4sVersion = "0.14.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -212,7 +212,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-dsl" % http4sVersion,
       "org.http4s" %%% "http4s-ember-client" % http4sVersion,
-      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.14.1",
+      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.15.0",
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.6.1",
       "org.tpolecat" %%% "skunk-core" % "0.6.4",
@@ -224,7 +224,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(lambda, lambdaHttp4s, lambdaNatchez, lambdaOtel4s, googleCloudHttp4s)
   .jvmSettings(libraryDependencies ++= Seq(
     "org.typelevel" %%% "otel4s-oteljava" % otel4sVersion,
-    "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.34.1",
+    "io.opentelemetry" % "opentelemetry-sdk-extension-autoconfigure" % "1.55.0",
     "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.3.3"
   ))
   .jsSettings(
