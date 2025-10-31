@@ -18,11 +18,14 @@ package feral.lambda
 
 import cats.effect.Sync
 import com.amazonaws.services.lambda.runtime
+import io.circe.Json
 import io.circe.JsonObject
-import io.circe.jawn.parse
+import io.circe.syntax._
 
+import java.util.Collections
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
+import scala.util.chaining._
 
 private[lambda] trait ContextCompanionPlatform {
 
@@ -39,26 +42,44 @@ private[lambda] trait ContextCompanionPlatform {
         CognitoIdentity(identity.getIdentityId(), identity.getIdentityPoolId())
       },
       Option(context.getClientContext()).map { clientContext =>
-        ClientContext(
-          ClientContextClient(
-            clientContext.getClient().getInstallationId(),
-            clientContext.getClient().getAppTitle(),
-            clientContext.getClient().getAppVersionName(),
-            clientContext.getClient().getAppVersionCode(),
-            clientContext.getClient().getAppPackageName()
-          ),
-          ClientContextEnv(
-            clientContext.getEnvironment().get("platformVersion"),
-            clientContext.getEnvironment().get("platform"),
-            clientContext.getEnvironment().get("make"),
-            clientContext.getEnvironment().get("model"),
-            clientContext.getEnvironment().get("locale")
-          ),
-          JsonObject.fromIterable(clientContext.getCustom().asScala.view.flatMap {
-            case (k, v) =>
-              parse(v).toOption.map(k -> _)
-          })
-        )
+        val env =
+          Option(clientContext.getEnvironment())
+            .map(_.asScala)
+            .getOrElse(Map.empty[String, String])
+            .pipe { env =>
+              ClientContextEnv(
+                env.get("platformVersion").orNull,
+                env.get("platform").orNull,
+                env.get("make").orNull,
+                env.get("model").orNull,
+                env.get("locale").orNull
+              )
+            }
+
+        val maybeClient =
+          for {
+            client <- Option(clientContext.getClient())
+          } yield ClientContextClient(
+            client.getInstallationId(),
+            client.getAppTitle(),
+            client.getAppVersionName(),
+            client.getAppVersionCode(),
+            client.getAppPackageName()
+          )
+
+        val custom =
+          JsonObject.fromIterable {
+            Option(clientContext.getCustom())
+              .getOrElse(Collections.emptyMap[String, String]())
+              .asScala
+              .view
+              .mapValues {
+                case null => Json.Null
+                case other => other.asJson
+              }
+          }
+
+        ClientContext(maybeClient, env, custom)
       },
       Sync[F].delay(context.getRemainingTimeInMillis().millis)
     )
