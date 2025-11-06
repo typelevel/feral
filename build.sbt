@@ -267,7 +267,7 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "com.google.cloud.functions" % "functions-framework-api" % "1.1.4" % Provided,
+      "com.google.cloud.functions" % "functions-framework-api" % "2.0.0" % Provided,
       "co.fs2" %%% "fs2-io" % fs2Version
     )
   )
