@@ -45,15 +45,21 @@ ThisBuild / githubWorkflowBuildPreamble +=
     cond = Some("matrix.project == 'rootJS'")
   )
 
+ThisBuild / mergifyStewardConfig ~= {
+  _.map {
+    _.withMergeMinors(true).withAuthor("typelevel-steward[bot]")
+  }
+}
+
 val Scala212 = "2.12.20"
 val Scala213 = "2.13.17"
-val Scala3 = "3.3.6"
+val Scala3 = "3.3.7"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
-val catsEffectVersion = "3.6.0"
+val catsEffectVersion = "3.6.3"
 val circeVersion = "0.14.15"
 val fs2Version = "3.12.2"
-val http4sVersion = "0.23.32"
+val http4sVersion = "0.23.33"
 val natchezVersion = "0.3.8"
 val munitVersion = "1.2.0"
 val munitCEVersion = "2.1.0"
@@ -171,7 +177,7 @@ lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatfo
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
       "org.typelevel" %%% "scalacheck-effect" % scalacheckEffectVersion % Test,
       "org.typelevel" %%% "scalacheck-effect-munit" % scalacheckEffectVersion % Test,
-      "com.eed3si9n.expecty" %%% "expecty" % "0.17.0" % Test,
+      "com.eed3si9n.expecty" %%% "expecty" % "0.17.1" % Test,
       "io.circe" %%% "circe-testing" % circeVersion % Test
     )
   )
@@ -231,6 +237,11 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
     scalaJSUseMainModuleInitializer := true,
     Compile / mainClass := Some("feral.examples.http4sGoogleCloudHandler"),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions.invoker" % "java-function-invoker" % "1.4.3"
+    )
   )
   .enablePlugins(NoPublishPlugin)
 
