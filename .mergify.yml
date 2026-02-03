@@ -68,6 +68,22 @@ pull_request_rules:
       add:
       - lambda-http4s
       remove: []
+- name: Label lambda-natchez PRs
+  conditions:
+  - files~=^lambda-natchez/
+  actions:
+    label:
+      add:
+      - lambda-natchez
+      remove: []
+- name: Label lambda-otel4s PRs
+  conditions:
+  - files~=^lambda-otel4s/
+  actions:
+    label:
+      add:
+      - lambda-otel4s
+      remove: []
 - name: Label output PRs
   conditions:
   - files~=^scalafix/output/
