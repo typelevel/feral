@@ -111,7 +111,12 @@ object CognitoIdentity {
 }
 
 sealed abstract class ClientContext {
-  def client: ClientContextClient
+  @deprecated(
+    "Use clientOption, because this will be populated with empty strings if no client context was received",
+    "0.3.2")
+  def client: ClientContextClient =
+    clientOption.getOrElse(ClientContextClient("", "", "", "", ""))
+  def clientOption: Option[ClientContextClient]
   def env: ClientContextEnv
   def custom: JsonObject
 }
@@ -122,10 +127,23 @@ object ClientContext {
       env: ClientContextEnv,
       custom: JsonObject
   ): ClientContext =
-    new Impl(client, env, custom)
+    Impl(Option(client), env, custom)
+
+  def apply(
+      env: ClientContextEnv,
+      custom: JsonObject
+  ): ClientContext =
+    Impl(None, env, custom)
+
+  def apply(
+      client: Option[ClientContextClient],
+      env: ClientContextEnv,
+      custom: JsonObject
+  ): ClientContext =
+    Impl(client, env, custom)
 
   private final case class Impl(
-      client: ClientContextClient,
+      override val clientOption: Option[ClientContextClient],
       env: ClientContextEnv,
       custom: JsonObject
   ) extends ClientContext {
