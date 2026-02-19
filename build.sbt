@@ -156,6 +156,22 @@ lazy val lambdaHttp4s = crossProject(JSPlatform, JVMPlatform)
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
 
+lazy val cloudflareWorker = project
+  .in(file("cloudflare-worker"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    name := "feral-cloudflare-worker",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "co.fs2" %%% "fs2-core" % fs2Version,
+      "io.circe" %%% "circe-generic" % circeVersion,
+      "io.circe" %%% "circe-scalajs" % circeVersion,
+      "org.http4s" %%% "http4s-client" % http4sVersion
+    )
+  ).dependsOn(core.js)
+  
+  .settings(commonSettings)
+
 lazy val lambdaCloudFormationCustomResource = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lambda-cloudformation-custom-resource"))
