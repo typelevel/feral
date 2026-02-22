@@ -1,4 +1,4 @@
-val sbtlTlV = "0.8.2"
+val sbtlTlV = "0.8.5"
 addSbtPlugin("org.typelevel" % "sbt-typelevel" % sbtlTlV)
 addSbtPlugin("org.typelevel" % "sbt-typelevel-scalafix" % sbtlTlV)
 addSbtPlugin("org.typelevel" % "sbt-typelevel-mergify" % sbtlTlV)
