@@ -25,6 +25,9 @@ class CodeCommitEventSuite extends FunSuite {
 
   test("decoder") {
     assertEquals(event.as[CodeCommitEvent].toTry.get, decoded)
+    assertEquals(
+      eventNoCustomDataWithDelete.as[CodeCommitEvent].toTry.get,
+      decodedNoCustomDataWithDelete)
   }
 }
 
@@ -61,6 +64,37 @@ object CodeCommitEventSuite {
       )
     )
 
+  val decodedNoCustomDataWithDelete: CodeCommitEvent =
+    CodeCommitEvent(
+      List(
+        CodeCommitRecord(
+          "us-east-1",
+          CodeCommitData(
+            List(
+              CodeCommitReference(
+                "a]b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "refs/heads/feature",
+                None,
+                Some(true)
+              )
+            )
+          ),
+          None,
+          "42fze9a2-1b2d-ffef-b1d1-e8ede6720eb4",
+          "TriggerEventTest",
+          1,
+          "aws:codecommit",
+          "arn:aws:codecommit:us-east-1:123456789012:MyDemoRepo",
+          "2016-02-01T23:59:59.000+0000",
+          1,
+          "6693f088-EXAMPLE",
+          "my-trigger",
+          "1",
+          "arn:aws:iam::123456789012:root"
+        )
+      )
+    )
+
   // https://docs.aws.amazon.com/lambda/latest/dg/services-codecommit.html
   val event: Json = json"""
     {
@@ -85,6 +119,36 @@ object CodeCommitEventSuite {
           "eventTime": "2016-01-01T23:59:59.000+0000",
           "eventTotalParts": 1,
           "eventTriggerConfigId": "5582e977-EXAMPLE",
+          "eventTriggerName": "my-trigger",
+          "eventVersion": "1",
+          "userIdentityARN": "arn:aws:iam::123456789012:root"
+        }
+      ]
+    }
+  """
+
+  val eventNoCustomDataWithDelete: Json = json"""
+    {
+      "Records": [
+        {
+          "awsRegion": "us-east-1",
+          "codecommit": {
+            "references": [
+              {
+                "commit": "a]b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "ref": "refs/heads/feature",
+                "deleted": true
+              }
+            ]
+          },
+          "eventId": "42fze9a2-1b2d-ffef-b1d1-e8ede6720eb4",
+          "eventName": "TriggerEventTest",
+          "eventPartNumber": 1,
+          "eventSource": "aws:codecommit",
+          "eventSourceARN": "arn:aws:codecommit:us-east-1:123456789012:MyDemoRepo",
+          "eventTime": "2016-02-01T23:59:59.000+0000",
+          "eventTotalParts": 1,
+          "eventTriggerConfigId": "6693f088-EXAMPLE",
           "eventTriggerName": "my-trigger",
           "eventVersion": "1",
           "userIdentityARN": "arn:aws:iam::123456789012:root"

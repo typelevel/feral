@@ -32,6 +32,12 @@ class CloudWatchLogsEventSuite extends FunSuite {
   test("decoded data decoder") {
     assertEquals(decodedDataJson.as[CloudWatchLogsDecodedData].toTry.get, decodedData)
   }
+
+  test("decoded data decoder with extractedFields") {
+    assertEquals(
+      decodedDataWithFieldsJson.as[CloudWatchLogsDecodedData].toTry.get,
+      decodedDataWithFields)
+  }
 }
 
 object CloudWatchLogsEventSuite {
@@ -66,6 +72,23 @@ object CloudWatchLogsEventSuite {
       )
     )
 
+  val decodedDataWithFields: CloudWatchLogsDecodedData =
+    CloudWatchLogsDecodedData(
+      "123456789012",
+      "testLogGroup",
+      "testLogStream",
+      List("testFilter"),
+      "DATA_MESSAGE",
+      List(
+        CloudWatchLogsLogEvent(
+          "eventId1",
+          Instant.ofEpochMilli(1440442987000L),
+          "[ERROR] First test message",
+          Some(Map("level" -> "ERROR", "component" -> "test"))
+        )
+      )
+    )
+
   // https://docs.aws.amazon.com/lambda/latest/dg/services-cloudwatchlogs.html
   val event: Json = json"""
     {
@@ -93,6 +116,27 @@ object CloudWatchLogsEventSuite {
           "id": "eventId2",
           "timestamp": 1440442987001,
           "message": "[ERROR] Second test message"
+        }
+      ]
+    }
+  """
+
+  val decodedDataWithFieldsJson: Json = json"""
+    {
+      "owner": "123456789012",
+      "logGroup": "testLogGroup",
+      "logStream": "testLogStream",
+      "subscriptionFilters": ["testFilter"],
+      "messageType": "DATA_MESSAGE",
+      "logEvents": [
+        {
+          "id": "eventId1",
+          "timestamp": 1440442987000,
+          "message": "[ERROR] First test message",
+          "extractedFields": {
+            "level": "ERROR",
+            "component": "test"
+          }
         }
       ]
     }

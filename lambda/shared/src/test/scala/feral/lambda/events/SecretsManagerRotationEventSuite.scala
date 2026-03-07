@@ -24,27 +24,53 @@ class SecretsManagerRotationEventSuite extends FunSuite {
   import SecretsManagerRotationEventSuite._
 
   test("decoder") {
-    assertEquals(createSecretEvent.as[SecretsManagerRotationEvent].toTry.get, decodedCreateSecret)
+    assertEquals(
+      createSecretEvent.as[SecretsManagerRotationEvent].toTry.get,
+      decodedCreateSecret)
+    assertEquals(setSecretEvent.as[SecretsManagerRotationEvent].toTry.get, decodedSetSecret)
+    assertEquals(testSecretEvent.as[SecretsManagerRotationEvent].toTry.get, decodedTestSecret)
     assertEquals(
       finishSecretEvent.as[SecretsManagerRotationEvent].toTry.get,
       decodedFinishSecret)
+  }
+
+  test("decoder unknown step") {
+    assert(unknownStepEvent.as[SecretsManagerRotationEvent].isLeft)
   }
 }
 
 object SecretsManagerRotationEventSuite {
 
+  private val secretId =
+    "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3"
+  private val token = "550e8400-e29b-41d4-a716-446655440000"
+
   val decodedCreateSecret: SecretsManagerRotationEvent =
     SecretsManagerRotationEvent(
       SecretsManagerRotationEvent.Step.CreateSecret,
-      "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3",
-      "550e8400-e29b-41d4-a716-446655440000"
+      secretId,
+      token
+    )
+
+  val decodedSetSecret: SecretsManagerRotationEvent =
+    SecretsManagerRotationEvent(
+      SecretsManagerRotationEvent.Step.SetSecret,
+      secretId,
+      token
+    )
+
+  val decodedTestSecret: SecretsManagerRotationEvent =
+    SecretsManagerRotationEvent(
+      SecretsManagerRotationEvent.Step.TestSecret,
+      secretId,
+      token
     )
 
   val decodedFinishSecret: SecretsManagerRotationEvent =
     SecretsManagerRotationEvent(
       SecretsManagerRotationEvent.Step.FinishSecret,
-      "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3",
-      "550e8400-e29b-41d4-a716-446655440000"
+      secretId,
+      token
     )
 
   // https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets-lambda-function-overview.html
@@ -56,9 +82,33 @@ object SecretsManagerRotationEventSuite {
     }
   """
 
+  val setSecretEvent: Json = json"""
+    {
+      "Step": "setSecret",
+      "SecretId": "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3",
+      "ClientRequestToken": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  """
+
+  val testSecretEvent: Json = json"""
+    {
+      "Step": "testSecret",
+      "SecretId": "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3",
+      "ClientRequestToken": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  """
+
   val finishSecretEvent: Json = json"""
     {
       "Step": "finishSecret",
+      "SecretId": "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3",
+      "ClientRequestToken": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  """
+
+  val unknownStepEvent: Json = json"""
+    {
+      "Step": "unknownStep",
       "SecretId": "arn:aws:secretsmanager:us-east-1:123456789012:secret:MyTestSecret-a1b2c3",
       "ClientRequestToken": "550e8400-e29b-41d4-a716-446655440000"
     }
