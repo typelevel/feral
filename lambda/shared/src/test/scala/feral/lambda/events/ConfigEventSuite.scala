@@ -32,7 +32,8 @@ object ConfigEventSuite {
 
   val decoded: ConfigEvent =
     ConfigEvent(
-      invokingEvent = """{"messageType":"ConfigurationItemChangeNotification","configurationItem":{}}""",
+      invokingEvent =
+        """{"messageType":"ConfigurationItemChangeNotification","configurationItem":{}}""",
       ruleParameters = """{"desiredInstanceType":"t2.micro"}""",
       resultToken = "testResultToken123",
       eventLeftScope = false,

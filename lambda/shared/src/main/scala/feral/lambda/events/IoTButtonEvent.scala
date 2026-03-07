@@ -40,8 +40,8 @@ object IoTButtonEvent {
     implicit val decoder: Decoder[ClickType] = Decoder.decodeString.emap {
       case "SINGLE" => Right(Single)
       case "DOUBLE" => Right(Double)
-      case "LONG"   => Right(Long)
-      case other    => Left(s"Unknown click type: $other")
+      case "LONG" => Right(Long)
+      case other => Left(s"Unknown click type: $other")
     }
   }
 
