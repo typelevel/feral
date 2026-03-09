@@ -62,7 +62,7 @@ val fs2Version = "3.12.2"
 val http4sVersion = "0.23.33"
 val natchezVersion = "0.3.8"
 val munitVersion = "1.2.0"
-val munitCEVersion = "2.1.0"
+val munitCEVersion = "2.2.0"
 val scalacheckEffectVersion = "2.1.0-RC1"
 
 lazy val commonSettings = Seq(
