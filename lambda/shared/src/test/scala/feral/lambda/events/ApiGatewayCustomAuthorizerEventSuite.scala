@@ -21,7 +21,7 @@ import munit.FunSuite
 import feral.lambda.events.events.APIGatewayCustomAuthorizerEvent
 
 class ApiGatewayCustomAuthorizerEventSuite extends FunSuite {
-    
+
   import ApiGatewayCustomAuthorizerEventSuite._
 
   test("decoder") {
@@ -30,7 +30,7 @@ class ApiGatewayCustomAuthorizerEventSuite extends FunSuite {
 }
 
 object ApiGatewayCustomAuthorizerEventSuite {
-    def event = json"""
+  def event = json"""
     {
         "type": "REQUEST",
         "methodArn": "arn:aws:execute-api:us-east-1:677276103099:or71kuogm2/test/GET/",

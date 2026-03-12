@@ -21,7 +21,7 @@ import munit.FunSuite
 import feral.lambda.events.events.APIGatewayCustomAuthorizerEventResult
 
 class APIGatewayCustomAuthorizerEventResultSuite extends FunSuite {
-    
+
   import APIGatewayCustomAuthorizerEventResultSuite._
 
   test("decoder") {
@@ -30,7 +30,7 @@ class APIGatewayCustomAuthorizerEventResultSuite extends FunSuite {
 }
 
 object APIGatewayCustomAuthorizerEventResultSuite {
-    def event = json"""
+  def event = json"""
     {
         "principalId": "me",
         "policyDocument": {
