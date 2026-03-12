@@ -25,6 +25,8 @@ import org.typelevel.ci.CIString
 
 import java.time.Instant
 import scala.util.Try
+import java.time.format.DateTimeFormatter
+import java.time.LocalDate
 
 private object codecs {
 
@@ -35,6 +37,15 @@ private object codecs {
         val seconds = round(millis / 1000).toLongExact
         val nanos = round((millis % 1000) * 1e6).toLongExact
         Instant.ofEpochSecond(seconds, nanos)
+      }
+    }
+
+  implicit def decodeDate: Decoder[java.time.LocalDate] =
+    Decoder.decodeString.emapTry { str =>
+      val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+      Try {
+        LocalDate.parse(str, dateFormatter)
       }
     }
 
