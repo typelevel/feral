@@ -15,7 +15,7 @@
  */
 
 package feral.lambda.events
-package events 
+package events
 
 import com.comcast.ip4s.Hostname
 import org.typelevel.ci.CIString
@@ -26,182 +26,182 @@ import codecs.decodeHostname
 import codecs.decodeKeyCIString
 
 sealed abstract class RequestContext {
-    def resourceId: String
-    def resourcePath: String
-    def httpMethod: String
-    def extendedRequestId: String
-    def requestTime: String
-    def path: String
-    def accountId: String
-    def protocol: String
-    def stage: String
-    def domainPrefix: String
-    def requestTimeEpoch: Long
-    def requestId: String
-    def identity: Map[String, Option[String]]
-    def domainName: Hostname
-    def deploymentId: String
-    def apiId: String
+  def resourceId: String
+  def resourcePath: String
+  def httpMethod: String
+  def extendedRequestId: String
+  def requestTime: String
+  def path: String
+  def accountId: String
+  def protocol: String
+  def stage: String
+  def domainPrefix: String
+  def requestTimeEpoch: Long
+  def requestId: String
+  def identity: Map[String, Option[String]]
+  def domainName: Hostname
+  def deploymentId: String
+  def apiId: String
 }
 
 object RequestContext {
 
-    def apply(
-        resourceId: String,
-        resourcePath: String,
-        httpMethod: String,
-        extendedRequestId: String,
-        requestTime: String,
-        path: String,
-        accountId: String,
-        protocol: String,
-        stage: String,
-        domainPrefix: String,
-        requestTimeEpoch: Long,
-        requestId: String,
-        identity: Map[String, Option[String]],
-        domainName: Hostname,
-        deploymentId: String,
-        apiId: String
-    ): RequestContext =
-        new Impl(
-            resourceId,
-            resourcePath,
-            httpMethod,
-            extendedRequestId,
-            requestTime,
-            path,
-            accountId,
-            protocol,
-            stage,
-            domainPrefix,
-            requestTimeEpoch,
-            requestId,
-            identity,
-            domainName,
-            deploymentId,
-            apiId
-        )
+  def apply(
+      resourceId: String,
+      resourcePath: String,
+      httpMethod: String,
+      extendedRequestId: String,
+      requestTime: String,
+      path: String,
+      accountId: String,
+      protocol: String,
+      stage: String,
+      domainPrefix: String,
+      requestTimeEpoch: Long,
+      requestId: String,
+      identity: Map[String, Option[String]],
+      domainName: Hostname,
+      deploymentId: String,
+      apiId: String
+  ): RequestContext =
+    new Impl(
+      resourceId,
+      resourcePath,
+      httpMethod,
+      extendedRequestId,
+      requestTime,
+      path,
+      accountId,
+      protocol,
+      stage,
+      domainPrefix,
+      requestTimeEpoch,
+      requestId,
+      identity,
+      domainName,
+      deploymentId,
+      apiId
+    )
 
-    implicit def decoder: Decoder[RequestContext] = Decoder.forProduct16(
-        "resourceId",
-        "resourcePath",
-        "httpMethod",
-        "extendedRequestId",
-        "requestTime",
-        "path",
-        "accountId",
-        "protocol",
-        "stage",
-        "domainPrefix",
-        "requestTimeEpoch",
-        "requestId",
-        "identity",
-        "domainName",
-        "deploymentId",
-        "apiId"
-    )(RequestContext.apply)
+  implicit def decoder: Decoder[RequestContext] = Decoder.forProduct16(
+    "resourceId",
+    "resourcePath",
+    "httpMethod",
+    "extendedRequestId",
+    "requestTime",
+    "path",
+    "accountId",
+    "protocol",
+    "stage",
+    "domainPrefix",
+    "requestTimeEpoch",
+    "requestId",
+    "identity",
+    "domainName",
+    "deploymentId",
+    "apiId"
+  )(RequestContext.apply)
 
-    private case class Impl(
-        resourceId: String,
-        resourcePath: String,
-        httpMethod: String,
-        extendedRequestId: String,
-        requestTime: String,
-        path: String,
-        accountId: String,
-        protocol: String,
-        stage: String,
-        domainPrefix: String,
-        requestTimeEpoch: Long,
-        requestId: String,
-        identity: Map[String, Option[String]],
-        domainName: Hostname,
-        deploymentId: String,
-        apiId: String
-    ) extends RequestContext {
-        override def productPrefix = "RequestContext"
-    }
+  private case class Impl(
+      resourceId: String,
+      resourcePath: String,
+      httpMethod: String,
+      extendedRequestId: String,
+      requestTime: String,
+      path: String,
+      accountId: String,
+      protocol: String,
+      stage: String,
+      domainPrefix: String,
+      requestTimeEpoch: Long,
+      requestId: String,
+      identity: Map[String, Option[String]],
+      domainName: Hostname,
+      deploymentId: String,
+      apiId: String
+  ) extends RequestContext {
+    override def productPrefix = "RequestContext"
+  }
 }
 
 sealed abstract class APIGatewayCustomAuthorizerEvent {
-   def `type`: String
-   def methodArn: String
-   def resource: String
-   def path: String
-   def httpMethod: String
-   def headers: Option[Map[CIString, String]]
-   def multiValueHeaders: Map[CIString, List[String]]
-   def queryStringParameters: Map[CIString, Option[String]]
-   def multiValueQueryStringParameters: Map[CIString, Option[List[String]]]
-   def pathParameters: Map[CIString, String]
-   def stageVariables: Map[CIString, String]
-   def requestContext: RequestContext
+  def `type`: String
+  def methodArn: String
+  def resource: String
+  def path: String
+  def httpMethod: String
+  def headers: Option[Map[CIString, String]]
+  def multiValueHeaders: Map[CIString, List[String]]
+  def queryStringParameters: Map[CIString, Option[String]]
+  def multiValueQueryStringParameters: Map[CIString, Option[List[String]]]
+  def pathParameters: Map[CIString, String]
+  def stageVariables: Map[CIString, String]
+  def requestContext: RequestContext
 }
 
 object APIGatewayCustomAuthorizerEvent {
 
-    def apply(
-        `type`: String,
-        methodArn: String,
-        resource: String,
-        path: String,
-        httpMethod: String,
-        headers: Option[Map[CIString, String]],
-        multiValueHeaders: Map[CIString, List[String]],
-        queryStringParameters: Map[CIString, Option[String]],
-        multiValueQueryStringParameters: Map[CIString, Option[List[String]]],
-        pathParameters: Map[CIString, String],
-        stageVariables: Map[CIString, String],
-        requestContext: RequestContext
-    ): APIGatewayCustomAuthorizerEvent =
-        new Impl(
-            `type`,
-            methodArn,
-            resource,
-            path,
-            httpMethod,
-            headers,
-            multiValueHeaders,
-            queryStringParameters,
-            multiValueQueryStringParameters,
-            pathParameters,
-            stageVariables,
-            requestContext
-        )
+  def apply(
+      `type`: String,
+      methodArn: String,
+      resource: String,
+      path: String,
+      httpMethod: String,
+      headers: Option[Map[CIString, String]],
+      multiValueHeaders: Map[CIString, List[String]],
+      queryStringParameters: Map[CIString, Option[String]],
+      multiValueQueryStringParameters: Map[CIString, Option[List[String]]],
+      pathParameters: Map[CIString, String],
+      stageVariables: Map[CIString, String],
+      requestContext: RequestContext
+  ): APIGatewayCustomAuthorizerEvent =
+    new Impl(
+      `type`,
+      methodArn,
+      resource,
+      path,
+      httpMethod,
+      headers,
+      multiValueHeaders,
+      queryStringParameters,
+      multiValueQueryStringParameters,
+      pathParameters,
+      stageVariables,
+      requestContext
+    )
 
-    implicit def kernelSource: KernelSource[APIGatewayCustomAuthorizerEvent] =
+  implicit def kernelSource: KernelSource[APIGatewayCustomAuthorizerEvent] =
     e => Kernel(e.headers.getOrElse(Map.empty))
 
-    implicit def decoder: Decoder[APIGatewayCustomAuthorizerEvent] = Decoder.forProduct12(
-        "type",
-        "methodArn",
-        "resource",
-        "path",
-        "httpMethod",
-        "headers",
-        "multiValueHeaders",
-        "queryStringParameters",
-        "multiValueQueryStringParameters",
-        "pathParameters",
-        "stageVariables",
-        "requestContext"
-    )(APIGatewayCustomAuthorizerEvent.apply)
+  implicit def decoder: Decoder[APIGatewayCustomAuthorizerEvent] = Decoder.forProduct12(
+    "type",
+    "methodArn",
+    "resource",
+    "path",
+    "httpMethod",
+    "headers",
+    "multiValueHeaders",
+    "queryStringParameters",
+    "multiValueQueryStringParameters",
+    "pathParameters",
+    "stageVariables",
+    "requestContext"
+  )(APIGatewayCustomAuthorizerEvent.apply)
 
-    private case class Impl(
-        `type`: String,
-        methodArn: String,
-        resource: String,
-        path: String,
-        httpMethod: String,
-        headers: Option[Map[CIString, String]],
-        multiValueHeaders: Map[CIString, List[String]],
-        queryStringParameters: Map[CIString, Option[String]],
-        multiValueQueryStringParameters: Map[CIString, Option[List[String]]],
-        pathParameters: Map[CIString, String],
-        stageVariables: Map[CIString, String],
-        requestContext: RequestContext
-    ) extends APIGatewayCustomAuthorizerEvent {
-        override def productPrefix = "APIGatewayCustomAuthorizerEvent"
-    }
+  private case class Impl(
+      `type`: String,
+      methodArn: String,
+      resource: String,
+      path: String,
+      httpMethod: String,
+      headers: Option[Map[CIString, String]],
+      multiValueHeaders: Map[CIString, List[String]],
+      queryStringParameters: Map[CIString, Option[String]],
+      multiValueQueryStringParameters: Map[CIString, Option[List[String]]],
+      pathParameters: Map[CIString, String],
+      stageVariables: Map[CIString, String],
+      requestContext: RequestContext
+  ) extends APIGatewayCustomAuthorizerEvent {
+    override def productPrefix = "APIGatewayCustomAuthorizerEvent"
+  }
 }

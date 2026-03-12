@@ -22,73 +22,73 @@ import io.circe.Decoder
 import codecs.decodeDate
 
 sealed abstract class APIGatewayCustomAuthorizerEventResult {
-    def principalId: String
-    def policyDocument: PolicyDocument
+  def principalId: String
+  def policyDocument: PolicyDocument
 }
 
 object APIGatewayCustomAuthorizerEventResult {
 
-    def apply(principalId: String, policyDocument: PolicyDocument): APIGatewayCustomAuthorizerEventResult =
-        Impl(principalId, policyDocument)
+  def apply(
+      principalId: String,
+      policyDocument: PolicyDocument): APIGatewayCustomAuthorizerEventResult =
+    Impl(principalId, policyDocument)
 
-    implicit def decoder: Decoder[APIGatewayCustomAuthorizerEventResult] = Decoder.forProduct2(
-        "principalId",
-        "policyDocument"
-    )(Impl.apply)
+  implicit def decoder: Decoder[APIGatewayCustomAuthorizerEventResult] = Decoder.forProduct2(
+    "principalId",
+    "policyDocument"
+  )(Impl.apply)
 
-    private case class Impl(
-        principalId: String,
-        policyDocument: PolicyDocument
-    ) extends APIGatewayCustomAuthorizerEventResult {
-        override def productPrefix = "APIGatewayCustomAuthorizerEventResult"
-    }
+  private case class Impl(
+      principalId: String,
+      policyDocument: PolicyDocument
+  ) extends APIGatewayCustomAuthorizerEventResult {
+    override def productPrefix = "APIGatewayCustomAuthorizerEventResult"
+  }
 }
 
 sealed abstract class PolicyDocument {
-    def version:LocalDate
-    def statement: List[Statement]
+  def version: LocalDate
+  def statement: List[Statement]
 }
 
 object PolicyDocument {
-    def apply(version:LocalDate, statement: List[Statement]): PolicyDocument =
-        Impl(version, statement)
+  def apply(version: LocalDate, statement: List[Statement]): PolicyDocument =
+    Impl(version, statement)
 
-    implicit def decoder: Decoder[PolicyDocument] = Decoder.forProduct2(
-        "Version",
-        "Statement"
-    )(Impl.apply)
+  implicit def decoder: Decoder[PolicyDocument] = Decoder.forProduct2(
+    "Version",
+    "Statement"
+  )(Impl.apply)
 
-    private case class Impl(
-        version:LocalDate,
-        statement: List[Statement]
-    ) extends PolicyDocument {
-        override def productPrefix = "PolicyDocument"
-    }
+  private case class Impl(
+      version: LocalDate,
+      statement: List[Statement]
+  ) extends PolicyDocument {
+    override def productPrefix = "PolicyDocument"
+  }
 }
 
 sealed abstract class Statement {
-    def action: String
-    def effect: String
-    def resource: String
+  def action: String
+  def effect: String
+  def resource: String
 }
 
 object Statement {
-    def apply(action: String, effect: String, resource: String): Statement =
-        Impl(action, effect, resource)
+  def apply(action: String, effect: String, resource: String): Statement =
+    Impl(action, effect, resource)
 
-    implicit def decoder: Decoder[Statement] = Decoder.forProduct3(
-        "Action",
-        "Effect",
-        "Resource"
-    )(Impl.apply)
+  implicit def decoder: Decoder[Statement] = Decoder.forProduct3(
+    "Action",
+    "Effect",
+    "Resource"
+  )(Impl.apply)
 
-    private case class Impl(
-        action: String,
-        effect: String,
-        resource: String
-    ) extends Statement {
-        override def productPrefix = "Statement"
-    }
+  private case class Impl(
+      action: String,
+      effect: String,
+      resource: String
+  ) extends Statement {
+    override def productPrefix = "Statement"
+  }
 }
-
-
