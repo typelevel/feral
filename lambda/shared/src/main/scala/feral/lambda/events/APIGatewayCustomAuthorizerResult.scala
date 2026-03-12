@@ -17,8 +17,10 @@
 package feral.lambda.events
 package events
 
-import java.time.LocalDate
 import io.circe.Decoder
+
+import java.time.LocalDate
+
 import codecs.decodeDate
 
 sealed abstract class APIGatewayCustomAuthorizerEventResult {

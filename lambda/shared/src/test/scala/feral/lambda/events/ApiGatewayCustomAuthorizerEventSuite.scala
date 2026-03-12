@@ -16,9 +16,9 @@
 
 package feral.lambda.events
 
+import feral.lambda.events.events.APIGatewayCustomAuthorizerEvent
 import io.circe.literal._
 import munit.FunSuite
-import feral.lambda.events.events.APIGatewayCustomAuthorizerEvent
 
 class ApiGatewayCustomAuthorizerEventSuite extends FunSuite {
 

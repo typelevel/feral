@@ -24,9 +24,9 @@ import io.circe.KeyEncoder
 import org.typelevel.ci.CIString
 
 import java.time.Instant
-import scala.util.Try
-import java.time.format.DateTimeFormatter
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import scala.util.Try
 
 private object codecs {
 

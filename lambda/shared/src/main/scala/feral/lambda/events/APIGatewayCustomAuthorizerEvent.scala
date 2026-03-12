@@ -18,10 +18,11 @@ package feral.lambda.events
 package events
 
 import com.comcast.ip4s.Hostname
-import org.typelevel.ci.CIString
 import feral.lambda.KernelSource
-import natchez.Kernel
 import io.circe.Decoder
+import natchez.Kernel
+import org.typelevel.ci.CIString
+
 import codecs.decodeHostname
 import codecs.decodeKeyCIString
 
