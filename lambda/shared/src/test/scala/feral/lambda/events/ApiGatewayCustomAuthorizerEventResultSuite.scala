@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package feral.lambda.events
 
 import io.circe.literal._
