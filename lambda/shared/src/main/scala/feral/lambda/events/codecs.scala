@@ -19,12 +19,12 @@ package feral.lambda.events
 import com.comcast.ip4s.Hostname
 import com.comcast.ip4s.IpAddress
 import io.circe.Decoder
+import io.circe.Encoder
 import io.circe.KeyDecoder
 import io.circe.KeyEncoder
 import org.typelevel.ci.CIString
 
 import java.time.Instant
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 
@@ -40,13 +40,10 @@ private object codecs {
       }
     }
 
-  implicit def decodeDate: Decoder[java.time.LocalDate] =
-    Decoder.decodeString.emapTry { str =>
+  implicit def encodeDate: Encoder[java.time.LocalDate] =
+    Encoder.encodeString.contramap { str =>
       val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-      Try {
-        LocalDate.parse(str, dateFormatter)
-      }
+      str.format(dateFormatter)
     }
 
   implicit def decodeIpAddress: Decoder[IpAddress] =

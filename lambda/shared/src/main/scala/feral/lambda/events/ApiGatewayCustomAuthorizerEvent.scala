@@ -42,7 +42,7 @@ sealed abstract class RequestContext {
   def identity: Map[String, Option[String]]
   def domainName: Hostname
   def deploymentId: String
-  def apiId: String
+  def ApiId: String
 }
 
 object RequestContext {
@@ -63,7 +63,7 @@ object RequestContext {
       identity: Map[String, Option[String]],
       domainName: Hostname,
       deploymentId: String,
-      apiId: String
+      ApiId: String
   ): RequestContext =
     new Impl(
       resourceId,
@@ -81,7 +81,7 @@ object RequestContext {
       identity,
       domainName,
       deploymentId,
-      apiId
+      ApiId
     )
 
   implicit def decoder: Decoder[RequestContext] = Decoder.forProduct16(
@@ -100,7 +100,7 @@ object RequestContext {
     "identity",
     "domainName",
     "deploymentId",
-    "apiId"
+    "ApiId"
   )(RequestContext.apply)
 
   private case class Impl(
@@ -119,13 +119,13 @@ object RequestContext {
       identity: Map[String, Option[String]],
       domainName: Hostname,
       deploymentId: String,
-      apiId: String
+      ApiId: String
   ) extends RequestContext {
     override def productPrefix = "RequestContext"
   }
 }
 
-sealed abstract class APIGatewayCustomAuthorizerEvent {
+sealed abstract class ApiGatewayCustomAuthorizerEvent {
   def `type`: String
   def methodArn: String
   def resource: String
@@ -140,7 +140,7 @@ sealed abstract class APIGatewayCustomAuthorizerEvent {
   def requestContext: RequestContext
 }
 
-object APIGatewayCustomAuthorizerEvent {
+object ApiGatewayCustomAuthorizerEvent {
 
   def apply(
       `type`: String,
@@ -155,7 +155,7 @@ object APIGatewayCustomAuthorizerEvent {
       pathParameters: Map[CIString, String],
       stageVariables: Map[CIString, String],
       requestContext: RequestContext
-  ): APIGatewayCustomAuthorizerEvent =
+  ): ApiGatewayCustomAuthorizerEvent =
     new Impl(
       `type`,
       methodArn,
@@ -171,10 +171,10 @@ object APIGatewayCustomAuthorizerEvent {
       requestContext
     )
 
-  implicit def kernelSource: KernelSource[APIGatewayCustomAuthorizerEvent] =
+  implicit def kernelSource: KernelSource[ApiGatewayCustomAuthorizerEvent] =
     e => Kernel(e.headers.getOrElse(Map.empty))
 
-  implicit def decoder: Decoder[APIGatewayCustomAuthorizerEvent] = Decoder.forProduct12(
+  implicit def decoder: Decoder[ApiGatewayCustomAuthorizerEvent] = Decoder.forProduct12(
     "type",
     "methodArn",
     "resource",
@@ -187,7 +187,7 @@ object APIGatewayCustomAuthorizerEvent {
     "pathParameters",
     "stageVariables",
     "requestContext"
-  )(APIGatewayCustomAuthorizerEvent.apply)
+  )(ApiGatewayCustomAuthorizerEvent.apply)
 
   private case class Impl(
       `type`: String,
@@ -202,7 +202,7 @@ object APIGatewayCustomAuthorizerEvent {
       pathParameters: Map[CIString, String],
       stageVariables: Map[CIString, String],
       requestContext: RequestContext
-  ) extends APIGatewayCustomAuthorizerEvent {
-    override def productPrefix = "APIGatewayCustomAuthorizerEvent"
+  ) extends ApiGatewayCustomAuthorizerEvent {
+    override def productPrefix = "ApiGatewayCustomAuthorizerEvent"
   }
 }

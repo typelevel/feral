@@ -17,34 +17,34 @@
 package feral.lambda.events
 package events
 
-import io.circe.Decoder
+import io.circe.Encoder
 
 import java.time.LocalDate
 
-import codecs.decodeDate
+import codecs.encodeDate
 
-sealed abstract class APIGatewayCustomAuthorizerEventResult {
+sealed abstract class ApiGatewayCustomAuthorizerEventResult {
   def principalId: String
   def policyDocument: PolicyDocument
 }
 
-object APIGatewayCustomAuthorizerEventResult {
+object ApiGatewayCustomAuthorizerEventResult {
 
   def apply(
       principalId: String,
-      policyDocument: PolicyDocument): APIGatewayCustomAuthorizerEventResult =
+      policyDocument: PolicyDocument): ApiGatewayCustomAuthorizerEventResult =
     Impl(principalId, policyDocument)
 
-  implicit def decoder: Decoder[APIGatewayCustomAuthorizerEventResult] = Decoder.forProduct2(
+  implicit def encoder: Encoder[ApiGatewayCustomAuthorizerEventResult] = Encoder.forProduct2(
     "principalId",
     "policyDocument"
-  )(Impl.apply)
+  )(r => (r.principalId, r.policyDocument))
 
   private case class Impl(
       principalId: String,
       policyDocument: PolicyDocument
-  ) extends APIGatewayCustomAuthorizerEventResult {
-    override def productPrefix = "APIGatewayCustomAuthorizerEventResult"
+  ) extends ApiGatewayCustomAuthorizerEventResult {
+    override def productPrefix = "ApiGatewayCustomAuthorizerEventResult"
   }
 }
 
@@ -57,10 +57,10 @@ object PolicyDocument {
   def apply(version: LocalDate, statement: List[Statement]): PolicyDocument =
     Impl(version, statement)
 
-  implicit def decoder: Decoder[PolicyDocument] = Decoder.forProduct2(
+  implicit def encoder: Encoder[PolicyDocument] = Encoder.forProduct2(
     "Version",
     "Statement"
-  )(Impl.apply)
+  )(r => (r.version, r.statement))
 
   private case class Impl(
       version: LocalDate,
@@ -80,11 +80,11 @@ object Statement {
   def apply(action: String, effect: String, resource: String): Statement =
     Impl(action, effect, resource)
 
-  implicit def decoder: Decoder[Statement] = Decoder.forProduct3(
+  implicit def encoder: Encoder[Statement] = Encoder.forProduct3(
     "Action",
     "Effect",
     "Resource"
-  )(Impl.apply)
+  )(r => (r.action, r.effect, r.resource))
 
   private case class Impl(
       action: String,
