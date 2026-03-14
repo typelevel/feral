@@ -40,7 +40,7 @@ class ApiGatewayCustomAuthorizerEventResultSuite extends FunSuite {
   )
 
   test("encoder") {
-   assertEquals(event, result.asJson)
+    assertEquals(event, result.asJson)
   }
 }
 
