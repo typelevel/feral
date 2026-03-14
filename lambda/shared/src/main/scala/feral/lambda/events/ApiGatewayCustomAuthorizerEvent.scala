@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package feral.lambda.events
+package feral.lambda
 package events
 
 import com.comcast.ip4s.Hostname
@@ -26,7 +26,7 @@ import org.typelevel.ci.CIString
 import codecs.decodeHostname
 import codecs.decodeKeyCIString
 
-sealed abstract class RequestContext {
+sealed abstract class AuthorizerRequestContext {
   def resourceId: String
   def resourcePath: String
   def httpMethod: String
@@ -45,7 +45,7 @@ sealed abstract class RequestContext {
   def apiId: String
 }
 
-object RequestContext {
+object AuthorizerRequestContext {
 
   def apply(
       resourceId: String,
@@ -64,7 +64,7 @@ object RequestContext {
       domainName: Hostname,
       deploymentId: String,
       apiId: String
-  ): RequestContext =
+  ): AuthorizerRequestContext =
     new Impl(
       resourceId,
       resourcePath,
@@ -84,7 +84,7 @@ object RequestContext {
       apiId
     )
 
-  implicit def decoder: Decoder[RequestContext] = Decoder.forProduct16(
+  implicit def decoder: Decoder[AuthorizerRequestContext] = Decoder.forProduct16(
     "resourceId",
     "resourcePath",
     "httpMethod",
@@ -101,7 +101,7 @@ object RequestContext {
     "domainName",
     "deploymentId",
     "apiId"
-  )(RequestContext.apply)
+  )(AuthorizerRequestContext.apply)
 
   private case class Impl(
       resourceId: String,
@@ -120,8 +120,8 @@ object RequestContext {
       domainName: Hostname,
       deploymentId: String,
       apiId: String
-  ) extends RequestContext {
-    override def productPrefix = "RequestContext"
+  ) extends AuthorizerRequestContext {
+    override def productPrefix = "AuthorizerRequestContext"
   }
 }
 
@@ -137,7 +137,7 @@ sealed abstract class ApiGatewayCustomAuthorizerEvent {
   def multiValueQueryStringParameters: Map[CIString, Option[List[String]]]
   def pathParameters: Map[CIString, String]
   def stageVariables: Map[CIString, String]
-  def requestContext: RequestContext
+  def requestContext: AuthorizerRequestContext
 }
 
 object ApiGatewayCustomAuthorizerEvent {
@@ -154,7 +154,7 @@ object ApiGatewayCustomAuthorizerEvent {
       multiValueQueryStringParameters: Map[CIString, Option[List[String]]],
       pathParameters: Map[CIString, String],
       stageVariables: Map[CIString, String],
-      requestContext: RequestContext
+      requestContext: AuthorizerRequestContext
   ): ApiGatewayCustomAuthorizerEvent =
     new Impl(
       `type`,
@@ -201,7 +201,7 @@ object ApiGatewayCustomAuthorizerEvent {
       multiValueQueryStringParameters: Map[CIString, Option[List[String]]],
       pathParameters: Map[CIString, String],
       stageVariables: Map[CIString, String],
-      requestContext: RequestContext
+      requestContext: AuthorizerRequestContext
   ) extends ApiGatewayCustomAuthorizerEvent {
     override def productPrefix = "ApiGatewayCustomAuthorizerEvent"
   }

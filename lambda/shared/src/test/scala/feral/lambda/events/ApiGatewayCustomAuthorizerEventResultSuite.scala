@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
+
 package feral.lambda.events
 
-import feral.lambda.events.events.ApiGatewayCustomAuthorizerEventResult
-import feral.lambda.events.events.PolicyDocument
-import feral.lambda.events.events.Statement
 import io.circe.literal._
 import io.circe.syntax._
 import munit.FunSuite
