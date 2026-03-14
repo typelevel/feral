@@ -42,7 +42,7 @@ sealed abstract class RequestContext {
   def identity: Map[String, Option[String]]
   def domainName: Hostname
   def deploymentId: String
-  def ApiId: String
+  def apiId: String
 }
 
 object RequestContext {
@@ -63,7 +63,7 @@ object RequestContext {
       identity: Map[String, Option[String]],
       domainName: Hostname,
       deploymentId: String,
-      ApiId: String
+      apiId: String
   ): RequestContext =
     new Impl(
       resourceId,
@@ -81,7 +81,7 @@ object RequestContext {
       identity,
       domainName,
       deploymentId,
-      ApiId
+      apiId
     )
 
   implicit def decoder: Decoder[RequestContext] = Decoder.forProduct16(
@@ -100,7 +100,7 @@ object RequestContext {
     "identity",
     "domainName",
     "deploymentId",
-    "ApiId"
+    "apiId"
   )(RequestContext.apply)
 
   private case class Impl(
@@ -119,7 +119,7 @@ object RequestContext {
       identity: Map[String, Option[String]],
       domainName: Hostname,
       deploymentId: String,
-      ApiId: String
+      apiId: String
   ) extends RequestContext {
     override def productPrefix = "RequestContext"
   }
