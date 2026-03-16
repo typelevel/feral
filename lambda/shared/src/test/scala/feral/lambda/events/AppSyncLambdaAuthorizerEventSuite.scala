@@ -36,7 +36,7 @@ class AppSyncLambdaAuthorizerEventSuite extends FunSuite {
 }
 
 object AppSyncLambdaAuthorizerEventSuite {
-    def event = json"""
+  def event = json"""
     {
         "authorizationToken": "ExampleAUTHtoken123123123",
         "requestContext": {
