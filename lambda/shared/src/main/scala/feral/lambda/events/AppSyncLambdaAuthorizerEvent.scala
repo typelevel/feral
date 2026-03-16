@@ -20,86 +20,83 @@ package events
 import io.circe.Decoder
 
 sealed abstract class AppSyncRequestContext {
-    def apiId: String
-    def accountId: String
-    def requestId: String
-    def operation: String
-    def channelNamespaceName: String
-    def channel: String
+  def apiId: String
+  def accountId: String
+  def requestId: String
+  def operation: String
+  def channelNamespaceName: String
+  def channel: String
 }
 
 object AppSyncRequestContext {
 
-    def apply(
-        apiId: String,
-        accountId: String,
-        requestId: String,
-        operation: String,
-        channelNamespaceName: String,
-        channel: String
+  def apply(
+      apiId: String,
+      accountId: String,
+      requestId: String,
+      operation: String,
+      channelNamespaceName: String,
+      channel: String
+  ): AppSyncRequestContext =
+    new Impl(
+      apiId,
+      accountId,
+      requestId,
+      operation,
+      channelNamespaceName,
+      channel
+    )
 
-    ): AppSyncRequestContext = 
-        new Impl(
-            apiId,
-            accountId,
-            requestId,
-            operation,
-            channelNamespaceName,
-            channel
-        )
+  implicit def decoder = Decoder.forProduct6(
+    "apiId",
+    "accountId",
+    "requestId",
+    "operation",
+    "channelNamespaceName",
+    "channel"
+  )(AppSyncRequestContext.apply)
 
-    implicit def decoder = Decoder.forProduct6(
-        "apiId",
-        "accountId",
-        "requestId",
-        "operation",
-        "channelNamespaceName",
-        "channel"
-
-    )(AppSyncRequestContext.apply)
-
-    private final case class Impl(
-        apiId: String,
-        accountId: String,
-        requestId: String,
-        operation: String,
-        channelNamespaceName: String,
-        channel: String
-
-    ) extends AppSyncRequestContext {
-        override def productPrefix = "AppSyncRequestContext" 
-    }
+  private final case class Impl(
+      apiId: String,
+      accountId: String,
+      requestId: String,
+      operation: String,
+      channelNamespaceName: String,
+      channel: String
+  ) extends AppSyncRequestContext {
+    override def productPrefix = "AppSyncRequestContext"
+  }
 }
 
 sealed abstract class AppSyncLambdaAuthorizerEvent {
-    def authorizationToken: String
-    def requestContext: AppSyncRequestContext
-    def requestHeaders: Map[String, String]
+  def authorizationToken: String
+  def requestContext: AppSyncRequestContext
+  def requestHeaders: Map[String, String]
 }
 
 object AppSyncLambdaAuthorizerEvent {
-    def apply(
-        authorizationToken: String,
-        requestContext: AppSyncRequestContext,
-        requestHeaders: Map[String, String]
-    ): AppSyncLambdaAuthorizerEvent = 
-        new Impl(
-            authorizationToken: String,
-            requestContext: AppSyncRequestContext,
-            requestHeaders: Map[String, String]
-        )
+  def apply(
+      authorizationToken: String,
+      requestContext: AppSyncRequestContext,
+      requestHeaders: Map[String, String]
+  ): AppSyncLambdaAuthorizerEvent =
+    new Impl(
+      authorizationToken: String,
+      requestContext: AppSyncRequestContext,
+      requestHeaders: Map[String, String]
+    )
 
-    implicit def decoder = Decoder.forProduct3(
-        "authorizationToken",
-        "requestContext",
-        "requestHeaders"
-    )(AppSyncLambdaAuthorizerEvent.apply)
+  implicit def decoder = Decoder.forProduct3(
+    "authorizationToken",
+    "requestContext",
+    "requestHeaders"
+  )(AppSyncLambdaAuthorizerEvent.apply)
 
-    private final case class Impl(
-        authorizationToken: String,
-        requestContext: AppSyncRequestContext,
-        requestHeaders: Map[String, String]
-    ) extends AppSyncLambdaAuthorizerEvent {
-        override def productPrefix = "AppSyncLambdaAuthorizerEvent" 
-    }
+  private final case class Impl(
+      authorizationToken: String,
+      requestContext: AppSyncRequestContext,
+      requestHeaders: Map[String, String]
+  ) extends AppSyncLambdaAuthorizerEvent {
+    override def productPrefix = "AppSyncLambdaAuthorizerEvent"
+  }
 }
