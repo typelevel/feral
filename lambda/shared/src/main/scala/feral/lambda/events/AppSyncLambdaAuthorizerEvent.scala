@@ -47,7 +47,7 @@ object AppSyncRequestContext {
       channel
     )
 
-  implicit def decoder = Decoder.forProduct6(
+  implicit def decoder: Decoder[AppSyncRequestContext] = Decoder.forProduct6(
     "apiId",
     "accountId",
     "requestId",
@@ -86,7 +86,7 @@ object AppSyncLambdaAuthorizerEvent {
       requestHeaders: Map[String, String]
     )
 
-  implicit def decoder = Decoder.forProduct3(
+  implicit def decoder: Decoder[AppSyncLambdaAuthorizerEvent] = Decoder.forProduct3(
     "authorizationToken",
     "requestContext",
     "requestHeaders"
