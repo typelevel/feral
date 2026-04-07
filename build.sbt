@@ -28,6 +28,7 @@ ThisBuild / developers := List(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq("11", "17").map(JavaSpec.corretto(_))
+ThisBuild / semanticdbVersion := "4.13.10"
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
   List("rootJS", "rootJVM").map(p => MatrixExclude(Map("project" -> p, "scala" -> "2.12"))) ++
@@ -52,7 +53,7 @@ ThisBuild / mergifyStewardConfig ~= {
 }
 
 val Scala212 = "2.12.20"
-val Scala213 = "2.13.17"
+val Scala213 = "2.13.18"
 val Scala3 = "3.3.7"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala3, Scala213)
 
@@ -64,7 +65,8 @@ val natchezVersion = "0.3.8"
 val munitVersion = "1.2.0"
 val munitCEVersion = "2.1.0"
 val scalacheckEffectVersion = "2.1.0-RC1"
-val otel4sVersion = "0.9.0"
+val otel4sVersion = "0.15.2"
+val otel4sSdkVersion = "0.17.0"
 
 lazy val commonSettings = Seq(
   crossScalaVersions := Seq(Scala3, Scala213)
@@ -203,7 +205,7 @@ lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
     name := "feral-lambda-otel4s",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
-      "org.typelevel" %%% "otel4s-sdk-trace-testkit" % otel4sVersion % Test,
+      "org.typelevel" %%% "otel4s-sdk-trace-testkit" % otel4sSdkVersion % Test,
       "org.typelevel" %%% "otel4s-semconv-experimental" % otel4sVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
@@ -221,7 +223,7 @@ lazy val examples = crossProject(JSPlatform, JVMPlatform)
       "org.tpolecat" %%% "natchez-xray" % natchezVersion,
       "org.tpolecat" %%% "natchez-http4s" % "0.6.1",
       "org.tpolecat" %%% "skunk-core" % "0.6.4",
-      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.9.0"
+      "org.http4s" %%% "http4s-otel4s-middleware-trace-client" % "0.16.0"
     )
   )
   .settings(commonSettings)
