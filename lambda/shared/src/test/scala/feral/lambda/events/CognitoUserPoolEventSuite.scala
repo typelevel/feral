@@ -90,20 +90,6 @@ class CognitoUserPoolEventSuite extends FunSuite {
   ]
   """
 
-  private[this] def unsupportedEvent = json"""
-  {
-    "version": "1",
-    "triggerSource": "Unsupported_Trigger",
-    "region": "eu-west-1",
-    "userPoolId": "eu-west-1_123456",
-    "userName": "some-user",
-    "callerContext": {
-      "awsSdkVersion": "aws-sdk-unknown-unknown",
-      "clientId": "example-client-id"
-    }
-  }
-  """
-
   private[this] def createAuthChallengeEvent = json"""
   {
     "version": ${baseEventJson.hcursor.get[String]("version").toOption.get},
