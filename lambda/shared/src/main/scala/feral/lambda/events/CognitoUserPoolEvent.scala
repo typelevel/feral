@@ -21,9 +21,6 @@ import io.circe.Decoder
 import io.circe.DecodingFailure
 import io.circe.HCursor
 
-// https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-lambda-triggers.html
-// https://github.com/aws/aws-lambda-java-libs/tree/master/aws-lambda-java-events/src/main/java/com/amazonaws/services/lambda/runtime/events
-
 sealed abstract class CognitoUserPoolEvent {
   def version: String
   def triggerSource: String
