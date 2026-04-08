@@ -28,6 +28,7 @@ ThisBuild / developers := List(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq("11", "17").map(JavaSpec.corretto(_))
+// TODO remove when sbt-typelevel supports 2.13.18
 ThisBuild / semanticdbVersion := "4.13.10"
 
 ThisBuild / githubWorkflowBuildMatrixExclusions ++=
