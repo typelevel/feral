@@ -34,15 +34,21 @@ object OtelAttributes {
     object Http {
       val value = "http"
     }
+    object Other {
+      val value = "other"
+    }
   }
 
   // ARN
   val CloudResourceId = AttributeKey.string("cloud.resource_id")
+  val CloudAccountId = AttributeKey.string("cloud.account.id")
+  val CloudRegion = AttributeKey.string("cloud.region")
   val FaasInstance = AttributeKey.string("faas.instance")
   val FaasMaxMemory = AttributeKey.long("faas.max_memory")
   val FaasName = AttributeKey.string("faas.name")
   val FaasVersion = AttributeKey.string("faas.version")
   val CloudProvider = AttributeKey.string("cloud.provider")
+  val AwsLambdaInvokedArn = AttributeKey.string("aws.lambda.invoked_arn")
   object CloudProviderValue {
     object Aws {
       val value = "aws"
@@ -60,7 +66,11 @@ object OtelAttributes {
     object Receive {
       val value = "receive"
     }
+    object Process {
+      val value = "process"
+    }
   }
   val MessagingMessageId = AttributeKey.string("messaging.message.id")
   val MessagingDestinationName = AttributeKey.string("messaging.destination.name")
+  val HttpRoute = AttributeKey.string("http.route")
 }

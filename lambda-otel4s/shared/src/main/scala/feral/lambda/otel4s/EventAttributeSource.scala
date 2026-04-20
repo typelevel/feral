@@ -25,8 +25,12 @@ import org.typelevel.otel4s.Attributes
 import org.typelevel.otel4s.trace.SpanKind
 
 trait EventAttributeSource[E] {
-  def contextCarrier(e: E): Map[String, String]
+  def contextCarrier(event: E): Map[String, String]
   def spanKind: SpanKind
+  def spanName(defaultName: String, event: E): String = {
+    val _ = event
+    defaultName
+  }
   def attributes(e: E): Attributes
 }
 
@@ -47,8 +51,11 @@ object EventAttributeSource {
 
       def spanKind: SpanKind = SpanKind.Consumer
 
+      override def spanName(defaultName: String, e: SqsEvent): String =
+        SqsAttributesHelpers.sqsEventSpanName(e).getOrElse(defaultName)
+
       def attributes(e: SqsEvent): Attributes =
-        SqsEventAttributes()
+        SqsEventAttributes(e)
     }
 
   implicit def dynamoDbStreamEvent: EventAttributeSource[DynamoDbStreamEvent] =
@@ -69,8 +76,11 @@ object EventAttributeSource {
 
       def spanKind: SpanKind = SpanKind.Server
 
+      override def spanName(defaultName: String, e: ApiGatewayProxyEvent): String =
+        e.resource
+
       def attributes(e: ApiGatewayProxyEvent): Attributes =
-        ApiGatewayProxyEventAttributes()
+        ApiGatewayProxyEventAttributes(e)
     }
 
   implicit def apiGatewayProxyEventV2: EventAttributeSource[ApiGatewayProxyEventV2] =
@@ -80,8 +90,11 @@ object EventAttributeSource {
 
       def spanKind: SpanKind = SpanKind.Server
 
+      override def spanName(defaultName: String, e: ApiGatewayProxyEventV2): String =
+        e.rawPath
+
       def attributes(e: ApiGatewayProxyEventV2): Attributes =
-        ApiGatewayProxyEventAttributes()
+        ApiGatewayProxyEventV2Attributes(e)
     }
 
   implicit def s3BatchEvent: EventAttributeSource[S3BatchEvent] =
@@ -92,6 +105,6 @@ object EventAttributeSource {
       def spanKind: SpanKind = SpanKind.Server
 
       def attributes(e: S3BatchEvent): Attributes =
-        S3BatchEventAttributes(e)
+        S3BatchEventAttributes()
     }
 }
