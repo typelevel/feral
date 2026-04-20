@@ -17,6 +17,7 @@
 package feral.lambda.otel4s
 
 import munit.FunSuite
+import org.typelevel.otel4s.AttributeKey
 import org.typelevel.otel4s.semconv.experimental.attributes.CloudExperimentalAttributes
 import org.typelevel.otel4s.semconv.experimental.attributes.FaasExperimentalAttributes
 import org.typelevel.otel4s.semconv.experimental.attributes.MessagingExperimentalAttributes
@@ -63,10 +64,29 @@ class OtelAttributesTest extends FunSuite {
     assertEquals(ours, otel)
   }
 
+  test("FaasTriggerValue.Other") {
+    val ours = FaasTriggerValue.Other.value
+    assertEquals(ours, "other")
+  }
+
   test("CloudResourceId") {
     val value = "value"
     val ours = CloudResourceId(value)
     val otel = otel4sCloud.CloudResourceId(value)
+    assertEquals(ours, otel)
+  }
+
+  test("CloudAccountId") {
+    val value = "value"
+    val ours = CloudAccountId(value)
+    val otel = AttributeKey.string("cloud.account.id")(value)
+    assertEquals(ours, otel)
+  }
+
+  test("CloudRegion") {
+    val value = "value"
+    val ours = CloudRegion(value)
+    val otel = AttributeKey.string("cloud.region")(value)
     assertEquals(ours, otel)
   }
 
@@ -111,6 +131,13 @@ class OtelAttributesTest extends FunSuite {
     assertEquals(ours, otel)
   }
 
+  test("AwsLambdaInvokedArn") {
+    val value = "value"
+    val ours = AwsLambdaInvokedArn(value)
+    val otel = AttributeKey.string("aws.lambda.invoked_arn")(value)
+    assertEquals(ours, otel)
+  }
+
   test("MessagingSystem") {
     val value = "value"
     val ours = MessagingSystem(value)
@@ -137,6 +164,11 @@ class OtelAttributesTest extends FunSuite {
     assertEquals(ours, otel)
   }
 
+  test("MessagingOperationValue.Process") {
+    val ours = MessagingOperationTypeValue.Process.value
+    assertEquals(ours, "process")
+  }
+
   test("MessagingMessageId") {
     val value = "value"
     val ours = MessagingMessageId(value)
@@ -148,6 +180,13 @@ class OtelAttributesTest extends FunSuite {
     val value = "value"
     val ours = MessagingDestinationName(value)
     val otel = otel4sMessaging.MessagingDestinationName(value)
+    assertEquals(ours, otel)
+  }
+
+  test("HttpRoute") {
+    val value = "value"
+    val ours = HttpRoute(value)
+    val otel = AttributeKey.string("http.route")(value)
     assertEquals(ours, otel)
   }
 

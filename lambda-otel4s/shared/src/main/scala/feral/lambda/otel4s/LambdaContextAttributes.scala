@@ -23,14 +23,31 @@ object LambdaContextAttributes {
   import OtelAttributes._
 
   def apply[F[_]](context: Context[F]): Attributes = {
-    Attributes(
+    val base = Attributes(
+      FaasInvocationId(context.awsRequestId),
       CloudProvider(CloudProviderValue.Aws.value),
-      CloudResourceId(context.invokedFunctionArn),
+      CloudResourceId(cloudResourceId(context.invokedFunctionArn, context.functionVersion)),
       FaasInstance(context.logStreamName),
       FaasMaxMemory(context.memoryLimitInMB.toLong * 1024 * 1024),
       FaasName(context.functionName),
-      FaasVersion(context.functionVersion)
+      FaasVersion(context.functionVersion),
+      AwsLambdaInvokedArn(context.invokedFunctionArn)
     )
+
+    val withAccountId = parseArnPart(context.invokedFunctionArn, 4).fold(base)(accountId =>
+      base ++ Attributes(CloudAccountId(accountId)))
+
+    parseArnPart(context.invokedFunctionArn, 3).fold(withAccountId)(region =>
+      withAccountId ++ Attributes(CloudRegion(region)))
   }
 
+  private def cloudResourceId(invokedArn: String, functionVersion: String): String = {
+    val parts = invokedArn.split(":", -1)
+    if (parts.length >= 8 && parts(5) == "function")
+      (parts.take(7) :+ functionVersion).mkString(":")
+    else invokedArn
+  }
+
+  private def parseArnPart(arn: String, idx: Int): Option[String] =
+    arn.split(":", -1).lift(idx).filter(_.nonEmpty)
 }

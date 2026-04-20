@@ -16,60 +16,102 @@
 
 package feral.lambda.otel4s
 
+import feral.lambda.events.ApiGatewayProxyEvent
+import feral.lambda.events.ApiGatewayProxyEventV2
 import feral.lambda.events.DynamoDbRecord
 import feral.lambda.events.S3BatchEvent
+import feral.lambda.events.SqsEvent
 import feral.lambda.events.SqsRecord
 import org.typelevel.otel4s.Attributes
 
 import OtelAttributes._
 
 object SqsEventAttributes {
-  def apply(): Attributes =
-    Attributes(
+  def apply(e: SqsEvent): Attributes = {
+    val base = Attributes(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
-      MessagingSystem(MessagingSystemValue.AwsSqs.value)
+      MessagingSystem(MessagingSystemValue.AwsSqs.value),
+      MessagingOperationType(MessagingOperationTypeValue.Process.value)
     )
+
+    SqsAttributesHelpers
+      .singleSqsQueueName(e)
+      .fold(base)(name => base ++ Attributes(MessagingDestinationName(name)))
+  }
 }
 
 object SqsRecordAttributes {
-  def apply(e: SqsRecord): Attributes =
-    Attributes(
+  def apply(e: SqsRecord): Attributes = {
+    val base = Attributes(
       FaasTrigger(FaasTriggerValue.Pubsub.value),
-      MessagingOperationType(MessagingOperationTypeValue.Receive.value),
+      MessagingSystem(MessagingSystemValue.AwsSqs.value),
+      MessagingOperationType(MessagingOperationTypeValue.Process.value),
       MessagingMessageId(e.messageId)
     )
+
+    SqsAttributesHelpers
+      .sqsQueueNameFromArn(e.eventSourceArn)
+      .fold(base)(name => base ++ Attributes(MessagingDestinationName(name)))
+  }
 }
 
 object DynamoDbStreamEventAttributes {
   def apply(): Attributes =
     Attributes(
-      FaasTrigger(FaasTriggerValue.Datasource.value),
-      MessagingSystem(MessagingSystemValue.AwsSqs.value)
+      FaasTrigger(FaasTriggerValue.Datasource.value)
     )
 }
 
 object DynamoDbRecordAttributes {
-  def apply(e: DynamoDbRecord): Attributes = {
+  def apply(unused: DynamoDbRecord): Attributes = {
+    val _ = unused
     Attributes(
-      FaasTrigger(FaasTriggerValue.Datasource.value),
-      MessagingOperationType(MessagingOperationTypeValue.Receive.value)
-    ) ++ e.eventId.map(MessagingMessageId(_))
+      FaasTrigger(FaasTriggerValue.Datasource.value)
+    )
   }
 }
 
 object ApiGatewayProxyEventAttributes {
-  def apply(): Attributes =
+  def apply(e: ApiGatewayProxyEvent): Attributes =
     Attributes(
       FaasTrigger(FaasTriggerValue.Http.value),
-      MessagingOperationType(MessagingOperationTypeValue.Receive.value)
+      HttpRoute(e.resource)
+    )
+}
+
+object ApiGatewayProxyEventV2Attributes {
+  def apply(e: ApiGatewayProxyEventV2): Attributes =
+    Attributes(
+      FaasTrigger(FaasTriggerValue.Http.value),
+      HttpRoute(e.rawPath)
     )
 }
 
 object S3BatchEventAttributes {
-  def apply(e: S3BatchEvent): Attributes =
+  def apply(): Attributes = {
     Attributes(
-      MessagingMessageId(e.invocationId),
-      FaasTrigger(FaasTriggerValue.Datasource.value),
-      MessagingOperationType(MessagingOperationTypeValue.Receive.value)
+      FaasTrigger(FaasTriggerValue.Other.value)
     )
+  }
+}
+
+private[otel4s] object SqsAttributesHelpers {
+  def sqsQueueNameFromArn(arn: String): Option[String] =
+    arn.split(":", 6).lift(5).filter(_.nonEmpty)
+
+  def singleSqsQueueName(e: SqsEvent): Option[String] = {
+    val queueNames = e.records.flatMap(r => sqsQueueNameFromArn(r.eventSourceArn)).distinct
+    if (queueNames.size == 1) queueNames.headOption else None
+  }
+
+  def sqsEventSpanName(e: SqsEvent): Option[String] = {
+    val names = e
+      .records
+      .map(r => sqsQueueNameFromArn(r.eventSourceArn).getOrElse(r.eventSource))
+      .distinct
+
+    if (names.isEmpty) None
+    else if (names.size == 1) Some(s"${names.head} process")
+    else Some("multiple_sources process")
+  }
 }
