@@ -18,7 +18,6 @@ package feral.lambda
 package events
 
 import io.circe.Decoder
-import natchez.Kernel
 import org.typelevel.ci.CIString
 
 sealed abstract class Http {
@@ -85,9 +84,6 @@ object ApiGatewayProxyEventV2 {
     "body",
     "isBase64Encoded"
   )(ApiGatewayProxyEventV2.apply)
-
-  implicit def kernelSource: KernelSource[ApiGatewayProxyEventV2] =
-    e => Kernel(e.headers)
 
   private final case class Impl(
       rawPath: String,

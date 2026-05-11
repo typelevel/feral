@@ -146,8 +146,6 @@ object KinesisStreamEvent {
   implicit val decoder: Decoder[KinesisStreamEvent] =
     Decoder.forProduct1("Records")(KinesisStreamEvent.apply)
 
-  implicit def kernelSource: KernelSource[KinesisStreamEvent] = KernelSource.emptyKernelSource
-
   private final case class Impl(
       records: List[KinesisStreamRecord]
   ) extends KinesisStreamEvent {
