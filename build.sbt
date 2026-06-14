@@ -112,7 +112,7 @@ lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .jsSettings(
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-scalajs" % circeVersion,
-      "io.github.cquiroz" %%% "scala-java-time" % "2.6.0"
+      "io.github.cquiroz" %%% "scala-java-time" % "2.7.0"
     ),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
