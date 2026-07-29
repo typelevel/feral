@@ -37,7 +37,7 @@ private[lambda] trait CognitoIdentity extends js.Object {
 }
 
 private[lambda] trait ClientContext extends js.Object {
-  def client: ClientContextClient
+  def client: js.UndefOr[ClientContextClient]
   def custom: js.UndefOr[js.Any]
   def env: ClientContextEnv
 }
