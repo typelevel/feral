@@ -76,6 +76,7 @@ lazy val root =
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       googleCloudHttp4s,
+      azureFunctions,
       examples,
       unidocs
     )
@@ -270,4 +271,27 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
       "com.google.cloud.functions" % "functions-framework-api" % "1.1.4" % Provided,
       "co.fs2" %%% "fs2-io" % fs2Version
     )
+  )
+
+lazy val azureFunctions = crossProject(JSPlatform, JVMPlatform)
+  .in(file("azure-functions"))
+  .settings(
+    name := "azure-functions", 
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "io.circe" %%% "circe-scodec" % circeVersion,
+      "org.http4s" %%% "http4s-server" % http4sVersion,
+      "co.fs2" %%% "fs2-io" % fs2Version
+    ),
+    tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
+  )
+  .settings(commonSettings)
+  .jsSettings(
+    libraryDependencies ++= Seq(
+    ),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .jvmSettings(
+    Test / fork := true,
+    libraryDependencies ++= Seq()
   )
