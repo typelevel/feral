@@ -18,6 +18,7 @@ package feral.examples
 
 import cats.Monad
 import cats.effect.IO
+import cats.effect.Resource
 import cats.syntax.all._
 import feral.lambda.INothing
 import feral.lambda.IOLambda
@@ -44,17 +45,19 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
         implicit val tp: TracerProvider[IO] = otel.tracerProvider
         val otelClientRedactor = new UriRedactor.OnlyRedactUserInfo {}
         val spanDataProvider = ClientSpanDataProvider.openTelemetry(otelClientRedactor)
-        val tracer = tp.get("com.example")
         val middleware = ClientMiddleware.builder[IO](spanDataProvider).build
-        (middleware, tracer).tupled
+
+        (middleware, tp).tupled
       }
       .flatMap {
-        case (middleware, tracer) =>
-          implicit val t: Tracer[IO] = tracer
+        case (middleware, tracerProvider) =>
+          implicit val tp: TracerProvider[IO] = tracerProvider
 
           for {
             client <- EmberClientBuilder.default[IO].build.map(middleware.wrapClient)
+            tracer <- Resource.eval(tp.get("com.example"))
           } yield { implicit inv: Invocation[IO, SqsEvent] =>
+            implicit val t: Tracer[IO] = tracer
             TracedHandler[IO, SqsEvent, INothing](
               handleEvent[IO](client)
             )
