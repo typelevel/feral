@@ -202,8 +202,11 @@ lazy val lambdaNatchez = crossProject(JSPlatform, JVMPlatform)
 
 lazy val lambdaOtel4s = crossProject(JSPlatform, JVMPlatform)
   .in(file("lambda-otel4s"))
+  .enablePlugins(BuildInfoPlugin)
   .settings(
     name := "feral-lambda-otel4s",
+    buildInfoPackage := "feral.lambda.otel4s",
+    buildInfoKeys := Seq[BuildInfoKey](version),
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "otel4s-core-trace" % otel4sVersion,
       "org.typelevel" %%% "otel4s-sdk-trace-testkit" % otel4sSdkVersion % Test,

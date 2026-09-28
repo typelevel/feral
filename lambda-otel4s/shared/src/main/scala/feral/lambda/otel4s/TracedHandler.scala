@@ -22,24 +22,28 @@ import feral.lambda.Context
 import feral.lambda.Invocation
 import org.typelevel.otel4s.trace.SpanOps
 import org.typelevel.otel4s.trace.Tracer
+import org.typelevel.otel4s.trace.TracerProvider
 
 object TracedHandler {
 
-  def apply[F[_]: Monad: Tracer, Event, Result](
+  def apply[F[_]: Monad: TracerProvider, Event, Result](
       handler: F[Option[Result]]
   )(
       implicit inv: Invocation[F, Event],
       attr: EventAttributeSource[Event]
   ): F[Option[Result]] =
-    for {
-      event <- inv.event
-      context <- inv.context
-      res <- Tracer[F].joinOrRoot(attr.contextCarrier(event)) {
-        buildSpan(event, context).surround {
-          handler
-        }
-      }
-    } yield res
+    TracerProvider[F].tracer("feral.lambda.otel4s").withVersion(BuildInfo.version).get.flatMap {
+      implicit tracer =>
+        for {
+          event <- inv.event
+          context <- inv.context
+          res <- Tracer[F].joinOrRoot(attr.contextCarrier(event)) {
+            buildSpan(event, context).surround {
+              handler
+            }
+          }
+        } yield res
+    }
 
   private def buildSpan[F[_]: Tracer, Event](event: Event, context: Context[F])(
       implicit attr: EventAttributeSource[Event]
