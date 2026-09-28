@@ -47,7 +47,7 @@ object SqsOtelExample extends IOLambda[SqsEvent, INothing] {
         val spanDataProvider = ClientSpanDataProvider.openTelemetry(otelClientRedactor)
         val middleware = ClientMiddleware.builder[IO](spanDataProvider).build
 
-        (middleware, tp).tupled
+        middleware.map((_, tp))
       }
       .flatMap {
         case (middleware, tracerProvider) =>
