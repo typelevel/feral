@@ -215,8 +215,6 @@ object DynamoDbStreamEvent {
   implicit val decoder: Decoder[DynamoDbStreamEvent] =
     Decoder.forProduct1("Records")(DynamoDbStreamEvent.apply)
 
-  implicit def kernelSource: KernelSource[DynamoDbStreamEvent] = KernelSource.emptyKernelSource
-
   private final case class Impl(
       records: List[DynamoDbRecord]
   ) extends DynamoDbStreamEvent {

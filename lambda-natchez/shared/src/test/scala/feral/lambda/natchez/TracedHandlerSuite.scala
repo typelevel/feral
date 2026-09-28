@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.lambda.natchez
 
 import cats.data.Kleisli
 import cats.effect.IO
+import feral.lambda.INothing
+import feral.lambda.Invocation
 import feral.lambda.events.KinesisStreamEvent
 import natchez.EntryPoint
 import natchez.Span
@@ -25,7 +27,7 @@ import natchez.Trace
 
 import scala.annotation.nowarn
 
-class TracedLambdaSuite {
+class TracedHandlerSuite {
 
   @nowarn
   def syntaxTest = { // Checking for compilation, nothing more
