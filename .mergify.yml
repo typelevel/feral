@@ -28,6 +28,14 @@ pull_request_rules:
       add:
       - examples
       remove: []
+- name: Label google-cloud PRs
+  conditions:
+  - files~=^google-cloud/
+  actions:
+    label:
+      add:
+      - google-cloud
+      remove: []
 - name: Label google-cloud-http4s PRs
   conditions:
   - files~=^google-cloud-http4s/

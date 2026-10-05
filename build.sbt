@@ -76,6 +76,7 @@ lazy val root =
       lambdaHttp4s,
       lambdaCloudFormationCustomResource,
       googleCloudHttp4s,
+      googleCloud,
       examples,
       unidocs
     )
@@ -257,6 +258,35 @@ lazy val googleCloudHttp4s = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test
     ),
     tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.1").toMap
+  )
+  .settings(commonSettings)
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
+    )
+  )
+  .jvmSettings(
+    Test / fork := true,
+    libraryDependencies ++= Seq(
+      "com.google.cloud.functions" % "functions-framework-api" % "1.1.4" % Provided,
+      "co.fs2" %%% "fs2-io" % fs2Version
+    )
+  )
+
+lazy val googleCloud = crossProject(JSPlatform, JVMPlatform)
+  .in(file("google-cloud"))
+  .settings(
+    name := "feral-google-cloud",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "org.scodec" %%% "scodec-bits" % "1.2.0",
+      "io.circe" %%% "circe-core" % circeVersion,
+      "io.circe" %%% "circe-generic" % circeVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % munitCEVersion % Test,
+      "io.circe" %%% "circe-literal" % circeVersion % Test
+    ),
+    tlVersionIntroduced := List("2.13", "3").map(_ -> "0.3.2").toMap
   )
   .settings(commonSettings)
   .jsSettings(
