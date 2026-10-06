@@ -66,7 +66,7 @@ class IOCloudEventFunctionSuite extends munit.FunSuite {
 
   test("reads input and writes output") {
 
-    implicit val runtime: IORuntime = IORuntime.global
+    implicit val ioRuntime: IORuntime = IORuntime.global
 
     val firstEvent = DummyCloudEvent("first event")
     val secondEvent = DummyCloudEvent("second event")
@@ -77,7 +77,7 @@ class IOCloudEventFunctionSuite extends munit.FunSuite {
         IO(
           processed_events
             .update(lis => lis ::: List(firstEvent, secondEvent))
-            .unsafeRunSync()(runtime)))
+            .unsafeRunSync()(ioRuntime)))
     }
 
     val firstOutput = function.acceptFunctionHelper(firstEvent)
