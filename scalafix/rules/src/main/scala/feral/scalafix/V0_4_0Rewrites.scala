@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Typelevel
+ * Copyright 2023 Typelevel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package feral.lambda
+package feral.scalafix
 
-import natchez.TraceValue
+import scalafix.v1._
 
-object AwsTags {
-  private[this] val prefix = "aws"
-  def arn(s: String): (String, TraceValue) = s"$prefix.arn" -> s
-  def requestId(s: String): (String, TraceValue) = s"$prefix.requestId" -> s
+class V0_4_0Rewrites extends SemanticRule("V0_4_0Rewrites") {
+  override def fix(implicit doc: SemanticDocument): Patch =
+    Patch.replaceSymbols(
+      "feral.lambda.AwsTags" -> "feral.lambda.natchez.AwsTags",
+      "feral.lambda.KernelSource" -> "feral.lambda.natchez.KernelSource",
+      "feral.lambda.TracedHandler" -> "feral.lambda.natchez.TracedHandler"
+    )
 }
