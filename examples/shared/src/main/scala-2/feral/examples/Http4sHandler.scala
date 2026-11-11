@@ -16,12 +16,13 @@
 
 package feral.examples
 
-import cats.effect._
 import cats.effect.std.Random
+import cats.effect.{Trace => _, _}
+import cats.mtl._
 import feral.lambda._
 import feral.lambda.events._
 import feral.lambda.http4s._
-import natchez.Trace
+import natchez._
 import natchez.http4s.NatchezMiddleware
 import natchez.xray.XRay
 import org.http4s.HttpApp
@@ -43,6 +44,9 @@ import org.http4s.syntax.all._
 object http4sHandler
     extends IOLambda[ApiGatewayProxyEventV2, ApiGatewayProxyStructuredResultV2] {
 
+  private type Handler =
+    Invocation[IO, ApiGatewayProxyEventV2] => IO[Option[ApiGatewayProxyStructuredResultV2]]
+
   /**
    * Actually, this is a `Resource` that builds your handler. The handler is acquired exactly
    * once when your Lambda starts and is permanently installed to process all incoming events.
@@ -52,29 +56,31 @@ object http4sHandler
    * event come from? Because accessing the event via `Invocation` is now also an effect in
    * `IO`, it becomes a step in your program.
    */
-  def handler = for {
-    entrypoint <- Resource
-      .eval(Random.scalaUtilRandom[IO])
-      .flatMap(implicit r => XRay.entryPoint[IO]())
-    client <- EmberClientBuilder.default[IO].build
-  } yield { implicit inv => // the Invocation provides access to the event and context
+  def handler: Resource[IO, Handler] =
+    for {
+      entrypoint <- Resource
+        .eval(Random.scalaUtilRandom[IO])
+        .flatMap(implicit r => XRay.entryPoint[IO]())
+      client <- EmberClientBuilder.default[IO].build
+      implicit0(local: Local[IO, Span[IO]]) <- IO.local(Span.noop[IO]).toResource
+    } yield { implicit inv => // the Invocation provides access to the event and context
 
-    // a middleware to add tracing to any handler
-    // it extracts the kernel from the event and adds tags derived from the context
-    TracedHandler(entrypoint) { implicit trace =>
-      val tracedClient = NatchezMiddleware.client(client)
+      // a middleware to add tracing to any handler
+      // it extracts the kernel from the event and adds tags derived from the context
+      TracedHandler(entrypoint) { implicit trace =>
+        val tracedClient = NatchezMiddleware.client(client)
 
-      // a "middleware" that converts an HttpApp into a ApiGatewayProxyHandler
-      ApiGatewayProxyHandlerV2(myApp[IO](tracedClient))
+        // a "middleware" that converts an HttpApp into a ApiGatewayProxyHandler
+        ApiGatewayProxyHandlerV2(myApp[IO](tracedClient))
+      }
     }
-  }
 
   /**
    * Nothing special about this method, including its existence, just an example :)
    */
   def myApp[F[_]: Concurrent: Trace](client: Client[F]): HttpApp[F] = {
     implicit val dsl = Http4sDsl[F]
-    import dsl._
+    import dsl.*
 
     val routes = HttpRoutes.of[F] {
       case GET -> Root / "foo" => Ok("bar")
